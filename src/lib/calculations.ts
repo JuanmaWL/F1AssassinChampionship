@@ -1,5 +1,11 @@
 import { ChampionshipData, Driver, Constructor, RaceResult } from '../types';
 
+const getPoints = (position: number, dnf: boolean): number => {
+  if (dnf) return 0;
+  const pointsMap = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+  return pointsMap[position - 1] || 0;
+};
+
 export function calculateStandings(data: ChampionshipData): ChampionshipData {
   // Reset points and stats
   const driversMap = new Map<string, Driver>(
@@ -15,8 +21,11 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
       race.results.forEach(result => {
         const driver = driversMap.get(result.driverId);
         if (driver) {
+          // Calculate points based on position (2025 Rules: No FL point)
+          const points = getPoints(result.position, result.dnf);
+          
           // Add points
-          driver.points += result.points;
+          driver.points += points;
           
           // Count fastest laps
           if (result.fastestLap) {
@@ -26,7 +35,7 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
           // Add points to constructor
           const constructor = Array.from(constructorsMap.values()).find(c => c.name === driver.team);
           if (constructor) {
-            constructor.points += result.points;
+            constructor.points += points;
           }
         }
       });

@@ -5,18 +5,34 @@ import { Driver } from '../../types';
 
 interface PodiumProps {
   drivers: Driver[];
+  isSeasonFinished?: boolean;
 }
 
-export function Podium({ drivers }: PodiumProps) {
+export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
   const topThree = drivers.slice(0, 3);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.3 }}
-      className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end justify-center py-8"
-    >
+    <div className="py-8">
+      <motion.h2 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center text-3xl font-black italic text-white mb-12 uppercase tracking-widest"
+      >
+        {isSeasonFinished ? (
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse">
+                🏆 PODIO FINAL 🏆
+            </span>
+        ) : (
+            <span className="text-white">TOP 3 ACTUAL</span>
+        )}
+      </motion.h2>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end justify-center"
+      >
       {/* 2nd Place */}
       {topThree[1] && (
         <div className="order-2 md:order-1 flex flex-col items-center group">
@@ -44,8 +60,31 @@ export function Podium({ drivers }: PodiumProps) {
 
       {/* 1st Place */}
       {topThree[0] && (
-        <div className="order-1 md:order-2 flex flex-col items-center z-20 -mt-8 md:mt-0 group">
-           <div className="relative">
+        <div className="order-1 md:order-2 flex flex-col items-center z-20 -mt-8 md:mt-0 group relative">
+           {/* Particles/Glow Effect */}
+           <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full z-0 animate-pulse"></div>
+           <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-full h-full z-0 overflow-visible">
+              {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 0, scale: 0 }}
+                    animate={{ opacity: [0, 1, 0], y: -100, scale: [0, 1.5, 0] }}
+                    transition={{ 
+                        duration: 2, 
+                        repeat: Infinity, 
+                        delay: i * 0.4,
+                        ease: "easeOut" 
+                    }}
+                    className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full"
+                    style={{ 
+                        left: `${50 + (Math.random() * 60 - 30)}%`, 
+                        top: `${50 + (Math.random() * 60 - 30)}%` 
+                    }}
+                  />
+              ))}
+           </div>
+
+           <div className="relative z-10">
               <Crown className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-500 w-10 h-10 animate-bounce drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
               <div className="w-32 h-32 rounded-full border-4 border-yellow-500 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(234,179,8,0.2)] z-10 relative overflow-hidden">
                  <span className="text-5xl font-black text-yellow-500 z-10">1</span>
@@ -93,5 +132,6 @@ export function Podium({ drivers }: PodiumProps) {
         </div>
       )}
     </motion.div>
+    </div>
   );
 }

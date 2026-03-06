@@ -24,7 +24,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') { // Simple mock auth
+    if (password === '25571440') {
       setIsAuthenticated(true);
       setError(null);
     } else {
@@ -202,7 +202,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingresa Contraseña (admin123)"
+                placeholder="Ingresa Contraseña"
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
               />
             </div>
@@ -237,8 +237,12 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500"
             >
               <option value="">-- Selecciona una Carrera --</option>
-              {data.races.filter(r => r.status === 'pending').map(r => (
-                <option key={r.id} value={r.id}>{r.name} - {r.date}</option>
+              {[...data.races]
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} - {r.date} ({r.status === 'completed' ? 'Completada' : 'Pendiente'})
+                  </option>
               ))}
             </select>
           </div>

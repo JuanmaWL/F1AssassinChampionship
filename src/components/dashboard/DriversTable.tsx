@@ -10,7 +10,7 @@ interface DriversTableProps {
 
 export function DriversTable({ drivers }: DriversTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(drivers.length / itemsPerPage);
   const paginatedDrivers = drivers.slice(
     (currentPage - 1) * itemsPerPage,

@@ -77,6 +77,11 @@ export function Calendar({ data }: CalendarProps) {
                     backgroundPosition: 'center'
                 }}
             />
+
+            {/* Watermark Number */}
+            <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-[10rem] font-black italic text-white/5 pointer-events-none select-none z-0 leading-none overflow-hidden">
+                {index + 1}
+            </div>
             
             {/* Status Indicator Strip */}
             <div className={cn(
@@ -214,8 +219,12 @@ export function Calendar({ data }: CalendarProps) {
                           key={result.driverId}
                           className="border-b border-white/5 hover:bg-white/5 transition-colors"
                         >
-                          <td className="py-3 px-2 font-mono text-slate-400 text-center font-bold">
-                            {result.position}
+                          <td className="py-3 px-2 font-mono text-center font-bold">
+                            {result.dnf ? (
+                                <span className="text-red-500">DNF</span>
+                            ) : (
+                                <span className="text-slate-400">{result.position}</span>
+                            )}
                           </td>
                           <td className="py-3 px-2">
                             <div className="flex items-center gap-3">
@@ -226,7 +235,7 @@ export function Calendar({ data }: CalendarProps) {
                               <div>
                                 <div className="font-bold text-white flex items-center gap-2">
                                     {getDriverName(result.driverId)}
-                                    {result.fastestLap && (
+                                    {result.fastestLap && !result.dnf && (
                                         <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 font-mono flex items-center gap-1" title="Vuelta Rápida">
                                         <Timer size={10} />
                                         </span>
@@ -240,13 +249,13 @@ export function Calendar({ data }: CalendarProps) {
                             {getTeamName(result.driverId)}
                           </td>
                           <td className="py-3 px-2 text-right font-mono text-sm text-slate-300">
-                            {result.raceTime || '-'}
+                            {result.dnf ? '-' : (result.raceTime || '-')}
                           </td>
                           <td className="py-3 px-2 text-right font-mono text-sm text-purple-400">
-                            {result.fastestLapTime || '-'}
+                            {result.dnf ? '-' : (result.fastestLapTime || '-')}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">
-                            +{result.points}
+                            {result.dnf ? <span className="text-slate-600">0</span> : `+${result.points}`}
                           </td>
                         </tr>
                       ))}
