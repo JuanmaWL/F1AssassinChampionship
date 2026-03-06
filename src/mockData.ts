@@ -92,30 +92,22 @@ const initialConstructors = [
 
 // Races Definition (2025 Dates)
 const racesDef = [
-  { id: 'r1', name: 'Gran Premio de China', circuit: 'Shanghai International Circuit', date: '2025-03-02' },
-  { id: 'r2', name: 'Gran Premio de Singapur', circuit: 'Marina Bay Street Circuit', date: '2025-03-16' },
-  { id: 'r3', name: 'Gran Premio de Australia', circuit: 'Albert Park Circuit', date: '2025-03-30' },
-  { id: 'r4', name: 'Gran Premio de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2025-04-13' },
-  { id: 'r5', name: 'Gran Premio de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2025-04-27' },
-  { id: 'r6', name: 'Gran Premio de Azerbaiyán', circuit: 'Baku City Circuit', date: '2025-05-11' },
-  { id: 'r7', name: 'Gran Premio de Japón', circuit: 'Suzuka International Racing Course', date: '2025-05-25' },
-  { id: 'r8', name: 'Gran Premio de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2025-06-08' },
-  { id: 'r9', name: 'Gran Premio de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2025-06-22' },
-  { id: 'r10', name: 'Gran Premio de Bahrein', circuit: 'Bahrain International Circuit', date: '2025-07-06' },
-  { id: 'r11', name: 'Gran Premio de Mónaco', circuit: 'Circuit de Monaco', date: '2025-07-20' },
-  { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-08-03' },
+  { id: 'r1', name: 'Gran Premio de China', circuit: 'Shanghai International Circuit', date: '2025-03-02T21:00:00+01:00', flagCode: 'cn' },
+  { id: 'r2', name: 'Gran Premio de Singapur', circuit: 'Marina Bay Street Circuit', date: '2025-03-16T21:00:00+01:00', flagCode: 'sg' },
+  { id: 'r3', name: 'Gran Premio de Australia', circuit: 'Albert Park Circuit', date: '2025-03-30T21:00:00+02:00', flagCode: 'au' },
+  { id: 'r4', name: 'Gran Premio de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2025-04-13T21:00:00+02:00', flagCode: 'ae' },
+  { id: 'r5', name: 'Gran Premio de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2025-04-27T21:00:00+02:00', flagCode: 'br' },
+  { id: 'r6', name: 'Gran Premio de Azerbaiyán', circuit: 'Baku City Circuit', date: '2025-05-11T21:00:00+02:00', flagCode: 'az' },
+  { id: 'r7', name: 'Gran Premio de Japón', circuit: 'Suzuka International Racing Course', date: '2025-05-25T21:00:00+02:00', flagCode: 'jp' },
+  { id: 'r8', name: 'Gran Premio de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2025-06-08T21:00:00+02:00', flagCode: 'be' },
+  { id: 'r9', name: 'Gran Premio de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2025-06-22T21:00:00+02:00', flagCode: 'gb' },
+  { id: 'r10', name: 'Gran Premio de Bahrein', circuit: 'Bahrain International Circuit', date: '2025-07-06T21:00:00+02:00', flagCode: 'bh' },
+  { id: 'r11', name: 'Gran Premio de Mónaco', circuit: 'Circuit de Monaco', date: '2025-07-20T21:00:00+02:00', flagCode: 'mc' },
+  { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-08-03T21:00:00+02:00', flagCode: 'es' },
 ];
 
-// Simulate Championship - Only first 3 races completed
-const simulatedRaces = racesDef.map((race, index) => {
-  if (index < 3) {
-    const results = generateRandomResults(race.id, initialDrivers);
-    return {
-      ...race,
-      status: 'completed' as const,
-      results,
-    };
-  }
+// Simulate Championship - All pending
+const simulatedRaces = racesDef.map((race) => {
   return {
     ...race,
     status: 'pending' as const,

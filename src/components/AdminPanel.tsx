@@ -80,8 +80,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       const ai = new GoogleGenAI({ apiKey });
       
       const driversList = data.drivers.map(d => d.name).join(', ');
-      
-      const prompt = `
+              const prompt = `
         Analiza esta imagen de resultados de carrera de F1.
         Extrae los resultados en un array JSON.
         Para cada fila necesito:
@@ -91,6 +90,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
         - "fastestLap": true si obtuvo vuelta rápida, false si no (boolean)
         - "raceTime": El tiempo total de carrera o el gap (string, ej: "1:32:45.123" o "+12.456s")
         - "fastestLapTime": El tiempo de la vuelta rápida si aparece (string, ej: "1:18.456")
+        - "pitStops": El número de paradas en boxes (number, por defecto 0 si no aparece)
         
         Extrae las posiciones de la imagen haciendo coincidir los nombres que leas con esta lista exacta de nicks: ${driversList}. Usa fuzzy matching si están un poco borrosos.
         
@@ -129,7 +129,8 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
           fastestLap: r.fastestLap || false,
           dnf: false,
           raceTime: r.raceTime || '-',
-          fastestLapTime: r.fastestLapTime || '-'
+          fastestLapTime: r.fastestLapTime || '-',
+          pitStops: r.pitStops || 0
         };
       });
 
@@ -150,7 +151,8 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
             fastestLap: i === 0,
             dnf: false,
             raceTime: i === 0 ? "1:30:00.000" : `+${i * 2}.000s`,
-            fastestLapTime: "1:18.500"
+            fastestLapTime: "1:18.500",
+            pitStops: Math.floor(Math.random() * 3) + 1
          })).slice(0, 10);
          setParsedResults(mockParsed);
          setError(null);
@@ -299,6 +301,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                       <th className="p-3">Puntos</th>
                       <th className="p-3">VR</th>
                       <th className="p-3">Tiempo</th>
+                      <th className="p-3">Pits</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -312,6 +315,9 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                         </td>
                         <td className="p-3 text-slate-400 font-mono text-xs">
                             {result.raceTime}
+                        </td>
+                        <td className="p-3 text-slate-400 font-mono text-xs">
+                            {result.pitStops}
                         </td>
                       </tr>
                     ))}

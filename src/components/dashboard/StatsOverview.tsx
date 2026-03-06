@@ -22,12 +22,13 @@ export function StatsOverview({ data }: StatsOverviewProps) {
     if (!nextRace) return;
 
     const updateTimer = () => {
-      const raceDate = new Date(`${nextRace.date}T15:00:00Z`); // Assuming 15:00 UTC
+      // Use the date string directly as it now contains time and timezone
+      const raceDate = new Date(nextRace.date);
       const now = new Date();
       const diff = raceDate.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeLeft('¡HOY!');
+        setTimeLeft('EN DISPUTA / FINALIZADO');
         return;
       }
 
@@ -89,16 +90,16 @@ export function StatsOverview({ data }: StatsOverviewProps) {
           <Trophy size={64} className={isSeasonFinished ? "text-slate-700" : "text-yellow-500"} />
         </div>
         <h3 className="text-slate-400 text-sm uppercase tracking-wider font-medium">
-            {isSeasonFinished ? 'Puntos Restantes' : 'Puntos en Juego'}
+            {isSeasonFinished ? 'Puntos Restantes' : 'PUNTOS EN JUEGO'}
         </h3>
         <div className="mt-2 flex items-baseline gap-2">
           <span className={`text-4xl font-black italic ${isSeasonFinished ? 'text-slate-500' : 'text-white'}`}>
             {pointsRemaining}
           </span>
-          <span className="text-slate-500 font-mono">Puntos Max</span>
+          <span className="text-slate-500 font-mono">PTS</span>
         </div>
         <p className="text-xs text-slate-500 mt-4">
-          {isSeasonFinished ? 'Campeonato Concluido' : 'Basado en 25pts por carrera restante'}
+          {isSeasonFinished ? 'Campeonato Concluido' : 'Disponibles para el líder'}
         </p>
       </motion.div>
 

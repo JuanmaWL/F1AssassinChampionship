@@ -1,12 +1,18 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Constructor } from '../../types';
+import { cn } from '../../lib/utils';
 
 interface ConstructorsTableProps {
   constructors: Constructor[];
+  hasCompletedRaces: boolean;
 }
 
-export function ConstructorsTable({ constructors }: ConstructorsTableProps) {
+export function ConstructorsTable({ constructors, hasCompletedRaces }: ConstructorsTableProps) {
+  const sortedConstructors = hasCompletedRaces 
+    ? [...constructors].sort((a, b) => b.points - a.points)
+    : [...constructors].sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -25,28 +31,38 @@ export function ConstructorsTable({ constructors }: ConstructorsTableProps) {
           <table className="w-full text-left border-collapse">
               <thead>
                   <tr className="bg-slate-950/50 text-xs uppercase tracking-wider text-slate-500 font-medium">
-                      <th className="py-4 px-6 w-16 text-center">Pos</th>
+                      <th className="py-4 px-6 w-16 text-center">POSICIÓN</th>
                       <th className="py-4 px-6">Equipo</th>
                       <th className="py-4 px-6 text-right">Puntos</th>
                   </tr>
               </thead>
               <tbody>
-                  {constructors.map((constructor, index) => (
+                  {sortedConstructors.map((constructor, index) => (
                       <motion.tr 
                           key={constructor.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="border-b border-white/5 transition-all duration-300 group"
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = `linear-gradient(90deg, transparent, ${constructor.color}10, transparent)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                          }}
+                          className={cn(
+                              "border-b border-white/5 transition-all duration-300 group",
+                              hasCompletedRaces && index === 0 ? "bg-yellow-500/10 hover:bg-yellow-500/20" : "",
+                              hasCompletedRaces && index === 1 ? "bg-slate-400/10 hover:bg-slate-400/20" : "",
+                              hasCompletedRaces && index === 2 ? "bg-orange-700/10 hover:bg-orange-700/20" : ""
+                          )}
                       >
                           <td className="py-4 px-6 text-center font-mono font-bold text-slate-400 group-hover:text-white">
-                              {index + 1}
+                              {hasCompletedRaces && index < 3 ? (
+                                  <span className={cn(
+                                      "inline-flex items-center justify-center w-8 h-8 rounded-full text-white shadow-lg",
+                                      index === 0 ? "bg-yellow-500" :
+                                      index === 1 ? "bg-slate-400" :
+                                      "bg-orange-700"
+                                  )}>
+                                      {index + 1}
+                                  </span>
+                              ) : (
+                                  <span>{index + 1}</span>
+                              )}
                           </td>
                           <td className="py-4 px-6">
                               <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChampionshipData, Race } from '../types';
-import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 
@@ -79,15 +79,28 @@ export function Calendar({ data }: CalendarProps) {
             />
 
             {/* Watermark Number */}
-            <div className="absolute right-2 bottom-0 text-[120px] leading-none opacity-5 font-black italic select-none pointer-events-none text-white">
+            <div className={cn(
+                "absolute font-serif font-black select-none pointer-events-none text-white z-0 transition-all duration-300",
+                viewMode === 'grid' 
+                    ? "bottom-[-20px] right-[-10px] text-[140px] leading-none opacity-10" 
+                    : "left-[-10px] bottom-[-20px] text-[120px] leading-none opacity-[0.05]"
+            )}>
                 {index + 1}
             </div>
             
-            {/* Checkered Flag for Completed Races */}
+            {/* Checkered Flag Fade for Completed Races */}
             {race.status === 'completed' && (
-                <div className="absolute top-4 right-4 text-2xl opacity-50 group-hover:opacity-100 transition-opacity filter drop-shadow-lg">
-                    🏁
-                </div>
+                <div 
+                    className="absolute inset-y-0 right-0 w-1/2 opacity-20 pointer-events-none z-0"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(to right, transparent, #000),
+                            repeating-conic-gradient(#333 0% 25%, transparent 0% 50%)
+                        `,
+                        backgroundSize: '100% 100%, 20px 20px',
+                        maskImage: 'linear-gradient(to left, black, transparent)'
+                    }}
+                />
             )}
             
             {/* Status Indicator Strip */}
@@ -107,10 +120,17 @@ export function Calendar({ data }: CalendarProps) {
                   </span>
                 </div>
                 <h3 className={cn(
-                    "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors",
+                    "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors flex items-center gap-3",
                     viewMode === 'list' ? "text-xl" : "text-2xl"
                 )}>
                   {race.name}
+                  {race.flagCode && (
+                      <img 
+                          src={`https://flagcdn.com/w40/${race.flagCode}.png`} 
+                          alt={race.flagCode} 
+                          className="h-5 w-auto rounded shadow-sm object-cover"
+                      />
+                  )}
                 </h3>
                 <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
                   <MapPin size={14} />
@@ -217,6 +237,11 @@ export function Calendar({ data }: CalendarProps) {
                                 <Timer size={14} /> VR
                             </div>
                         </th>
+                        <th className="py-3 px-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                                <Wrench size={14} /> Pits
+                            </div>
+                        </th>
                         <th className="py-3 px-2 text-right">Pts</th>
                       </tr>
                     </thead>
@@ -263,6 +288,9 @@ export function Calendar({ data }: CalendarProps) {
                               result.fastestLap ? "text-purple-400 font-bold" : "text-slate-500"
                           )}>
                             {result.dnf ? '-' : (result.fastestLapTime || '-')}
+                          </td>
+                          <td className="py-3 px-2 text-center font-mono text-sm text-slate-500">
+                            {result.dnf ? '-' : (result.pitStops || 0)}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">
                             {result.dnf ? <span className="text-slate-600">0</span> : `+${result.points}`}

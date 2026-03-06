@@ -55,26 +55,20 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
   };
 
   const renderCustomDot = (props: any, index: number) => {
-      const { cx, cy, payload } = props;
-      // Check if it's the last point in the dataset
-      const isLastPoint = payload.name === evolutionData[evolutionData.length - 1].name;
-
-      if (isLastPoint && index < 3) {
+      const { cx, cy } = props;
+      
+      if (index < 3) {
           const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
           return (
-              <text x={cx} y={cy} dy={8} dx={0} textAnchor="middle" fontSize={24} className="filter drop-shadow-md cursor-default select-none">
+              <text x={cx} y={cy} dy={5} dx={0} textAnchor="middle" fontSize={16} className="filter drop-shadow-md cursor-default select-none">
                   {medal}
               </text>
           );
       }
       
-      if (index < 3) {
-          return (
-              <circle cx={cx} cy={cy} r={5} fill={props.stroke} stroke="#0f172a" strokeWidth={2} />
-          );
-      }
-      
-      return null;
+      return (
+          <circle cx={cx} cy={cy} r={3} fill={props.stroke} stroke="#0f172a" strokeWidth={1} />
+      );
   };
 
   return (
@@ -101,6 +95,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
               tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
               tickMargin={15}
               interval="preserveStartEnd"
+              tickFormatter={(value) => value.replace('Gran Premio de', 'GP').replace('GRAN PREMIO DE', 'GP')}
             />
             <YAxis 
               stroke="#94a3b8" 
@@ -113,7 +108,13 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
                 onClick={handleLegendClick}
                 formatter={(value, entry: any) => {
                     const isHidden = hiddenDrivers.includes(value);
-                    return <span style={{ color: entry.color, opacity: isHidden ? 0.5 : 1, textDecoration: isHidden ? 'line-through' : 'none', fontWeight: 600, marginRight: 10 }}>{value}</span>;
+                    const driverIndex = sortedDrivers.findIndex(d => d.name === value);
+                    let prefix = '';
+                    if (driverIndex === 0) prefix = '🥇 ';
+                    if (driverIndex === 1) prefix = '🥈 ';
+                    if (driverIndex === 2) prefix = '🥉 ';
+
+                    return <span style={{ color: entry.color, opacity: isHidden ? 0.5 : 1, textDecoration: isHidden ? 'line-through' : 'none', fontWeight: 600, marginRight: 10 }}>{prefix}{value}</span>;
                 }}
             />
             {sortedDrivers.map((driver, index) => (

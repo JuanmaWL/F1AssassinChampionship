@@ -28,6 +28,7 @@ export interface RaceResult {
   dnf: boolean;
   raceTime?: string; // Total race time or gap (e.g., "1:32:45.123" or "+12.456s")
   fastestLapTime?: string; // Best lap time (e.g., "1:18.456")
+  pitStops?: number;
 }
 
 export interface Race {
@@ -35,6 +36,7 @@ export interface Race {
   name: string;
   circuit: string;
   date: string; // ISO date string
+  flagCode?: string; // ISO country code for flag (e.g., 'cn', 'es')
   status: RaceStatus;
   results?: RaceResult[];
   polePosition?: string; // Driver ID
