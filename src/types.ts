@@ -7,6 +7,7 @@ export interface Driver {
   teamColor: TeamColor;
   points: number;
   avatarUrl?: string;
+  fastestLaps?: number;
 }
 
 export interface Constructor {
@@ -25,7 +26,8 @@ export interface RaceResult {
   points: number;
   fastestLap: boolean;
   dnf: boolean;
-  raceTime?: string; // e.g., "1:32:45.123" or "+12.456s"
+  raceTime?: string; // Total race time or gap (e.g., "1:32:45.123" or "+12.456s")
+  fastestLapTime?: string; // Best lap time (e.g., "1:18.456")
 }
 
 export interface Race {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChampionshipData, Race } from '../types';
-import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 
@@ -159,7 +159,7 @@ export function Calendar({ data }: CalendarProps) {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-slate-900 border border-white/10 w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl shadow-2xl"
+              className="bg-slate-900 border border-white/10 w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-6 flex justify-between items-start z-10">
@@ -195,7 +195,16 @@ export function Calendar({ data }: CalendarProps) {
                         <th className="py-3 px-2 w-12 text-center">Pos</th>
                         <th className="py-3 px-2">Piloto</th>
                         <th className="py-3 px-2 hidden sm:table-cell">Equipo</th>
-                        <th className="py-3 px-2 text-right">Tiempo</th>
+                        <th className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                                <Clock size={14} /> Tiempo
+                            </div>
+                        </th>
+                        <th className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                                <Timer size={14} /> VR
+                            </div>
+                        </th>
                         <th className="py-3 px-2 text-right">Pts</th>
                       </tr>
                     </thead>
@@ -219,7 +228,7 @@ export function Calendar({ data }: CalendarProps) {
                                     {getDriverName(result.driverId)}
                                     {result.fastestLap && (
                                         <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 font-mono flex items-center gap-1" title="Vuelta Rápida">
-                                        <Timer size={10} /> VR
+                                        <Timer size={10} />
                                         </span>
                                     )}
                                 </div>
@@ -232,6 +241,9 @@ export function Calendar({ data }: CalendarProps) {
                           </td>
                           <td className="py-3 px-2 text-right font-mono text-sm text-slate-300">
                             {result.raceTime || '-'}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono text-sm text-purple-400">
+                            {result.fastestLapTime || '-'}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">
                             +{result.points}

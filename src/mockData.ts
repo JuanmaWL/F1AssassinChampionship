@@ -1,4 +1,5 @@
 import { ChampionshipData, RaceResult } from './types';
+import { calculateStandings } from './lib/calculations';
 
 // Helper to generate random results for simulation
 const generateRandomResults = (raceId: string, drivers: { id: string }[]): RaceResult[] => {
@@ -34,6 +35,15 @@ const generateRandomResults = (raceId: string, drivers: { id: string }[]): RaceR
         const gap = Math.random() * 5000 + (index * 2000);
         raceTime = `+${(gap / 1000).toFixed(3)}s`;
     }
+    
+    // Generate random fastest lap time (e.g., 1:18.xxx)
+    const flBase = 78000; // 1m 18s
+    const flRandom = Math.floor(Math.random() * 2000);
+    const flTotal = flBase + flRandom;
+    const flM = Math.floor(flTotal / 60000);
+    const flS = Math.floor((flTotal % 60000) / 1000);
+    const flMS = flTotal % 1000;
+    const fastestLapTime = `${flM}:${flS.toString().padStart(2, '0')}.${flMS.toString().padStart(3, '0')}`;
 
     return {
       driverId: driver.id,
@@ -42,29 +52,30 @@ const generateRandomResults = (raceId: string, drivers: { id: string }[]): RaceR
       fastestLap: isFastestLap,
       dnf: false,
       raceTime: raceTime,
+      fastestLapTime: fastestLapTime,
     };
   });
 };
 
 // Initial Drivers Data
 const initialDrivers = [
-  { id: 'd1', name: 'Azerjin', team: 'Thunder Speed F1 Team', teamColor: '#FFD700', points: 0 },
-  { id: 'd2', name: 'Legna-1601', team: 'Thunder Speed F1 Team', teamColor: '#FFD700', points: 0 },
-  { id: 'd3', name: 'Uyimero', team: 'Eagleclaw Racing Team', teamColor: '#C0C0C0', points: 0 },
-  { id: 'd4', name: 'Minico', team: 'Eagleclaw Racing Team', teamColor: '#C0C0C0', points: 0 },
-  { id: 'd5', name: 'Juasmo', team: 'Tractores F1 Team Racing', teamColor: '#32CD32', points: 0 },
-  { id: 'd6', name: 'Pekeno-Salta', team: 'Tractores F1 Team Racing', teamColor: '#32CD32', points: 0 },
-  { id: 'd7', name: 'Supereloy77', team: 'Nakamas Malakas F1 Team Racing', teamColor: '#FF8C00', points: 0 },
-  { id: 'd8', name: 'Maximo384', team: 'Nakamas Malakas F1 Team Racing', teamColor: '#FF8C00', points: 0 },
-  { id: 'd9', name: 'Roudy', team: 'Potatsio D.Canarias F1 Team Racing', teamColor: '#8A2BE2', points: 0 },
-  { id: 'd10', name: 'Always Dave', team: 'Potatsio D.Canarias F1 Team Racing', teamColor: '#8A2BE2', points: 0 },
-  { id: 'd11', name: 'Urbano62TV', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0 },
-  { id: 'd12', name: 'Andrew Taragod', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0 },
-  { id: 'd13', name: 'Ainzzu', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0 },
-  { id: 'd14', name: 'Nacho_RB10', team: 'Alros F1 Team Racing', teamColor: '#FF69B4', points: 0 },
-  { id: 'd15', name: 'Ubicypher', team: 'Alros F1 Team Racing', teamColor: '#FF69B4', points: 0 },
-  { id: 'd16', name: 'Kisame', team: 'Assassin\'s Mania Racing Team', teamColor: '#00FFFF', points: 0 },
-  { id: 'd17', name: 'Dorian', team: 'Assassin\'s Mania Racing Team', teamColor: '#00FFFF', points: 0 },
+  { id: 'd1', name: 'Azerjin', team: 'Thunder Speed F1 Team', teamColor: '#FFD700', points: 0, fastestLaps: 0 },
+  { id: 'd2', name: 'Legna-1601', team: 'Thunder Speed F1 Team', teamColor: '#FFD700', points: 0, fastestLaps: 0 },
+  { id: 'd3', name: 'Uyimero', team: 'Eagleclaw Racing Team', teamColor: '#C0C0C0', points: 0, fastestLaps: 0 },
+  { id: 'd4', name: 'Minico', team: 'Eagleclaw Racing Team', teamColor: '#C0C0C0', points: 0, fastestLaps: 0 },
+  { id: 'd5', name: 'Juasmo', team: 'Tractores F1 Team Racing', teamColor: '#32CD32', points: 0, fastestLaps: 0 },
+  { id: 'd6', name: 'Pekeno-Salta', team: 'Tractores F1 Team Racing', teamColor: '#32CD32', points: 0, fastestLaps: 0 },
+  { id: 'd7', name: 'Supereloy77', team: 'Nakamas Malakas F1 Team Racing', teamColor: '#FF8C00', points: 0, fastestLaps: 0 },
+  { id: 'd8', name: 'Maximo384', team: 'Nakamas Malakas F1 Team Racing', teamColor: '#FF8C00', points: 0, fastestLaps: 0 },
+  { id: 'd9', name: 'Roudy', team: 'Potatsio D.Canarias F1 Team Racing', teamColor: '#8A2BE2', points: 0, fastestLaps: 0 },
+  { id: 'd10', name: 'Always Dave', team: 'Potatsio D.Canarias F1 Team Racing', teamColor: '#8A2BE2', points: 0, fastestLaps: 0 },
+  { id: 'd11', name: 'Urbano62TV', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0, fastestLaps: 0 },
+  { id: 'd12', name: 'Andrew Taragod', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0, fastestLaps: 0 },
+  { id: 'd13', name: 'Ainzzu', team: 'Tarazed F1 Racing Team', teamColor: '#DC143C', points: 0, fastestLaps: 0 },
+  { id: 'd14', name: 'Nacho_RB10', team: 'Alros F1 Team Racing', teamColor: '#FF69B4', points: 0, fastestLaps: 0 },
+  { id: 'd15', name: 'Ubicypher', team: 'Alros F1 Team Racing', teamColor: '#FF69B4', points: 0, fastestLaps: 0 },
+  { id: 'd16', name: 'Kisame', team: 'Assassin\'s Mania Racing Team', teamColor: '#00FFFF', points: 0, fastestLaps: 0 },
+  { id: 'd17', name: 'Dorian', team: 'Assassin\'s Mania Racing Team', teamColor: '#00FFFF', points: 0, fastestLaps: 0 },
 ];
 
 // Initial Constructors Data
@@ -95,34 +106,27 @@ const racesDef = [
   { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-06-23' },
 ];
 
-// Simulate Championship
-const simulatedRaces = racesDef.map((race) => {
-  const results = generateRandomResults(race.id, initialDrivers);
+// Simulate Championship - Only first 3 races completed
+const simulatedRaces = racesDef.map((race, index) => {
+  if (index < 3) {
+    const results = generateRandomResults(race.id, initialDrivers);
+    return {
+      ...race,
+      status: 'completed' as const,
+      results,
+    };
+  }
   return {
     ...race,
-    status: 'completed' as const,
-    results,
+    status: 'pending' as const,
   };
 });
 
-// Calculate Totals
-const calculatedDrivers = initialDrivers.map((driver) => {
-  let totalPoints = 0;
-  simulatedRaces.forEach((race) => {
-    const result = race.results.find((r) => r.driverId === driver.id);
-    if (result) totalPoints += result.points;
-  });
-  return { ...driver, points: totalPoints };
-});
-
-const calculatedConstructors = initialConstructors.map((cons) => {
-  const teamDrivers = calculatedDrivers.filter((d) => d.team === cons.name);
-  const totalPoints = teamDrivers.reduce((sum, d) => sum + d.points, 0);
-  return { ...cons, points: totalPoints };
-});
-
-export const mockData: ChampionshipData = {
-  drivers: calculatedDrivers,
-  constructors: calculatedConstructors,
+// Calculate Totals using the centralized function
+const initialData: ChampionshipData = {
+  drivers: initialDrivers,
+  constructors: initialConstructors,
   races: simulatedRaces,
 };
+
+export const mockData = calculateStandings(initialData);

@@ -4,6 +4,7 @@ import { Upload, Save, Loader2, Lock, AlertTriangle, CheckCircle } from 'lucide-
 import { GoogleGenAI } from '@google/genai';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
+import { calculateStandings } from '../lib/calculations';
 
 interface AdminPanelProps {
   data: ChampionshipData;
@@ -88,6 +89,8 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
         - "position": La posición final (number)
         - "points": Los puntos ganados (number)
         - "fastestLap": true si obtuvo vuelta rápida, false si no (boolean)
+        - "raceTime": El tiempo total de carrera o el gap (string, ej: "1:32:45.123" o "+12.456s")
+        - "fastestLapTime": El tiempo de la vuelta rápida si aparece (string, ej: "1:18.456")
         
         Extrae las posiciones de la imagen haciendo coincidir los nombres que leas con esta lista exacta de nicks: ${driversList}. Usa fuzzy matching si están un poco borrosos.
         
@@ -124,7 +127,9 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
           position: r.position,
           points: r.points,
           fastestLap: r.fastestLap || false,
-          dnf: false
+          dnf: false,
+          raceTime: r.raceTime || '-',
+          fastestLapTime: r.fastestLapTime || '-'
         };
       });
 
@@ -143,7 +148,9 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
             position: i + 1,
             points: i === 0 ? 25 : i === 1 ? 18 : i === 2 ? 15 : 0,
             fastestLap: i === 0,
-            dnf: false
+            dnf: false,
+            raceTime: i === 0 ? "1:30:00.000" : `+${i * 2}.000s`,
+            fastestLapTime: "1:18.500"
          })).slice(0, 10);
          setParsedResults(mockParsed);
          setError(null);
@@ -165,26 +172,13 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       return r;
     });
 
-    // Recalculate driver points
-    const updatedDrivers = data.drivers.map(driver => {
-        const newPoints = parsedResults.find(r => r.driverId === driver.id)?.points || 0;
-        return { ...driver, points: driver.points + newPoints };
-    });
-
-    // Recalculate constructor points (simplified logic)
-    const updatedConstructors = data.constructors.map(cons => {
-        // Find drivers for this constructor
-        const teamDrivers = updatedDrivers.filter(d => d.team === cons.name);
-        const totalPoints = teamDrivers.reduce((sum, d) => sum + d.points, 0);
-        return { ...cons, points: totalPoints };
-    });
-
-    onUpdateData({
+    // Recalculate standings using the centralized function
+    const updatedData = calculateStandings({
       ...data,
-      races: updatedRaces,
-      drivers: updatedDrivers,
-      constructors: updatedConstructors
+      races: updatedRaces
     });
+
+    onUpdateData(updatedData);
 
     setSuccess("¡Datos del campeonato actualizados con éxito!");
     setParsedResults(null);
@@ -300,6 +294,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                       <th className="p-3">Piloto ID</th>
                       <th className="p-3">Puntos</th>
                       <th className="p-3">VR</th>
+                      <th className="p-3">Tiempo</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -310,6 +305,9 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                         <td className="p-3 text-white font-bold">{result.points}</td>
                         <td className="p-3">
                           {result.fastestLap && <span className="text-purple-400 text-xs border border-purple-500/30 px-1 rounded">RÁPIDA</span>}
+                        </td>
+                        <td className="p-3 text-slate-400 font-mono text-xs">
+                            {result.raceTime}
                         </td>
                       </tr>
                     ))}
