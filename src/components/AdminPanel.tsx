@@ -161,6 +161,29 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
     }
   };
 
+  const handleResultChange = (index: number, field: keyof RaceResult, value: any) => {
+    if (!parsedResults) return;
+    const newResults = [...parsedResults];
+    newResults[index] = { ...newResults[index], [field]: value };
+    setParsedResults(newResults);
+  };
+
+  const startManualEntry = () => {
+    const manualResults: RaceResult[] = data.drivers.map((d, i) => ({
+        driverId: d.id,
+        position: i + 1,
+        points: 0,
+        fastestLap: false,
+        dnf: false,
+        raceTime: '-',
+        fastestLapTime: '-',
+        pitStops: 0
+    }));
+    setParsedResults(manualResults);
+    setSuccess("Modo de ingreso manual activado. Por favor completa la tabla.");
+    setError(null);
+  };
+
   const handleSave = () => {
     if (!selectedRaceId || !parsedResults) {
       setError("Por favor selecciona una carrera y asegura que hay resultados.");
@@ -249,29 +272,41 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
             </select>
           </div>
 
-          {/* Image Upload */}
-          <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-red-500/50 transition-colors bg-slate-950/30">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="max-h-64 rounded-lg shadow-lg" />
-              ) : (
-                <div className="p-4 bg-slate-800 rounded-full">
-                  <Upload className="w-8 h-8 text-slate-400" />
-                </div>
-              )}
-              <span className="text-slate-300 font-medium">
-                {isProcessing ? 'Analizando Imagen con Gemini AI...' : 'Click para subir captura de resultados'}
-              </span>
-              {isProcessing && <Loader2 className="animate-spin text-red-500" />}
-            </label>
+          {/* Image Upload or Manual Entry */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-red-500/50 transition-colors bg-slate-950/30">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Preview" className="max-h-48 rounded-lg shadow-lg" />
+                  ) : (
+                    <div className="p-4 bg-slate-800 rounded-full">
+                      <Upload className="w-8 h-8 text-slate-400" />
+                    </div>
+                  )}
+                  <span className="text-slate-300 font-medium">
+                    {isProcessing ? 'Analizando Imagen...' : 'Subir Captura (IA)'}
+                  </span>
+                  {isProcessing && <Loader2 className="animate-spin text-red-500" />}
+                </label>
+              </div>
+
+              <button 
+                onClick={startManualEntry}
+                className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-blue-500/50 transition-colors bg-slate-950/30 flex flex-col items-center justify-center gap-4 cursor-pointer"
+              >
+                  <div className="p-4 bg-slate-800 rounded-full">
+                      <AlertTriangle className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <span className="text-slate-300 font-medium">Ingreso Manual / Alternativo</span>
+              </button>
           </div>
 
           {/* Messages */}
@@ -291,13 +326,13 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
           {/* Parsed Results Editor */}
           {parsedResults && (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white italic uppercase">Revisar Datos</h3>
+              <h3 className="text-xl font-bold text-white italic uppercase">Revisar y Editar Datos</h3>
               <div className="bg-slate-950 rounded-xl border border-white/5 overflow-hidden">
                 <table className="w-full text-left">
                   <thead className="bg-slate-900 text-slate-400 text-xs uppercase">
                     <tr>
                       <th className="p-3">Pos</th>
-                      <th className="p-3">Piloto ID</th>
+                      <th className="p-3">Piloto</th>
                       <th className="p-3">Puntos</th>
                       <th className="p-3">VR</th>
                       <th className="p-3">Tiempo</th>
@@ -305,22 +340,56 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {parsedResults.map((result, idx) => (
-                      <tr key={idx}>
-                        <td className="p-3 text-white font-mono">{result.position}</td>
-                        <td className="p-3 text-slate-300">{result.driverId}</td>
-                        <td className="p-3 text-white font-bold">{result.points}</td>
-                        <td className="p-3">
-                          {result.fastestLap && <span className="text-purple-400 text-xs border border-purple-500/30 px-1 rounded">RÁPIDA</span>}
-                        </td>
-                        <td className="p-3 text-slate-400 font-mono text-xs">
-                            {result.raceTime}
-                        </td>
-                        <td className="p-3 text-slate-400 font-mono text-xs">
-                            {result.pitStops}
-                        </td>
-                      </tr>
-                    ))}
+                    {parsedResults.map((result, idx) => {
+                        const driver = data.drivers.find(d => d.id === result.driverId);
+                        return (
+                          <tr key={idx}>
+                            <td className="p-2">
+                                <input 
+                                    type="number" 
+                                    value={result.position} 
+                                    onChange={(e) => handleResultChange(idx, 'position', parseInt(e.target.value))}
+                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center"
+                                />
+                            </td>
+                            <td className="p-2 text-slate-300">
+                                {driver ? driver.name : result.driverId}
+                            </td>
+                            <td className="p-2">
+                                <input 
+                                    type="number" 
+                                    value={result.points} 
+                                    onChange={(e) => handleResultChange(idx, 'points', parseInt(e.target.value))}
+                                    className="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center font-bold"
+                                />
+                            </td>
+                            <td className="p-2">
+                                <input 
+                                    type="checkbox" 
+                                    checked={result.fastestLap} 
+                                    onChange={(e) => handleResultChange(idx, 'fastestLap', e.target.checked)}
+                                    className="w-5 h-5 rounded border-slate-700 bg-slate-900 text-purple-500 focus:ring-purple-500"
+                                />
+                            </td>
+                            <td className="p-2">
+                                <input 
+                                    type="text" 
+                                    value={result.raceTime} 
+                                    onChange={(e) => handleResultChange(idx, 'raceTime', e.target.value)}
+                                    className="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-400 font-mono text-xs"
+                                />
+                            </td>
+                            <td className="p-2">
+                                <input 
+                                    type="number" 
+                                    value={result.pitStops} 
+                                    onChange={(e) => handleResultChange(idx, 'pitStops', parseInt(e.target.value))}
+                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-400 font-mono text-xs text-center"
+                                />
+                            </td>
+                          </tr>
+                        );
+                    })}
                   </tbody>
                 </table>
               </div>

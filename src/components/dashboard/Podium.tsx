@@ -31,22 +31,53 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
     <div className="py-12 relative">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl h-64 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+      
+      {/* Floating Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full z-0">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 50, x: 0 }}
+            animate={{ 
+              opacity: [0, 0.4, 0], 
+              y: -150, 
+              x: (Math.random() - 0.5) * 50 
+            }}
+            transition={{ 
+              duration: 3 + Math.random() * 4, 
+              repeat: Infinity, 
+              delay: Math.random() * 5,
+              ease: "easeOut" 
+            }}
+            className="absolute bottom-0 w-1 h-1 bg-white/20 rounded-full"
+            style={{ left: `${10 + Math.random() * 80}%` }}
+          />
+        ))}
+      </div>
 
-      <motion.h2 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center text-4xl font-black italic text-white mb-16 uppercase tracking-widest relative z-10"
-      >
-        {isSeasonFinished ? (
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse drop-shadow-lg">
-                🏆 PODIO FINAL 🏆
-            </span>
-        ) : (
-            <span className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                LIDERAZGO DEL CAMPEONATO
-            </span>
-        )}
-      </motion.h2>
+      <div className="relative z-10 mb-24">
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+             <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
+        </div>
+        <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center relative"
+        >
+            <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-widest relative z-10 py-4">
+                {isSeasonFinished ? (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse drop-shadow-lg">
+                        🏆 PODIO FINAL 🏆
+                    </span>
+                ) : (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                        LUCHA POR EL CAMPEONATO
+                    </span>
+                )}
+            </h2>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-12 bg-blue-500/20 blur-xl rounded-full -z-10"></div>
+        </motion.div>
+      </div>
 
       <motion.div
         variants={containerVariants}
@@ -62,13 +93,13 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥈</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-slate-400/20 to-transparent z-0"></div>
               </div>
-              <div className="absolute -top-4 -right-2 bg-slate-300 text-slate-900 text-xs font-black px-2 py-1 rounded shadow-lg rotate-12">
+              <div className="absolute -top-2 -right-2 bg-slate-300 text-slate-900 text-xs font-black px-2 py-1 rounded shadow-lg rotate-12 z-20">
                   P2
               </div>
            </div>
            
            <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-slate-300 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end">
-              <h3 className="text-xl font-black text-white italic uppercase tracking-wider mb-1 truncate">{topThree[1].name}</h3>
+              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans">{topThree[1].name}</h3>
               <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[1].team}</p>
               <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5">
                   <span className="text-2xl font-black text-slate-300 font-mono">{topThree[1].points}</span>
@@ -81,8 +112,8 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
       {/* 1st Place */}
       {topThree[0] && (
         <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-12 md:mt-0 group relative w-full">
-           <div className="relative mb-6">
-              <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-20 h-20 z-20">
+           <div className="relative mb-8">
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-24 h-24 z-20">
                   <Crown className="w-full h-full text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] animate-[bounce_3s_infinite]" />
               </div>
               
@@ -98,7 +129,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
 
            <div className="w-full bg-gradient-to-t from-yellow-900/20 to-slate-900/90 border-t-4 border-yellow-400 rounded-t-2xl p-8 text-center backdrop-blur-md shadow-[0_0_40px_rgba(250,204,21,0.15)] transform hover:-translate-y-3 transition-transform duration-300 min-h-[220px] flex flex-col justify-end relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent pointer-events-none"></div>
-              <h3 className="text-3xl font-black text-white italic uppercase tracking-wider mb-1 truncate drop-shadow-md">{topThree[0].name}</h3>
+              <h3 className="text-3xl font-bold text-white uppercase tracking-tight mb-1 truncate drop-shadow-md font-sans">{topThree[0].name}</h3>
               <p className="text-sm text-yellow-500/80 font-mono mb-6 uppercase tracking-widest font-bold">{topThree[0].team}</p>
               <div className="mt-auto bg-yellow-500/10 rounded-xl py-3 border border-yellow-500/20">
                   <span className="text-4xl font-black text-yellow-400 font-mono">{topThree[0].points}</span>
@@ -116,13 +147,13 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥉</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-orange-700/20 to-transparent z-0"></div>
               </div>
-              <div className="absolute -top-4 -left-2 bg-orange-700 text-white text-xs font-black px-2 py-1 rounded shadow-lg -rotate-12">
+              <div className="absolute -top-2 -left-2 bg-orange-700 text-white text-xs font-black px-2 py-1 rounded shadow-lg -rotate-12 z-20">
                   P3
               </div>
            </div>
            
            <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-orange-700 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end">
-              <h3 className="text-xl font-black text-white italic uppercase tracking-wider mb-1 truncate">{topThree[2].name}</h3>
+              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans">{topThree[2].name}</h3>
               <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[2].team}</p>
               <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5">
                   <span className="text-2xl font-black text-orange-400 font-mono">{topThree[2].points}</span>

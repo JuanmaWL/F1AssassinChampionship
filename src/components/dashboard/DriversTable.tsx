@@ -51,10 +51,10 @@ export function DriversTable({ drivers }: DriversTableProps) {
           <table className="w-full text-left border-collapse">
               <thead>
                   <tr className="bg-slate-950/50 text-xs uppercase tracking-wider text-slate-500 font-medium">
-                      <th className="py-4 px-6 w-16 text-center">Pos</th>
+                      <th className="py-4 px-6 w-16 text-center">POSICIÓN</th>
                       <th className="py-4 px-6">Piloto</th>
                       <th className="py-4 px-6 hidden md:table-cell">Equipo</th>
-                      <th className="py-4 px-6 text-center" title="Vueltas Rápidas">VR</th>
+                      <th className="py-4 px-6 text-center" title="Vueltas Rápidas">Vueltas Rápidas</th>
                       <th className="py-4 px-6 text-right">Puntos</th>
                   </tr>
               </thead>

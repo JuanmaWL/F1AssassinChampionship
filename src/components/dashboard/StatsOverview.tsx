@@ -15,7 +15,15 @@ export function StatsOverview({ data }: StatsOverviewProps) {
   const pointsRemaining = remainingRaces * 25; // Max points per race (25, no FL point in 2025)
   const isSeasonFinished = remainingRaces === 0;
 
-  const nextRace = data.races.find(r => r.status === 'pending');
+  // Find the next race based on time (assuming 2h duration) to auto-advance the timer
+  // even if the status hasn't been manually updated yet.
+  const nextRace = [...data.races]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .find(r => {
+        const raceEnd = new Date(r.date).getTime() + (2 * 60 * 60 * 1000); // +2 hours
+        return raceEnd > new Date().getTime();
+    });
+
   const [timeLeft, setTimeLeft] = useState<string>('');
 
   useEffect(() => {
