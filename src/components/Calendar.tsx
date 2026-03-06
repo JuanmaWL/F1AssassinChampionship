@@ -25,7 +25,7 @@ export function Calendar({ data }: CalendarProps) {
         </h2>
         
         {/* View Toggle */}
-        <div className="bg-slate-900 p-1 rounded-lg border border-white/10 flex items-center self-start md:self-auto">
+        <div className="bg-slate-900 p-1 rounded-lg border border-white/10 hidden md:flex items-center self-start md:self-auto">
             <button
                 onClick={() => setViewMode('list')}
                 className={cn(
@@ -79,9 +79,16 @@ export function Calendar({ data }: CalendarProps) {
             />
 
             {/* Watermark Number */}
-            <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-[10rem] font-black italic text-white/5 pointer-events-none select-none z-0 leading-none overflow-hidden">
+            <div className="absolute right-2 bottom-0 text-[120px] leading-none opacity-5 font-black italic select-none pointer-events-none text-white">
                 {index + 1}
             </div>
+            
+            {/* Checkered Flag for Completed Races */}
+            {race.status === 'completed' && (
+                <div className="absolute top-4 right-4 text-2xl opacity-50 group-hover:opacity-100 transition-opacity filter drop-shadow-lg">
+                    🏁
+                </div>
+            )}
             
             {/* Status Indicator Strip */}
             <div className={cn(
@@ -251,7 +258,10 @@ export function Calendar({ data }: CalendarProps) {
                           <td className="py-3 px-2 text-right font-mono text-sm text-slate-300">
                             {result.dnf ? '-' : (result.raceTime || '-')}
                           </td>
-                          <td className="py-3 px-2 text-right font-mono text-sm text-purple-400">
+                          <td className={cn(
+                              "py-3 px-2 text-right font-mono text-sm",
+                              result.fastestLap ? "text-purple-400 font-bold" : "text-slate-500"
+                          )}>
                             {result.dnf ? '-' : (result.fastestLapTime || '-')}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">

@@ -16,7 +16,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
       <motion.h2 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center text-3xl font-black italic text-white mb-12 uppercase tracking-widest"
+        className="text-center text-3xl font-black italic text-white mb-20 uppercase tracking-widest"
       >
         {isSeasonFinished ? (
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse">
@@ -38,7 +38,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
         <div className="order-2 md:order-1 flex flex-col items-center group">
            <div className="relative">
               <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-slate-900 shadow-lg z-10 relative overflow-hidden" style={{ borderColor: topThree[1].teamColor }}>
-                 <span className="text-3xl font-black text-slate-300 z-10">2</span>
+                 <span className="text-5xl z-10 filter drop-shadow-lg">🥈</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-black/50 to-transparent z-0"></div>
               </div>
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-800 text-xs px-3 py-1 rounded-full text-slate-300 border border-slate-700 shadow-md whitespace-nowrap z-20">
@@ -85,9 +85,9 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
            </div>
 
            <div className="relative z-10">
-              <Crown className="absolute -top-10 left-1/2 -translate-x-1/2 text-yellow-500 w-10 h-10 animate-bounce drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
+              <Crown className="absolute -top-12 left-1/2 -translate-x-1/2 text-yellow-500 w-12 h-12 animate-bounce drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
               <div className="w-32 h-32 rounded-full border-4 border-yellow-500 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(234,179,8,0.2)] z-10 relative overflow-hidden">
-                 <span className="text-5xl font-black text-yellow-500 z-10">1</span>
+                 <span className="text-7xl z-10 filter drop-shadow-lg">🥇</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 to-transparent z-0"></div>
               </div>
               <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-black font-black text-sm px-4 py-1.5 rounded-full border border-yellow-400 shadow-lg whitespace-nowrap z-20">
@@ -112,7 +112,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
         <div className="order-3 md:order-3 flex flex-col items-center group">
            <div className="relative">
               <div className="w-24 h-24 rounded-full border-4 border-slate-800 flex items-center justify-center bg-slate-900 shadow-lg z-10 relative overflow-hidden" style={{ borderColor: topThree[2].teamColor }}>
-                 <span className="text-3xl font-black text-orange-700 z-10">3</span>
+                 <span className="text-5xl z-10 filter drop-shadow-lg">🥉</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-black/50 to-transparent z-0"></div>
               </div>
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-800 text-xs px-3 py-1 rounded-full text-slate-300 border border-slate-700 shadow-md whitespace-nowrap z-20">
@@ -131,7 +131,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
            />
         </div>
       )}
-    </motion.div>
+      </motion.div>
     </div>
   );
 }

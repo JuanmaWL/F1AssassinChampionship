@@ -92,18 +92,18 @@ const initialConstructors = [
 
 // Races Definition (2025 Dates)
 const racesDef = [
-  { id: 'r1', name: 'Gran Premio de China', circuit: 'Shanghai International Circuit', date: '2025-04-21' },
-  { id: 'r2', name: 'Gran Premio de Singapur', circuit: 'Marina Bay Street Circuit', date: '2025-09-22' },
-  { id: 'r3', name: 'Gran Premio de Australia', circuit: 'Albert Park Circuit', date: '2025-03-24' },
-  { id: 'r4', name: 'Gran Premio de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2025-12-08' },
-  { id: 'r5', name: 'Gran Premio de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2025-11-03' },
-  { id: 'r6', name: 'Gran Premio de Azerbaiyán', circuit: 'Baku City Circuit', date: '2025-09-15' },
-  { id: 'r7', name: 'Gran Premio de Japón', circuit: 'Suzuka International Racing Course', date: '2025-04-07' },
-  { id: 'r8', name: 'Gran Premio de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2025-07-28' },
-  { id: 'r9', name: 'Gran Premio de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2025-07-07' },
-  { id: 'r10', name: 'Gran Premio de Bahrein', circuit: 'Bahrain International Circuit', date: '2025-03-02' },
-  { id: 'r11', name: 'Gran Premio de Mónaco', circuit: 'Circuit de Monaco', date: '2025-05-26' },
-  { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-06-23' },
+  { id: 'r1', name: 'Gran Premio de China', circuit: 'Shanghai International Circuit', date: '2025-03-02' },
+  { id: 'r2', name: 'Gran Premio de Singapur', circuit: 'Marina Bay Street Circuit', date: '2025-03-16' },
+  { id: 'r3', name: 'Gran Premio de Australia', circuit: 'Albert Park Circuit', date: '2025-03-30' },
+  { id: 'r4', name: 'Gran Premio de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2025-04-13' },
+  { id: 'r5', name: 'Gran Premio de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2025-04-27' },
+  { id: 'r6', name: 'Gran Premio de Azerbaiyán', circuit: 'Baku City Circuit', date: '2025-05-11' },
+  { id: 'r7', name: 'Gran Premio de Japón', circuit: 'Suzuka International Racing Course', date: '2025-05-25' },
+  { id: 'r8', name: 'Gran Premio de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2025-06-08' },
+  { id: 'r9', name: 'Gran Premio de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2025-06-22' },
+  { id: 'r10', name: 'Gran Premio de Bahrein', circuit: 'Bahrain International Circuit', date: '2025-07-06' },
+  { id: 'r11', name: 'Gran Premio de Mónaco', circuit: 'Circuit de Monaco', date: '2025-07-20' },
+  { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-08-03' },
 ];
 
 // Simulate Championship - Only first 3 races completed
