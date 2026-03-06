@@ -14,6 +14,7 @@ export interface Constructor {
   name: string;
   color: TeamColor;
   points: number;
+  logoUrl?: string;
 }
 
 export type RaceStatus = 'completed' | 'pending';
@@ -24,6 +25,7 @@ export interface RaceResult {
   points: number;
   fastestLap: boolean;
   dnf: boolean;
+  raceTime?: string; // e.g., "1:32:45.123" or "+12.456s"
 }
 
 export interface Race {

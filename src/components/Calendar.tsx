@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ChampionshipData, Race, RaceResult } from '../types';
-import { Calendar as CalendarIcon, MapPin, Trophy, ChevronRight, X } from 'lucide-react';
+import { ChampionshipData, Race } from '../types';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '../lib/utils';
+import { cn, formatDate } from '../lib/utils';
 
 interface CalendarProps {
   data: ChampionshipData;
@@ -10,6 +10,7 @@ interface CalendarProps {
 
 export function Calendar({ data }: CalendarProps) {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const getDriverName = (id: string) => data.drivers.find((d) => d.id === id)?.name || id;
   const getTeamColor = (id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff';
@@ -17,43 +18,86 @@ export function Calendar({ data }: CalendarProps) {
 
   return (
     <div className="pb-20">
-      <h2 className="text-3xl font-black italic text-white mb-8 uppercase tracking-tighter flex items-center gap-3">
-        <CalendarIcon className="w-8 h-8 text-red-500" />
-        Race Calendar
-      </h2>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+            <CalendarIcon className="w-8 h-8 text-red-500" />
+            Calendario de Carreras
+        </h2>
+        
+        {/* View Toggle */}
+        <div className="bg-slate-900 p-1 rounded-lg border border-white/10 flex items-center self-start md:self-auto">
+            <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                    "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                    viewMode === 'list' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                )}
+            >
+                <List size={18} />
+                Lista
+            </button>
+            <button
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                    "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                    viewMode === 'grid' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                )}
+            >
+                <LayoutGrid size={18} />
+                Grid
+            </button>
+        </div>
+      </div>
 
-      <div className="space-y-4">
+      <div className={cn(
+          "gap-4",
+          viewMode === 'list' ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+      )}>
         {data.races.map((race, index) => (
           <motion.div
             key={race.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             onClick={() => race.status === 'completed' && setSelectedRace(race)}
             className={cn(
-              "relative overflow-hidden rounded-xl border p-6 transition-all duration-300 group",
+              "relative overflow-hidden rounded-xl border transition-all duration-300 group",
               race.status === 'completed'
                 ? "bg-slate-900/60 border-white/10 hover:border-red-500/50 cursor-pointer hover:bg-slate-800/80"
-                : "bg-slate-950/40 border-white/5 opacity-75"
+                : "bg-slate-950/40 border-white/5 opacity-75",
+              viewMode === 'list' ? "p-6" : "p-6 flex flex-col h-full min-h-[200px]"
             )}
           >
+            {/* Circuit Background Image (Fictional/Placeholder) */}
+            <div 
+                className="absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500"
+                style={{
+                    backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                }}
+            />
+            
             {/* Status Indicator Strip */}
             <div className={cn(
-              "absolute left-0 top-0 bottom-0 w-1.5",
+              "absolute left-0 top-0 bottom-0 w-1.5 z-10",
               race.status === 'completed' ? "bg-green-500" : "bg-slate-700"
             )} />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pl-4">
+            <div className={cn(
+                "flex justify-between gap-4 pl-4 h-full relative z-10",
+                viewMode === 'list' ? "flex-col md:flex-row md:items-center" : "flex-col"
+            )}>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-white/5">
-                    R{index + 1}
-                  </span>
                   <span className="text-sm font-mono text-red-400 uppercase tracking-widest">
-                    {race.date}
+                    {formatDate(race.date)}
                   </span>
                 </div>
-                <h3 className="text-xl font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors">
+                <h3 className={cn(
+                    "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors",
+                    viewMode === 'list' ? "text-xl" : "text-2xl"
+                )}>
                   {race.name}
                 </h3>
                 <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
@@ -63,19 +107,23 @@ export function Calendar({ data }: CalendarProps) {
               </div>
 
               {race.status === 'completed' && race.results && (
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                    "flex items-center gap-4",
+                    viewMode === 'grid' ? "mt-auto pt-4 border-t border-white/5 justify-between" : ""
+                )}>
                   <div className="flex -space-x-3">
                     {race.results.slice(0, 3).map((result, i) => (
                       <div
                         key={result.driverId}
                         className={cn(
-                          "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative z-10",
-                          i === 0 ? "w-12 h-12 z-20" : ""
+                          "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative z-10 shadow-lg",
+                          i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
+                          i === 1 ? "bg-slate-300 text-black border-slate-400" :
+                          "bg-orange-700 text-white border-orange-600"
                         )}
-                        style={{ backgroundColor: getTeamColor(result.driverId) }}
                         title={getDriverName(result.driverId)}
                       >
-                        {i === 0 ? '1st' : i === 1 ? '2nd' : '3rd'}
+                        {i === 0 ? '1' : i === 1 ? '2' : '3'}
                       </div>
                     ))}
                   </div>
@@ -84,8 +132,12 @@ export function Calendar({ data }: CalendarProps) {
               )}
               
               {race.status === 'pending' && (
-                 <div className="px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-mono text-slate-400 uppercase">
-                    Upcoming
+                 <div className={cn(
+                    viewMode === 'grid' ? "mt-auto pt-4" : ""
+                 )}>
+                    <div className="inline-block px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-mono text-slate-400 uppercase backdrop-blur-sm">
+                        Pendiente
+                    </div>
                  </div>
               )}
             </div>
@@ -107,12 +159,20 @@ export function Calendar({ data }: CalendarProps) {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-slate-900 border border-white/10 w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-2xl shadow-2xl"
+              className="bg-slate-900 border border-white/10 w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-6 flex justify-between items-start z-10">
                 <div>
-                  <h3 className="text-2xl font-black italic text-white uppercase tracking-tight">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">
+                        Ronda {data.races.findIndex(r => r.id === selectedRace.id) + 1}
+                    </span>
+                    <span className="text-slate-400 text-sm font-mono">
+                        {formatDate(selectedRace.date)}
+                    </span>
+                  </div>
+                  <h3 className="text-3xl font-black italic text-white uppercase tracking-tight">
                     {selectedRace.name}
                   </h3>
                   <p className="text-slate-400 flex items-center gap-2 text-sm mt-1">
@@ -132,9 +192,10 @@ export function Calendar({ data }: CalendarProps) {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
-                        <th className="py-3 px-2">Pos</th>
-                        <th className="py-3 px-2">Driver</th>
-                        <th className="py-3 px-2">Team</th>
+                        <th className="py-3 px-2 w-12 text-center">Pos</th>
+                        <th className="py-3 px-2">Piloto</th>
+                        <th className="py-3 px-2 hidden sm:table-cell">Equipo</th>
+                        <th className="py-3 px-2 text-right">Tiempo</th>
                         <th className="py-3 px-2 text-right">Pts</th>
                       </tr>
                     </thead>
@@ -144,7 +205,7 @@ export function Calendar({ data }: CalendarProps) {
                           key={result.driverId}
                           className="border-b border-white/5 hover:bg-white/5 transition-colors"
                         >
-                          <td className="py-3 px-2 font-mono text-slate-400">
+                          <td className="py-3 px-2 font-mono text-slate-400 text-center font-bold">
                             {result.position}
                           </td>
                           <td className="py-3 px-2">
@@ -153,18 +214,24 @@ export function Calendar({ data }: CalendarProps) {
                                 className="w-1 h-8 rounded-full"
                                 style={{ backgroundColor: getTeamColor(result.driverId) }}
                               />
-                              <span className="font-bold text-white">
-                                {getDriverName(result.driverId)}
-                              </span>
-                              {result.fastestLap && (
-                                <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 font-mono">
-                                  FL
-                                </span>
-                              )}
+                              <div>
+                                <div className="font-bold text-white flex items-center gap-2">
+                                    {getDriverName(result.driverId)}
+                                    {result.fastestLap && (
+                                        <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 font-mono flex items-center gap-1" title="Vuelta Rápida">
+                                        <Timer size={10} /> VR
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-xs text-slate-500 sm:hidden">{getTeamName(result.driverId)}</div>
+                              </div>
                             </div>
                           </td>
-                          <td className="py-3 px-2 text-sm text-slate-400">
+                          <td className="py-3 px-2 text-sm text-slate-400 hidden sm:table-cell">
                             {getTeamName(result.driverId)}
+                          </td>
+                          <td className="py-3 px-2 text-right font-mono text-sm text-slate-300">
+                            {result.raceTime || '-'}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">
                             +{result.points}

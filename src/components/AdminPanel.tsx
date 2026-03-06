@@ -27,7 +27,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       setIsAuthenticated(true);
       setError(null);
     } else {
-      setError('Invalid password');
+      setError('Contraseña incorrecta');
     }
   };
 
@@ -45,7 +45,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       await parseResultsWithAI(file);
     } catch (err) {
       console.error(err);
-      setError('Failed to parse image. Please try again or enter manually.');
+      setError('Error al procesar la imagen. Por favor intenta de nuevo o ingresa manualmente.');
     } finally {
       setIsProcessing(false);
     }
@@ -78,20 +78,20 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
 
       const ai = new GoogleGenAI({ apiKey });
       
+      const driversList = data.drivers.map(d => d.name).join(', ');
+      
       const prompt = `
-        Analyze this F1 race results image. 
-        Extract the race results into a JSON array.
-        For each row, I need:
-        - "driverName": The name of the driver (string)
-        - "position": The finishing position (number)
-        - "points": The points awarded (number)
-        - "fastestLap": true if they got fastest lap, else false (boolean)
+        Analiza esta imagen de resultados de carrera de F1.
+        Extrae los resultados en un array JSON.
+        Para cada fila necesito:
+        - "driverName": El nombre del piloto (string)
+        - "position": La posición final (number)
+        - "points": Los puntos ganados (number)
+        - "fastestLap": true si obtuvo vuelta rápida, false si no (boolean)
         
-        The known drivers in the championship are:
-        ${data.drivers.map(d => d.name).join(', ')}
+        Extrae las posiciones de la imagen haciendo coincidir los nombres que leas con esta lista exacta de nicks: ${driversList}. Usa fuzzy matching si están un poco borrosos.
         
-        Map the extracted names to the closest matching known driver name.
-        Return ONLY the JSON array, no markdown formatting.
+        Devuelve SOLO el array JSON, sin formato markdown.
       `;
 
       const response = await ai.models.generateContent({
@@ -129,12 +129,12 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       });
 
       setParsedResults(mappedResults);
-      setSuccess("AI successfully parsed the results! Please review below.");
+      setSuccess("¡IA procesó los resultados con éxito! Por favor revisa abajo.");
 
     } catch (err) {
       console.error("AI Parsing Error:", err);
       // Fallback mock data for demo purposes if API fails or key is missing
-      setError("AI Parsing failed (Check API Key). Loading mock data for demo.");
+      setError("Fallo en IA (Verifica API Key). Cargando datos de prueba.");
       
       // Mock fallback
       setTimeout(() => {
@@ -147,14 +147,14 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
          })).slice(0, 10);
          setParsedResults(mockParsed);
          setError(null);
-         setSuccess("Loaded mock data (Demo Mode)");
+         setSuccess("Datos de prueba cargados (Modo Demo)");
       }, 1000);
     }
   };
 
   const handleSave = () => {
     if (!selectedRaceId || !parsedResults) {
-      setError("Please select a race and ensure results are parsed.");
+      setError("Por favor selecciona una carrera y asegura que hay resultados.");
       return;
     }
 
@@ -186,7 +186,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
       constructors: updatedConstructors
     });
 
-    setSuccess("Championship data updated successfully!");
+    setSuccess("¡Datos del campeonato actualizados con éxito!");
     setParsedResults(null);
     setPreviewUrl(null);
     setSelectedRaceId('');
@@ -201,14 +201,14 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
               <Lock className="w-8 h-8 text-red-500" />
             </div>
           </div>
-          <h2 className="text-2xl font-black italic text-white text-center mb-6 uppercase">Admin Access</h2>
+          <h2 className="text-2xl font-black italic text-white text-center mb-6 uppercase">Acceso Admin</h2>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter Password (admin123)"
+                placeholder="Ingresa Contraseña (admin123)"
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
               />
             </div>
@@ -217,7 +217,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
               type="submit"
               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors"
             >
-              Unlock Panel
+              Desbloquear Panel
             </button>
           </form>
         </div>
@@ -229,20 +229,20 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
     <div className="pb-20 max-w-4xl mx-auto">
       <h2 className="text-3xl font-black italic text-white mb-8 uppercase tracking-tighter flex items-center gap-3">
         <Upload className="w-8 h-8 text-red-500" />
-        Result Processor
+        Procesador de Resultados
       </h2>
 
       <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 mb-8">
         <div className="grid gap-6">
           {/* Race Selection */}
           <div>
-            <label className="block text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Select Race</label>
+            <label className="block text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Seleccionar Carrera</label>
             <select
               value={selectedRaceId}
               onChange={(e) => setSelectedRaceId(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500"
             >
-              <option value="">-- Select a Race --</option>
+              <option value="">-- Selecciona una Carrera --</option>
               {data.races.filter(r => r.status === 'pending').map(r => (
                 <option key={r.id} value={r.id}>{r.name} - {r.date}</option>
               ))}
@@ -268,7 +268,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                 </div>
               )}
               <span className="text-slate-300 font-medium">
-                {isProcessing ? 'Analyzing Image with Gemini AI...' : 'Click to upload Race Result Screenshot'}
+                {isProcessing ? 'Analizando Imagen con Gemini AI...' : 'Click para subir captura de resultados'}
               </span>
               {isProcessing && <Loader2 className="animate-spin text-red-500" />}
             </label>
@@ -291,15 +291,15 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
           {/* Parsed Results Editor */}
           {parsedResults && (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white italic uppercase">Review Data</h3>
+              <h3 className="text-xl font-bold text-white italic uppercase">Revisar Datos</h3>
               <div className="bg-slate-950 rounded-xl border border-white/5 overflow-hidden">
                 <table className="w-full text-left">
                   <thead className="bg-slate-900 text-slate-400 text-xs uppercase">
                     <tr>
                       <th className="p-3">Pos</th>
-                      <th className="p-3">Driver ID</th>
-                      <th className="p-3">Points</th>
-                      <th className="p-3">FL</th>
+                      <th className="p-3">Piloto ID</th>
+                      <th className="p-3">Puntos</th>
+                      <th className="p-3">VR</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -309,7 +309,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                         <td className="p-3 text-slate-300">{result.driverId}</td>
                         <td className="p-3 text-white font-bold">{result.points}</td>
                         <td className="p-3">
-                          {result.fastestLap && <span className="text-purple-400 text-xs border border-purple-500/30 px-1 rounded">FASTEST</span>}
+                          {result.fastestLap && <span className="text-purple-400 text-xs border border-purple-500/30 px-1 rounded">RÁPIDA</span>}
                         </td>
                       </tr>
                     ))}
@@ -323,7 +323,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                 className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
               >
                 <Save size={20} />
-                Confirm & Update Championship
+                Confirmar y Actualizar Campeonato
               </button>
             </div>
           )}

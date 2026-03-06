@@ -26,7 +26,7 @@ export default function App() {
           </h1>
         </div>
         <div className="text-xs font-mono text-slate-500 hidden md:block">
-          SEASON 2024 // V1.0
+          TEMPORADA 2025 // V1.0
         </div>
       </header>
 
@@ -48,7 +48,7 @@ export default function App() {
             )}
           >
             <LayoutDashboard size={24} strokeWidth={activeTab === 'dashboard' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Standings</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Clasificación</span>
           </button>
           
           <button
@@ -59,7 +59,7 @@ export default function App() {
             )}
           >
             <CalendarIcon size={24} strokeWidth={activeTab === 'calendar' ? 2.5 : 2} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Calendar</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Calendario</span>
           </button>
 
           <button
