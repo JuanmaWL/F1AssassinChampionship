@@ -1,20 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { Calendar } from './components/Calendar';
 import { AdminPanel } from './components/AdminPanel';
+import { IntroAnimation } from './components/IntroAnimation';
 import { mockData } from './mockData';
 import { ChampionshipData } from './types';
-import { LayoutDashboard, Calendar as CalendarIcon, Settings, Trophy } from 'lucide-react';
+import { LayoutDashboard, Calendar as CalendarIcon, Settings, Trophy, Play } from 'lucide-react';
 import { cn } from './lib/utils';
+import { AnimatePresence } from 'motion/react';
 
 type Tab = 'dashboard' | 'calendar' | 'admin';
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [data, setData] = useState<ChampionshipData>(mockData);
 
+  // Prevent scrolling during intro
+  useEffect(() => {
+    if (showIntro) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [showIntro]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-red-500/30">
+      <AnimatePresence>
+        {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-white/5 h-16 flex items-center justify-between px-4 md:px-8">
         <div className="flex items-center gap-2">
@@ -25,8 +41,17 @@ export default function App() {
             F1 <span className="text-red-500">Assassins</span>
           </h1>
         </div>
-        <div className="text-xs font-mono text-slate-500 hidden md:block">
-          TEMPORADA 2025 // V1.0
+        <div className="flex items-center gap-4">
+            <div className="text-xs font-mono text-slate-500 hidden md:block">
+            TEMPORADA 2025 // V1.0
+            </div>
+            <button 
+            onClick={() => setShowIntro(true)}
+            className="text-slate-800 hover:text-red-500 transition-colors p-1 opacity-30 hover:opacity-100"
+            title="Reproducir Intro"
+            >
+            <Play size={12} />
+            </button>
         </div>
       </header>
 

@@ -59,119 +59,132 @@ export function Calendar({ data }: CalendarProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            onClick={() => race.status === 'completed' && setSelectedRace(race)}
             className={cn(
-              "relative overflow-hidden rounded-xl border transition-all duration-300 group",
-              race.status === 'completed'
-                ? "bg-slate-900/60 border-white/10 hover:border-red-500/50 cursor-pointer hover:bg-slate-800/80"
-                : "bg-slate-950/40 border-white/5 opacity-75",
-              viewMode === 'list' ? "p-6" : "p-6 flex flex-col h-full min-h-[200px]"
+              "group",
+              viewMode === 'list' ? "flex items-center gap-6" : "h-full"
             )}
           >
-            {/* Circuit Background Image (Fictional/Placeholder) */}
-            <div 
-                className="absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500"
-                style={{
-                    backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                }}
-            />
+            {/* List View Number - Outside */}
+            {viewMode === 'list' && (
+                <div className="text-5xl font-black italic text-slate-800 group-hover:text-red-600 transition-colors duration-300 min-w-[3.5rem] text-right select-none">
+                    {index + 1}
+                </div>
+            )}
 
-            {/* Watermark Number */}
-            <div className={cn(
-                "absolute font-serif font-black select-none pointer-events-none text-white z-0 transition-all duration-300",
-                viewMode === 'grid' 
-                    ? "bottom-[-20px] right-[-10px] text-[140px] leading-none opacity-10" 
-                    : "left-[-10px] bottom-[-20px] text-[120px] leading-none opacity-[0.05]"
-            )}>
-                {index + 1}
-            </div>
-            
-            {/* Checkered Flag Fade for Completed Races */}
-            {race.status === 'completed' && (
+            <div
+                onClick={() => race.status === 'completed' && setSelectedRace(race)}
+                className={cn(
+                  "relative overflow-hidden rounded-xl border transition-all duration-300 w-full",
+                  // Hover Animations
+                  "hover:shadow-2xl hover:shadow-red-900/10 hover:-translate-y-1",
+                  race.status === 'completed'
+                    ? "bg-slate-900/60 border-white/10 hover:border-red-500/50 cursor-pointer hover:bg-slate-800/80"
+                    : "bg-slate-950/40 border-white/5 opacity-75",
+                  viewMode === 'list' ? "p-6" : "p-6 flex flex-col h-full min-h-[200px]"
+                )}
+            >
+                {/* Circuit Background Image (Fictional/Placeholder) */}
                 <div 
-                    className="absolute inset-y-0 right-0 w-1/2 opacity-20 pointer-events-none z-0"
+                    className="absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500"
                     style={{
-                        backgroundImage: `
-                            linear-gradient(to right, transparent, #000),
-                            repeating-conic-gradient(#333 0% 25%, transparent 0% 50%)
-                        `,
-                        backgroundSize: '100% 100%, 20px 20px',
-                        maskImage: 'linear-gradient(to left, black, transparent)'
+                        backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
                     }}
                 />
-            )}
-            
-            {/* Status Indicator Strip */}
-            <div className={cn(
-              "absolute left-0 top-0 bottom-0 w-1.5 z-10",
-              race.status === 'completed' ? "bg-green-500" : "bg-slate-700"
-            )} />
 
-            <div className={cn(
-                "flex justify-between gap-4 pl-4 h-full relative z-10",
-                viewMode === 'list' ? "flex-col md:flex-row md:items-center" : "flex-col"
-            )}>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-sm font-mono text-red-400 uppercase tracking-widest">
-                    {formatDate(race.date)}
-                  </span>
-                </div>
-                <h3 className={cn(
-                    "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors flex items-center gap-3",
-                    viewMode === 'list' ? "text-xl" : "text-2xl"
-                )}>
-                  {race.name}
-                  {race.flagCode && (
-                      <img 
-                          src={`https://flagcdn.com/w40/${race.flagCode}.png`} 
-                          alt={race.flagCode} 
-                          className="h-5 w-auto rounded shadow-sm object-cover"
-                      />
-                  )}
-                </h3>
-                <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
-                  <MapPin size={14} />
-                  {race.circuit}
-                </div>
-              </div>
-
-              {race.status === 'completed' && race.results && (
-                <div className={cn(
-                    "flex items-center gap-4",
-                    viewMode === 'grid' ? "mt-auto pt-4 border-t border-white/5 justify-between" : ""
-                )}>
-                  <div className="flex -space-x-3">
-                    {race.results.slice(0, 3).map((result, i) => (
-                      <div
-                        key={result.driverId}
-                        className={cn(
-                          "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative z-10 shadow-lg",
-                          i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
-                          i === 1 ? "bg-slate-300 text-black border-slate-400" :
-                          "bg-orange-700 text-white border-orange-600"
-                        )}
-                        title={getDriverName(result.driverId)}
-                      >
-                        {i === 0 ? '1' : i === 1 ? '2' : '3'}
-                      </div>
-                    ))}
-                  </div>
-                  <ChevronRight className="text-slate-600 group-hover:text-white transition-colors" />
-                </div>
-              )}
-              
-              {race.status === 'pending' && (
-                 <div className={cn(
-                    viewMode === 'grid' ? "mt-auto pt-4" : ""
-                 )}>
-                    <div className="inline-block px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-mono text-slate-400 uppercase backdrop-blur-sm">
-                        Pendiente
+                {/* Grid View Number - Inside (Improved Position) */}
+                {viewMode === 'grid' && (
+                    <div className="absolute -bottom-6 -right-2 text-[120px] leading-none font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
+                        {index + 1}
                     </div>
-                 </div>
-              )}
+                )}
+                
+                {/* Checkered Flag Fade for Completed Races */}
+                {race.status === 'completed' && (
+                    <div 
+                        className="absolute inset-y-0 right-0 w-1/2 opacity-20 pointer-events-none z-0"
+                        style={{
+                            backgroundImage: `
+                                linear-gradient(to right, transparent, #000),
+                                repeating-conic-gradient(#333 0% 25%, transparent 0% 50%)
+                            `,
+                            backgroundSize: '100% 100%, 20px 20px',
+                            maskImage: 'linear-gradient(to left, black, transparent)'
+                        }}
+                    />
+                )}
+                
+                {/* Status Indicator Strip */}
+                <div className={cn(
+                  "absolute left-0 top-0 bottom-0 w-1.5 z-10 transition-all duration-300 group-hover:w-2",
+                  race.status === 'completed' ? "bg-green-500 group-hover:bg-green-400" : "bg-slate-700 group-hover:bg-slate-600"
+                )} />
+
+                <div className={cn(
+                    "flex justify-between gap-4 pl-4 h-full relative z-10",
+                    viewMode === 'list' ? "flex-col md:flex-row md:items-center" : "flex-col"
+                )}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-sm font-mono text-red-400 uppercase tracking-widest">
+                        {formatDate(race.date)}
+                      </span>
+                    </div>
+                    <h3 className={cn(
+                        "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors flex items-center gap-3",
+                        viewMode === 'list' ? "text-xl" : "text-2xl"
+                    )}>
+                      {race.name}
+                      {race.flagCode && (
+                          <img 
+                              src={`https://flagcdn.com/w40/${race.flagCode}.png`} 
+                              alt={race.flagCode} 
+                              className="h-5 w-auto rounded shadow-sm object-cover"
+                          />
+                      )}
+                    </h3>
+                    <div className="flex items-center gap-2 text-slate-400 text-sm mt-1">
+                      <MapPin size={14} />
+                      {race.circuit}
+                    </div>
+                  </div>
+
+                  {race.status === 'completed' && race.results && (
+                    <div className={cn(
+                        "flex items-center gap-4",
+                        viewMode === 'grid' ? "mt-auto pt-4 border-t border-white/5 justify-between" : ""
+                    )}>
+                      <div className="flex -space-x-3">
+                        {race.results.slice(0, 3).map((result, i) => (
+                          <div
+                            key={result.driverId}
+                            className={cn(
+                              "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative z-10 shadow-lg transition-transform hover:scale-110 hover:z-30",
+                              i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
+                              i === 1 ? "bg-slate-300 text-black border-slate-400" :
+                              "bg-orange-700 text-white border-orange-600"
+                            )}
+                            title={getDriverName(result.driverId)}
+                          >
+                            {i === 0 ? '1' : i === 1 ? '2' : '3'}
+                          </div>
+                        ))}
+                      </div>
+                      <ChevronRight className="text-slate-600 group-hover:text-white transition-colors transform group-hover:translate-x-1" />
+                    </div>
+                  )}
+                  
+                  {race.status === 'pending' && (
+                     <div className={cn(
+                        viewMode === 'grid' ? "mt-auto pt-4" : ""
+                     )}>
+                        <div className="inline-block px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-mono text-slate-400 uppercase backdrop-blur-sm group-hover:bg-slate-700/50 transition-colors">
+                            Pendiente
+                        </div>
+                     </div>
+                  )}
+                </div>
             </div>
           </motion.div>
         ))}

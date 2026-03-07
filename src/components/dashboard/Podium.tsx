@@ -9,6 +9,31 @@ interface PodiumProps {
   isSeasonFinished?: boolean;
 }
 
+const FireParticles = ({ colorClass }: { colorClass: string }) => (
+  <div className="absolute inset-0 overflow-hidden rounded-t-2xl pointer-events-none z-0">
+    {[...Array(12)].map((_, i) => (
+      <motion.div
+        key={i}
+        className={cn("absolute bottom-0 w-1.5 h-1.5 rounded-full blur-[1px]", colorClass)}
+        initial={{ opacity: 0, y: 10, x: 0, scale: 0 }}
+        animate={{ 
+          opacity: [0, 0.6, 0], 
+          y: -120 - Math.random() * 60, 
+          x: (Math.random() - 0.5) * 40,
+          scale: [0, 1.5, 0]
+        }}
+        transition={{ 
+          duration: 1.5 + Math.random() * 1.5, 
+          repeat: Infinity, 
+          delay: Math.random() * 2,
+          ease: "easeOut" 
+        }}
+        style={{ left: `${20 + Math.random() * 60}%` }}
+      />
+    ))}
+  </div>
+);
+
 export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
   const topThree = drivers.slice(0, 3);
 
@@ -32,7 +57,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl h-64 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
       
-      {/* Floating Particles */}
+      {/* Floating Background Particles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full z-0">
         {[...Array(15)].map((_, i) => (
           <motion.div
@@ -55,7 +80,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
         ))}
       </div>
 
-      <div className="relative z-10 mb-24">
+      <div className="relative z-10 mb-16 md:mb-24">
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
              <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
         </div>
@@ -89,7 +114,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
       {topThree[1] && (
         <motion.div variants={itemVariants} className="order-2 md:order-1 flex flex-col items-center group relative z-10">
            <div className="relative mb-4">
-              <div className="w-28 h-28 rounded-full border-4 border-slate-300 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(203,213,225,0.3)] z-10 relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+              <div className="w-28 h-28 rounded-full border-4 border-slate-300 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(203,213,225,0.3)] z-10 relative overflow-hidden group-hover:scale-110 group-hover:shadow-[0_0_50px_rgba(203,213,225,0.5)] transition-all duration-500">
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥈</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-slate-400/20 to-transparent z-0"></div>
               </div>
@@ -98,12 +123,15 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
               </div>
            </div>
            
-           <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-slate-300 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end">
-              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans">{topThree[1].name}</h3>
-              <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[1].team}</p>
-              <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5">
-                  <span className="text-2xl font-black text-slate-300 font-mono">{topThree[1].points}</span>
-                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
+           <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-slate-300 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end relative overflow-hidden group-hover:border-slate-200">
+              <FireParticles colorClass="bg-slate-400" />
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans group-hover:text-slate-200 transition-colors">{topThree[1].name}</h3>
+                <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[1].team}</p>
+                <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5 group-hover:border-slate-500/30 transition-colors">
+                    <span className="text-2xl font-black text-slate-300 font-mono">{topThree[1].points}</span>
+                    <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
+                </div>
               </div>
            </div>
         </motion.div>
@@ -111,9 +139,9 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
 
       {/* 1st Place */}
       {topThree[0] && (
-        <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-12 md:-mt-16 group relative w-full">
-           {/* Floating Status Icon */}
-           <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+        <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-8 md:-mt-12 group relative w-full">
+           {/* Floating Status Icon - Moved closer */}
+           <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
               <motion.div
                 animate={{ 
                     y: [0, -8, 0],
@@ -123,54 +151,58 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
                 {isSeasonFinished ? (
-                    <Trophy className="w-24 h-24 text-yellow-400" strokeWidth={1} />
+                    <Trophy className="w-14 h-14 text-yellow-400" strokeWidth={1} />
                 ) : (
-                    <Crown className="w-24 h-24 text-yellow-400" strokeWidth={1} />
+                    <Crown className="w-14 h-14 text-yellow-400" strokeWidth={1} />
                 )}
               </motion.div>
            </div>
 
-           <div className="relative w-full max-w-[320px]">
-              {/* Avatar Container */}
-              <div className="relative z-20 mx-auto w-48 h-48 mb-[-3rem]">
-                  <div className={`w-full h-full rounded-full border-[6px] flex items-center justify-center bg-slate-950 shadow-[0_0_50px_rgba(234,179,8,0.3)] relative overflow-hidden group-hover:scale-105 transition-transform duration-500 ${isSeasonFinished ? 'border-yellow-500' : 'border-yellow-500'}`}>
-                     <span className="text-8xl z-10 filter drop-shadow-2xl">🥇</span>
+           <div className="relative w-full max-w-[280px]">
+              {/* Avatar Container - Reduced Size */}
+              <div className="relative z-20 mx-auto w-40 h-40 mb-[-2.5rem]">
+                  <div className={`w-full h-full rounded-full border-[6px] flex items-center justify-center bg-slate-950 shadow-[0_0_50px_rgba(234,179,8,0.3)] relative overflow-hidden group-hover:scale-105 group-hover:shadow-[0_0_70px_rgba(234,179,8,0.5)] transition-all duration-500 ${isSeasonFinished ? 'border-yellow-500' : 'border-yellow-500'}`}>
+                     <span className="text-7xl z-10 filter drop-shadow-2xl">🥇</span>
                      
                      {/* Animated Background */}
                      <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(234,179,8,0.5)_360deg)] animate-[spin_4s_linear_infinite] opacity-30"></div>
                      <div className="absolute inset-1 bg-slate-900 rounded-full"></div>
                   </div>
                   
-                  {/* Label Badge */}
-                  <div className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-sm font-black px-6 py-1.5 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.6)] whitespace-nowrap z-30 uppercase tracking-widest border-4 border-slate-900 flex items-center gap-2">
-                      {isSeasonFinished ? <Trophy size={14} strokeWidth={3} /> : <Crown size={14} strokeWidth={3} />}
-                      <span>{isSeasonFinished ? 'CAMPEÓN' : 'LÍDER ACTUAL'}</span>
+                  {/* Label Badge - Repositioned */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-yellow-500 text-black text-xs font-black px-4 py-1 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.6)] whitespace-nowrap z-30 uppercase tracking-widest border-4 border-slate-900 flex items-center gap-2">
+                      {isSeasonFinished ? <Trophy size={12} strokeWidth={3} /> : <Crown size={12} strokeWidth={3} />}
+                      <span>{isSeasonFinished ? 'CAMPEÓN' : 'LÍDER'}</span>
                   </div>
               </div>
 
               {/* Card Content */}
-              <div className={`w-full rounded-[2rem] p-8 pt-16 text-center backdrop-blur-xl shadow-2xl transform transition-all duration-500 group-hover:-translate-y-2 border-t-4 relative overflow-hidden ${
+              <div className={`w-full rounded-[2rem] p-6 pt-14 text-center backdrop-blur-xl shadow-2xl transform transition-all duration-500 group-hover:-translate-y-2 border-t-4 relative overflow-hidden ${
                   isSeasonFinished 
                     ? 'bg-gradient-to-b from-yellow-900/60 to-slate-950 border-yellow-500' 
                     : 'bg-gradient-to-b from-yellow-900/40 to-slate-950 border-yellow-500'
               }`}>
+                  <FireParticles colorClass="bg-yellow-400" />
+                  
                   {/* Background Texture */}
                   <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                   
-                  <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-1 truncate drop-shadow-lg font-sans mt-2 relative z-10">
-                    {topThree[0].name}
-                  </h3>
-                  <p className="text-sm font-mono mb-6 uppercase tracking-[0.3em] font-bold text-yellow-500/80 relative z-10">
-                    {topThree[0].team}
-                  </p>
-                  
-                  <div className="relative z-10 bg-black/40 rounded-xl py-4 border border-yellow-500/20 shadow-inner">
-                      <span className="text-5xl font-black text-yellow-400 font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
-                        {topThree[0].points}
-                      </span>
-                      <span className="text-[10px] text-yellow-600/80 block uppercase font-bold mt-1 tracking-widest">
-                        Puntos Totales
-                      </span>
+                  <div className="relative z-10">
+                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-1 truncate drop-shadow-lg font-sans mt-2 group-hover:text-yellow-100 transition-colors">
+                        {topThree[0].name}
+                    </h3>
+                    <p className="text-xs font-mono mb-6 uppercase tracking-[0.3em] font-bold text-yellow-500/80">
+                        {topThree[0].team}
+                    </p>
+                    
+                    <div className="bg-black/40 rounded-xl py-3 border border-yellow-500/20 shadow-inner group-hover:border-yellow-500/40 transition-colors">
+                        <span className="text-4xl font-black text-yellow-400 font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                            {topThree[0].points}
+                        </span>
+                        <span className="text-[10px] text-yellow-600/80 block uppercase font-bold mt-1 tracking-widest">
+                            Puntos Totales
+                        </span>
+                    </div>
                   </div>
               </div>
            </div>
@@ -181,7 +213,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
       {topThree[2] && (
         <motion.div variants={itemVariants} className="order-3 md:order-3 flex flex-col items-center group relative z-10">
            <div className="relative mb-4">
-              <div className="w-28 h-28 rounded-full border-4 border-orange-700 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(194,65,12,0.3)] z-10 relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
+              <div className="w-28 h-28 rounded-full border-4 border-orange-700 flex items-center justify-center bg-slate-900 shadow-[0_0_30px_rgba(194,65,12,0.3)] z-10 relative overflow-hidden group-hover:scale-110 group-hover:shadow-[0_0_50px_rgba(194,65,12,0.5)] transition-all duration-500">
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥉</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-orange-700/20 to-transparent z-0"></div>
               </div>
@@ -190,12 +222,15 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
               </div>
            </div>
            
-           <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-orange-700 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end">
-              <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans">{topThree[2].name}</h3>
-              <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[2].team}</p>
-              <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5">
-                  <span className="text-2xl font-black text-orange-400 font-mono">{topThree[2].points}</span>
-                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
+           <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-orange-700 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end relative overflow-hidden group-hover:border-orange-600">
+              <FireParticles colorClass="bg-orange-500" />
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans group-hover:text-orange-100 transition-colors">{topThree[2].name}</h3>
+                <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[2].team}</p>
+                <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5 group-hover:border-orange-500/30 transition-colors">
+                    <span className="text-2xl font-black text-orange-400 font-mono">{topThree[2].points}</span>
+                    <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
+                </div>
               </div>
            </div>
         </motion.div>

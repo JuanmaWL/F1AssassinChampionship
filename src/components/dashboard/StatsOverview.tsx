@@ -68,11 +68,37 @@ export function StatsOverview({ data }: StatsOverviewProps) {
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
         <div className={`absolute -right-10 -top-10 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-all duration-500 group-hover:opacity-100 group-hover:scale-125 ${isSeasonFinished ? 'bg-yellow-600/20' : 'bg-cyan-600/20'}`}></div>
         
-        {/* Hover Particles Effect */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-            <div className={`absolute top-1/4 left-1/4 w-1 h-1 rounded-full animate-ping ${isSeasonFinished ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ animationDuration: '2s' }}></div>
-            <div className={`absolute top-3/4 right-1/4 w-1 h-1 rounded-full animate-ping ${isSeasonFinished ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ animationDuration: '3s', animationDelay: '0.5s' }}></div>
-            <div className={`absolute bottom-10 left-10 w-1 h-1 rounded-full animate-ping ${isSeasonFinished ? 'bg-yellow-400' : 'bg-cyan-400'}`} style={{ animationDuration: '2.5s', animationDelay: '1s' }}></div>
+        {/* Hover Particles Effect - Reworked */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
+            {[...Array(15)].map((_, i) => (
+                <motion.div
+                    key={i}
+                    className={`absolute rounded-full blur-[1px] ${isSeasonFinished ? 'bg-yellow-400' : 'bg-cyan-400'}`}
+                    initial={{ 
+                        x: Math.random() * 300, 
+                        y: Math.random() * 200, 
+                        opacity: 0,
+                        scale: 0
+                    }}
+                    animate={{ 
+                        y: [null, Math.random() * -100],
+                        opacity: [0, 0.8, 0],
+                        scale: [0, Math.random() * 1.5 + 0.5, 0]
+                    }}
+                    transition={{ 
+                        duration: Math.random() * 2 + 2, 
+                        repeat: Infinity, 
+                        delay: Math.random() * 2,
+                        ease: "easeInOut"
+                    }}
+                    style={{
+                        width: Math.random() * 4 + 2 + 'px',
+                        height: Math.random() * 4 + 2 + 'px',
+                        left: Math.random() * 100 + '%',
+                        top: Math.random() * 100 + '%'
+                    }}
+                />
+            ))}
         </div>
         
         <div className="relative z-10 flex flex-col h-full justify-between">
