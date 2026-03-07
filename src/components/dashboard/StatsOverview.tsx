@@ -13,8 +13,9 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
   const remainingRaces = data.races.filter((r) => r.status === 'pending').length;
   const totalRaces = data.races.length;
   const completedRaces = totalRaces - remainingRaces;
-  const pointsRemaining = remainingRaces * 25; // Max points per race (25, no FL point in 2025)
-  const isSeasonFinished = remainingRaces === 0;
+  const pointsRemaining = totalRaces > 0 ? remainingRaces * 25 : 0;
+  const isSeasonFinished = totalRaces > 0 && remainingRaces === 0;
+  const hasStarted = completedRaces > 0;
 
   // Find the next pending race to display in the timer
   const nextRace = data.races.find(r => r.status === 'pending');
@@ -23,7 +24,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
 
   useEffect(() => {
     if (!nextRace) {
-        if (!isSeasonFinished) {
+        if (totalRaces > 0 && !isSeasonFinished) {
              setTimeLeft('Pendiente de confirmar');
         }
         return;
@@ -107,14 +108,14 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                 <div>
                     <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 transition-colors duration-300 ${isSeasonFinished ? 'text-yellow-500 group-hover:text-yellow-400' : 'text-cyan-500 group-hover:text-cyan-400'}`}>
                         <span className={`w-2 h-2 rounded-full animate-pulse ${isSeasonFinished ? 'bg-yellow-500' : 'bg-cyan-500'}`}></span>
-                        {isSeasonFinished ? 'CAMPEONATO' : 'TEMPORADA'}
+                        {isSeasonFinished ? `TEMPORADA ${activeSeason}` : 'TEMPORADA'}
                     </h3>
                     <div className="flex items-baseline gap-2">
                         <span className="text-5xl font-black italic text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
-                            {Math.round((completedRaces / totalRaces) * 100)}%
+                            {totalRaces > 0 ? Math.round((completedRaces / totalRaces) * 100) : 0}%
                         </span>
                         <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
-                            COMPLETADO
+                            {hasStarted ? 'COMPLETADO' : ''}
                         </span>
                     </div>
                 </div>
@@ -125,14 +126,14 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
 
             <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
-                    <span>Carrera {completedRaces}</span>
+                    <span>{hasStarted ? `Carrera ${completedRaces}` : 'Preparando motores'}</span>
                     <span>Total {totalRaces}</span>
                 </div>
                 {/* Custom Progress Bar */}
                 <div className="h-3 w-full bg-slate-950 rounded-full border border-white/5 relative overflow-hidden">
                     <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: `${(completedRaces / totalRaces) * 100}%` }}
+                        animate={{ width: totalRaces > 0 ? `${(completedRaces / totalRaces) * 100}%` : '0%' }}
                         transition={{ duration: 1.5, ease: "easeOut" }}
                         className={`h-full relative ${isSeasonFinished ? 'bg-gradient-to-r from-yellow-600 to-yellow-400' : 'bg-gradient-to-r from-cyan-600 to-cyan-400'}`}
                     >
@@ -141,7 +142,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                     </motion.div>
                 </div>
                 <p className="text-[10px] text-slate-500 font-mono text-right pt-1">
-                    {isSeasonFinished ? '🏁 Bandera a cuadros' : '🚀 La batalla continúa'}
+                    {isSeasonFinished ? '🏁 Bandera a cuadros' : !hasStarted ? '🚦 Esperando semáforos' : '🚀 La batalla continúa'}
                 </p>
             </div>
         </div>
@@ -173,7 +174,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                 <div>
                     <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-emerald-500 group-hover:text-emerald-400'}`}>
                         <span className={`w-2 h-2 rounded-full animate-pulse ${isSeasonFinished ? 'bg-slate-500' : 'bg-emerald-500'}`}></span>
-                        {isSeasonFinished ? 'PUNTOS FINALES' : 'EN JUEGO'}
+                        {isSeasonFinished ? 'PUNTOS FINALES' : 'PUNTOS EN JUEGO'}
                     </h3>
                     <div className="flex items-baseline gap-2">
                         <span className={`text-5xl font-black italic tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300 ${isSeasonFinished ? 'text-slate-500' : 'text-white'}`}>
@@ -192,14 +193,14 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
             <div className="mt-auto pt-4">
                 <div className={`p-3 rounded-lg border backdrop-blur-sm flex items-center gap-3 transition-colors duration-300 ${isSeasonFinished ? 'bg-slate-950/30 border-slate-800 group-hover:border-slate-700' : 'bg-emerald-950/30 border-emerald-500/10 group-hover:border-emerald-500/30'}`}>
                     <div className={`text-2xl ${isSeasonFinished ? 'grayscale opacity-50' : ''}`}>
-                        🏆
+                        {!hasStarted ? '🏎️' : '🏆'}
                     </div>
                     <div>
                         <p className={`text-[10px] uppercase tracking-wider font-bold transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-emerald-400 group-hover:text-emerald-300'}`}>
-                            {isSeasonFinished ? 'Temporada Cerrada' : 'Oportunidad de Oro'}
+                            {isSeasonFinished ? 'Temporada Cerrada' : !hasStarted ? 'Motores Listos' : 'Oportunidad de Oro'}
                         </p>
                         <p className="text-[10px] text-slate-500 leading-tight">
-                            {isSeasonFinished ? 'Gracias por participar' : 'Puntos máximos disponibles'}
+                            {isSeasonFinished ? 'Gracias por participar' : !hasStarted ? 'Todo por decidir en pista' : 'Puntos máximos disponibles'}
                         </p>
                     </div>
                 </div>
@@ -235,10 +236,10 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                 <div>
                     <h3 className="text-red-500 text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 group-hover:text-red-400 transition-colors duration-300">
                         <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                        {isSeasonFinished ? `Temporada ${activeSeason}` : 'Próximo Gran Premio'}
+                        {isSeasonFinished ? `TEMPORADA ${activeSeason}` : !hasStarted ? 'GRAN PREMIO INAUGURAL' : 'PRÓXIMO GRAN PREMIO'}
                     </h3>
                     <span className="text-2xl font-black text-white italic block uppercase tracking-tighter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
-                        {isSeasonFinished ? 'COMPLETADA' : nextRace?.name}
+                        {isSeasonFinished ? 'COMPLETADA' : nextRace?.name || 'POR CONFIRMAR'}
                     </span>
                 </div>
                 <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20 text-red-500 group-hover:bg-red-500/20 group-hover:border-red-500/40 transition-all duration-300">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { Trophy } from 'lucide-react';
 import { Constructor } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -28,7 +29,23 @@ export function ConstructorsTable({ constructors, hasCompletedRaces }: Construct
       </div>
       
       <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          {constructors.length === 0 || constructors.every(c => c.points === 0) ? (
+              <div className="py-20 flex flex-col items-center justify-center text-center px-6">
+                  <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5">
+                      <Trophy className="text-slate-500 w-10 h-10" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white italic uppercase tracking-wider mb-2">Fábricas en Marcha</h3>
+                  <p className="text-slate-500 text-sm max-w-xs mx-auto font-mono uppercase tracking-widest">
+                      Los ingenieros están ultimando los detalles. El mundial de constructores cobrará vida pronto.
+                  </p>
+                  <div className="mt-8 flex gap-2">
+                      {[1, 2, 3].map(i => (
+                          <div key={i} className="w-2 h-2 rounded-full bg-blue-500/20 animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
+                      ))}
+                  </div>
+              </div>
+          ) : (
+              <table className="w-full text-left border-collapse">
               <thead>
                   <tr className="bg-slate-950/50 text-xs uppercase tracking-wider text-slate-500 font-medium">
                       <th className="py-4 px-6 w-16 text-center">POSICIÓN</th>
@@ -84,6 +101,7 @@ export function ConstructorsTable({ constructors, hasCompletedRaces }: Construct
                   ))}
               </tbody>
           </table>
+          )}
       </div>
     </motion.div>
   );

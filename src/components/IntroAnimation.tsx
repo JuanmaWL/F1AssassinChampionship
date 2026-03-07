@@ -140,11 +140,11 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="mt-8 text-center w-full px-4"
+                        className="mt-8 text-center w-full px-8"
                     >
-                        <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter text-white uppercase flex flex-col items-center gap-2 w-full pr-12 pl-4">
-                            <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">F1</span>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 py-2 pr-2">Assassins</span>
+                        <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter text-white uppercase flex flex-col items-center gap-2 w-full overflow-visible">
+                            <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] pr-2">F1</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 py-2 pr-4">Assassins</span>
                         </h1>
                         <motion.div 
                             initial={{ width: 0 }}
@@ -153,7 +153,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                             className="h-1 bg-red-600 mt-4 mx-auto rounded-full shadow-[0_0_10px_#dc2626] max-w-xs"
                         />
                         <p className="mt-4 text-xs md:text-sm font-mono text-slate-500 tracking-[0.5em] uppercase w-full text-center">
-                            Championship {activeSeason}
+                            Racing Championship Series
                         </p>
                     </motion.div>
                 </motion.div>

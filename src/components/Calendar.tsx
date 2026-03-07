@@ -86,34 +86,56 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
         </h2>
         
         {/* View Toggle */}
-        <div className="bg-slate-900 p-1 rounded-lg border border-white/10 hidden md:flex items-center self-start md:self-auto">
-            <button
-                onClick={() => setViewMode('list')}
-                className={cn(
-                    "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
-                    viewMode === 'list' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                )}
-            >
-                <List size={18} />
-                Lista
-            </button>
-            <button
-                onClick={() => setViewMode('grid')}
-                className={cn(
-                    "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
-                    viewMode === 'grid' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                )}
-            >
-                <LayoutGrid size={18} />
-                Grid
-            </button>
-        </div>
+        {data.races.length > 0 && (
+          <div className="bg-slate-900 p-1 rounded-lg border border-white/10 hidden md:flex items-center self-start md:self-auto">
+              <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                      viewMode === 'list' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                  )}
+              >
+                  <List size={18} />
+                  Lista
+              </button>
+              <button
+                  onClick={() => setViewMode('grid')}
+                  className={cn(
+                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                      viewMode === 'grid' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                  )}
+              >
+                  <LayoutGrid size={18} />
+                  Grid
+              </button>
+          </div>
+        )}
       </div>
 
-      <div className={cn(
-          "gap-4",
-          viewMode === 'list' ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-      )}>
+      {data.races.length === 0 ? (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-12 flex flex-col items-center justify-center text-center"
+        >
+          <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5">
+            <CalendarIcon className="text-slate-500 w-10 h-10" />
+          </div>
+          <h3 className="text-2xl font-black italic text-white uppercase tracking-tighter mb-3">Calendario Pendiente</h3>
+          <p className="text-slate-400 text-sm max-w-md mx-auto font-mono uppercase tracking-widest leading-relaxed">
+            La FIA está ultimando las fechas de la temporada. Vuelve pronto para conocer el calendario oficial de este campeonato.
+          </p>
+          <div className="mt-8 flex gap-3">
+              {[1, 2, 3].map(i => (
+                  <div key={i} className={cn("w-3 h-1 rounded-full animate-pulse", isHistorical ? "bg-amber-500/30" : "bg-red-500/30")} style={{ animationDelay: `${i * 0.2}s` }} />
+              ))}
+          </div>
+        </motion.div>
+      ) : (
+        <div className={cn(
+            "gap-4",
+            viewMode === 'list' ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        )}>
         {data.races.map((race, index) => (
           <motion.div
             key={race.id}
@@ -324,6 +346,7 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* Race Details Modal */}
       <AnimatePresence>
@@ -342,8 +365,8 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
               className="bg-slate-900 border border-white/10 w-full max-w-6xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Enhanced Header with Background */}
-              <div className="relative overflow-hidden border-b border-white/10">
+              {/* Enhanced Header with Background - Fixed on scroll */}
+              <div className="sticky top-0 z-20 overflow-hidden border-b border-white/10 bg-slate-900 shadow-xl">
                   {/* Background Image with Overlay */}
                   <div 
                       className="absolute inset-0 z-0 opacity-40 grayscale"
