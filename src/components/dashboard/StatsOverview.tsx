@@ -6,9 +6,10 @@ import { formatDate } from '../../lib/utils';
 
 interface StatsOverviewProps {
   data: ChampionshipData;
+  activeSeason: SeasonId;
 }
 
-export function StatsOverview({ data }: StatsOverviewProps) {
+export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
   const remainingRaces = data.races.filter((r) => r.status === 'pending').length;
   const totalRaces = data.races.length;
   const completedRaces = totalRaces - remainingRaces;
@@ -234,7 +235,7 @@ export function StatsOverview({ data }: StatsOverviewProps) {
                 <div>
                     <h3 className="text-red-500 text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 group-hover:text-red-400 transition-colors duration-300">
                         <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
-                        {isSeasonFinished ? 'Temporada 2025' : 'Próximo Gran Premio'}
+                        {isSeasonFinished ? `Temporada ${activeSeason}` : 'Próximo Gran Premio'}
                     </h3>
                     <span className="text-2xl font-black text-white italic block uppercase tracking-tighter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
                         {isSeasonFinished ? 'COMPLETADA' : nextRace?.name}
@@ -248,7 +249,7 @@ export function StatsOverview({ data }: StatsOverviewProps) {
             <div className="mt-auto">
                 {isSeasonFinished ? (
                     <div className="text-slate-500 font-mono text-sm uppercase tracking-widest">
-                        Nos vemos en 2026
+                        Nos vemos en la próxima
                     </div>
                 ) : (
                     <div className="grid grid-cols-4 gap-2 text-center">

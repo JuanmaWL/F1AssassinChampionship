@@ -67,7 +67,7 @@ export function ConstructorsTable({ constructors, hasCompletedRaces }: Construct
                           <td className="py-4 px-6">
                               <div className="flex items-center gap-4">
                                   <div className="w-12 h-12 rounded-lg bg-white/5 p-1 border border-white/10 flex items-center justify-center overflow-hidden">
-                                      <img src={constructor.logoUrl} alt={constructor.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                                      <img src={constructor.logoUrl || undefined} alt={constructor.name} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                                   </div>
                                   <div>
                                       <div className="font-bold text-white text-lg italic">{constructor.name}</div>

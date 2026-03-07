@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Flag, Zap } from 'lucide-react';
 import { F1Car } from './F1Car';
 
+import { SeasonId } from '../types';
+
 interface IntroAnimationProps {
   onComplete: () => void;
+  activeSeason: SeasonId;
 }
 
-export function IntroAnimation({ onComplete }: IntroAnimationProps) {
+export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps) {
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
@@ -150,7 +153,7 @@ export function IntroAnimation({ onComplete }: IntroAnimationProps) {
                             className="h-1 bg-red-600 mt-4 mx-auto rounded-full shadow-[0_0_10px_#dc2626] max-w-xs"
                         />
                         <p className="mt-4 text-xs md:text-sm font-mono text-slate-500 tracking-[0.5em] uppercase w-full text-center">
-                            Championship 2025
+                            Championship {activeSeason}
                         </p>
                     </motion.div>
                 </motion.div>

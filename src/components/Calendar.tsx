@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { ChampionshipData, Race } from '../types';
+import { ChampionshipData, Race, SeasonId } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 
 interface CalendarProps {
   data: ChampionshipData;
+  activeSeason: SeasonId;
 }
 
-export function Calendar({ data }: CalendarProps) {
+export function Calendar({ data, activeSeason }: CalendarProps) {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
@@ -16,11 +17,16 @@ export function Calendar({ data }: CalendarProps) {
   const getTeamColor = (id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff';
   const getTeamName = (id: string) => data.drivers.find((d) => d.id === id)?.team || 'Unknown';
 
+  const isHistorical = activeSeason === '2024';
+  const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
+  const hoverBorderColor = isHistorical ? "hover:border-amber-500/50" : "hover:border-red-500/50";
+  const statusColor = isHistorical ? "bg-amber-500 group-hover:bg-amber-400" : "bg-green-500 group-hover:bg-green-400";
+
   return (
     <div className="pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-            <CalendarIcon className="w-8 h-8 text-red-500" />
+            <CalendarIcon className={cn("w-8 h-8", accentColor)} />
             Calendario de Carreras
         </h2>
         
@@ -66,7 +72,10 @@ export function Calendar({ data }: CalendarProps) {
           >
             {/* List View Number - Outside */}
             {viewMode === 'list' && (
-                <div className="text-5xl font-black italic text-slate-800 group-hover:text-red-600 transition-colors duration-300 min-w-[3.5rem] text-right select-none">
+                <div className={cn(
+                    "text-5xl font-black italic text-slate-800 transition-colors duration-300 min-w-[3.5rem] text-right select-none",
+                    isHistorical ? "group-hover:text-amber-600" : "group-hover:text-red-600"
+                )}>
                     {index + 1}
                 </div>
             )}
@@ -76,16 +85,20 @@ export function Calendar({ data }: CalendarProps) {
                 className={cn(
                   "relative overflow-hidden rounded-xl border transition-all duration-300 w-full",
                   // Hover Animations
-                  "hover:shadow-2xl hover:shadow-red-900/10 hover:-translate-y-1",
+                  "hover:shadow-2xl hover:-translate-y-1",
+                  isHistorical ? "hover:shadow-amber-900/10" : "hover:shadow-red-900/10",
                   race.status === 'completed'
-                    ? "bg-slate-900/60 border-white/10 hover:border-red-500/50 cursor-pointer hover:bg-slate-800/80"
+                    ? cn("bg-slate-900/60 border-white/10 cursor-pointer hover:bg-slate-800/80", hoverBorderColor)
                     : "bg-slate-950/40 border-white/5 opacity-75",
                   viewMode === 'list' ? "p-6" : "p-6 flex flex-col h-full min-h-[200px]"
                 )}
             >
                 {/* Circuit Background Image (Fictional/Placeholder) */}
                 <div 
-                    className="absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500"
+                    className={cn(
+                        "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500",
+                        isHistorical && "sepia"
+                    )}
                     style={{
                         backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
                         backgroundSize: 'cover',
@@ -118,7 +131,7 @@ export function Calendar({ data }: CalendarProps) {
                 {/* Status Indicator Strip */}
                 <div className={cn(
                   "absolute left-0 top-0 bottom-0 w-1.5 z-10 transition-all duration-300 group-hover:w-2",
-                  race.status === 'completed' ? "bg-green-500 group-hover:bg-green-400" : "bg-slate-700 group-hover:bg-slate-600"
+                  race.status === 'completed' ? statusColor : "bg-slate-700 group-hover:bg-slate-600"
                 )} />
 
                 <div className={cn(
@@ -127,12 +140,13 @@ export function Calendar({ data }: CalendarProps) {
                 )}>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <span className="text-sm font-mono text-red-400 uppercase tracking-widest">
+                      <span className={cn("text-sm font-mono uppercase tracking-widest", isHistorical ? "text-amber-400" : "text-red-400")}>
                         {formatDate(race.date)}
                       </span>
                     </div>
                     <h3 className={cn(
-                        "font-black italic text-white uppercase tracking-tight group-hover:text-red-500 transition-colors flex items-center gap-3",
+                        "font-black italic text-white uppercase tracking-tight transition-colors flex items-center gap-3",
+                        isHistorical ? "group-hover:text-amber-500" : "group-hover:text-red-500",
                         viewMode === 'list' ? "text-xl" : "text-2xl"
                     )}>
                       {race.name}
@@ -228,7 +242,7 @@ export function Calendar({ data }: CalendarProps) {
               <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-6 flex justify-between items-start z-10">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">
+                    <span className={cn("text-white text-xs font-bold px-2 py-0.5 rounded uppercase", isHistorical ? "bg-amber-600" : "bg-red-600")}>
                         Ronda {data.races.findIndex(r => r.id === selectedRace.id) + 1}
                     </span>
                     <span className="text-slate-400 text-sm font-mono">

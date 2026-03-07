@@ -1,29 +1,34 @@
-import React, { useState, useRef } from 'react';
-import { ChampionshipData, RaceResult } from '../types';
-import { Upload, Save, Loader2, Lock, AlertTriangle, CheckCircle } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
+import { ChampionshipData, SeasonId } from '../types';
+import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { calculateStandings } from '../lib/calculations';
 import { verifyPassword } from '../lib/auth';
-import { dataService } from '../services/dataService';
+import { ResultsEditor } from './admin/ResultsEditor';
+import { DriversEditor } from './admin/DriversEditor';
+import { TeamsEditor } from './admin/TeamsEditor';
+import { CalendarEditor } from './admin/CalendarEditor';
+import { JsonImporter } from './admin/JsonImporter';
 
 interface AdminPanelProps {
   data: ChampionshipData;
   onUpdateData: (newData: ChampionshipData) => void;
+  activeSeason: SeasonId;
 }
 
-export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
+type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import';
+
+export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [selectedRaceId, setSelectedRaceId] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [parsedResults, setParsedResults] = useState<RaceResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<AdminTab>('teams');
+
+  const isHistorical = activeSeason === '2024';
+  const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
+  const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
+  const ringColor = isHistorical ? "focus:ring-amber-500" : "focus:ring-red-500";
+  const borderColor = isHistorical ? "border-amber-500/30" : "border-red-500/30";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,204 +49,13 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPreviewUrl(URL.createObjectURL(file));
-    setParsedResults(null);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      setIsProcessing(true);
-      await parseResultsWithAI(file);
-    } catch (err) {
-      console.error(err);
-      setError('Error al procesar la imagen. Por favor intenta de nuevo o ingresa manualmente.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const parseResultsWithAI = async (file: File) => {
-    try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          // Remove data:image/jpeg;base64, prefix
-          const base64Data = result.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-      });
-
-      const base64Data = await base64Promise;
-
-      // Initialize Gemini
-      // NOTE: In a real app, ensure GEMINI_API_KEY is set in .env
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Missing Gemini API Key");
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const driversList = data.drivers.map(d => d.name).join(', ');
-              const prompt = `
-        Analiza esta imagen de resultados de carrera de F1.
-        Extrae los resultados en un array JSON.
-        Para cada fila necesito:
-        - "driverName": El nombre del piloto (string)
-        - "position": La posición final (number)
-        - "points": Los puntos ganados (number)
-        - "fastestLap": true si obtuvo vuelta rápida, false si no (boolean)
-        - "raceTime": El tiempo total de carrera o el gap (string, ej: "1:32:45.123" o "+12.456s")
-        - "fastestLapTime": El tiempo de la vuelta rápida si aparece (string, ej: "1:18.456")
-        - "pitStops": El número de paradas en boxes (number, por defecto 0 si no aparece)
-        
-        Extrae las posiciones de la imagen haciendo coincidir los nombres que leas con esta lista exacta de nicks: ${driversList}. Usa fuzzy matching si están un poco borrosos.
-        
-        Devuelve SOLO el array JSON, sin formato markdown.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-            parts: [
-                { text: prompt },
-                { 
-                    inlineData: {
-                        mimeType: file.type,
-                        data: base64Data
-                    }
-                }
-            ]
-        }
-      });
-
-      const text = response.text;
-      if (!text) throw new Error("No response from AI");
-
-      // Clean up response if it contains markdown code blocks
-      const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const rawResults = JSON.parse(cleanJson);
-
-      // Map to internal IDs
-      const mappedResults: RaceResult[] = rawResults.map((r: any) => {
-        const driver = data.drivers.find(d => d.name.toLowerCase().includes(r.driverName.toLowerCase().split(' ').pop()));
-        return {
-          driverId: driver ? driver.id : 'unknown',
-          position: r.position,
-          points: r.points,
-          fastestLap: r.fastestLap || false,
-          dnf: false,
-          raceTime: r.raceTime || '-',
-          fastestLapTime: r.fastestLapTime || '-',
-          pitStops: r.pitStops || 0
-        };
-      });
-
-      setParsedResults(mappedResults);
-      setSuccess("¡IA procesó los resultados con éxito! Por favor revisa abajo.");
-
-    } catch (err) {
-      console.error("AI Parsing Error:", err);
-      // Fallback mock data for demo purposes if API fails or key is missing
-      setError("Fallo en IA (Verifica API Key). Cargando datos de prueba.");
-      
-      // Mock fallback
-      setTimeout(() => {
-         const mockParsed: RaceResult[] = data.drivers.map((d, i) => ({
-            driverId: d.id,
-            position: i + 1,
-            points: i === 0 ? 25 : i === 1 ? 18 : i === 2 ? 15 : 0,
-            fastestLap: i === 0,
-            dnf: false,
-            raceTime: i === 0 ? "1:30:00.000" : `+${i * 2}.000s`,
-            fastestLapTime: "1:18.500",
-            pitStops: Math.floor(Math.random() * 3) + 1
-         })).slice(0, 10);
-         setParsedResults(mockParsed);
-         setError(null);
-         setSuccess("Datos de prueba cargados (Modo Demo)");
-      }, 1000);
-    }
-  };
-
-  const handleResultChange = (index: number, field: keyof RaceResult, value: any) => {
-    if (!parsedResults) return;
-    const newResults = [...parsedResults];
-    newResults[index] = { ...newResults[index], [field]: value };
-    setParsedResults(newResults);
-  };
-
-  const startManualEntry = () => {
-    const manualResults: RaceResult[] = data.drivers.map((d, i) => ({
-        driverId: d.id,
-        position: i + 1,
-        points: 0,
-        fastestLap: false,
-        dnf: false,
-        raceTime: '-',
-        fastestLapTime: '-',
-        pitStops: 0
-    }));
-    setParsedResults(manualResults);
-    setSuccess("Modo de ingreso manual activado. Por favor completa la tabla.");
-    setError(null);
-  };
-
-  const handleSave = async () => {
-    if (!selectedRaceId || !parsedResults) {
-      setError("Por favor selecciona una carrera y asegura que hay resultados.");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-        const updatedRaces = data.races.map(r => {
-        if (r.id === selectedRaceId) {
-            return { ...r, status: 'completed' as const, results: parsedResults };
-        }
-        return r;
-        });
-
-        // Recalculate standings using the centralized function
-        const updatedData = calculateStandings({
-        ...data,
-        races: updatedRaces
-        });
-
-        // Save to Firebase
-        await dataService.saveData(updatedData);
-
-        // Update local state
-        onUpdateData(updatedData);
-
-        setSuccess("¡Datos del campeonato actualizados y guardados en la nube!");
-        setParsedResults(null);
-        setPreviewUrl(null);
-        setSelectedRaceId('');
-    } catch (err) {
-        console.error("Save error:", err);
-        setError("Error al guardar los datos en la nube. Verifica tu conexión.");
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh]">
-        <div className="bg-slate-900 border border-white/10 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+        <div className={cn("bg-slate-900 border p-8 rounded-2xl shadow-2xl max-w-md w-full", isHistorical ? "border-amber-500/20" : "border-white/10")}>
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-red-500/10 rounded-full">
-              <Lock className="w-8 h-8 text-red-500" />
+            <div className={cn("p-4 rounded-full", isHistorical ? "bg-amber-500/10" : "bg-red-500/10")}>
+              <Lock className={cn("w-8 h-8", accentColor)} />
             </div>
           </div>
           <h2 className="text-2xl font-black italic text-white text-center mb-6 uppercase">Acceso Admin</h2>
@@ -252,7 +66,10 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa Contraseña"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                className={cn(
+                    "w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none transition-colors",
+                    ringColor
+                )}
                 disabled={isProcessing}
               />
             </div>
@@ -260,7 +77,10 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
             <button
               type="submit"
               disabled={isProcessing}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+              className={cn(
+                  "w-full text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2 disabled:opacity-50",
+                  buttonColor
+              )}
             >
               {isProcessing ? <Loader2 className="animate-spin" size={20} /> : 'Desbloquear Panel'}
             </button>
@@ -271,164 +91,155 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
   }
 
   return (
-    <div className="pb-20 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-black italic text-white mb-8 uppercase tracking-tighter flex items-center gap-3">
-        <Upload className="w-8 h-8 text-red-500" />
-        Procesador de Resultados
-      </h2>
+    <div className="pb-20 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+          <Settings className={cn("w-8 h-8", accentColor)} />
+          Panel de Administración
+          <span className={cn(
+              "text-sm px-3 py-1 rounded-full border bg-slate-900/50 ml-2",
+              isHistorical ? "border-amber-500/30 text-amber-500" : "border-red-500/30 text-red-500"
+          )}>
+              {isHistorical ? "EDITANDO 2024" : "EDITANDO 2026"}
+          </span>
+        </h2>
+      </div>
 
-      <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="grid gap-6">
-          {/* Race Selection */}
-          <div>
-            <label className="block text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Seleccionar Carrera</label>
-            <select
-              value={selectedRaceId}
-              onChange={(e) => setSelectedRaceId(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500"
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Sidebar Navigation */}
+        <div className="lg:col-span-1 space-y-6">
+          
+          {/* FAQ / Instructions Block */}
+          <div className={cn(
+              "p-4 rounded-xl border text-xs space-y-2",
+              isHistorical ? "bg-amber-900/10 border-amber-500/20 text-amber-200/80" : "bg-slate-900/50 border-white/10 text-slate-400"
+          )}>
+              <h4 className="font-bold uppercase tracking-wider text-white mb-2 flex items-center gap-2">
+                  <Info size={14} /> Guía Rápida
+              </h4>
+              <p>Para configurar una nueva temporada, sigue este orden recomendado:</p>
+              <ol className="list-decimal list-inside space-y-1 ml-1">
+                  <li><span className="text-white font-bold">Escuderías:</span> Crea equipos y logos.</li>
+                  <li><span className="text-white font-bold">Pilotos:</span> Asigna pilotos a equipos.</li>
+                  <li><span className="text-white font-bold">Calendario:</span> Define las carreras.</li>
+                  <li><span className="text-white font-bold">Resultados:</span> Sube resultados.</li>
+              </ol>
+              <div className="mt-2 pt-2 border-t border-white/10 text-[10px] text-slate-500">
+                <p>⚠️ Si la subida de imágenes falla, verifica que las <strong>Reglas de Storage</strong> en Firebase permitan escritura pública (allow write: if true;).</p>
+              </div>
+          </div>
+
+          <div className="space-y-2">
+            <button
+                onClick={() => setActiveTab('teams')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                activeTab === 'teams' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
             >
-              <option value="">-- Selecciona una Carrera --</option>
-              {[...data.races]
-                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                .map(r => (
-                  <option key={r.id} value={r.id}>
-                    {r.name} - {r.date} ({r.status === 'completed' ? 'Completada' : 'Pendiente'})
-                  </option>
-              ))}
-            </select>
+                <Trophy size={18} className={activeTab === 'teams' ? accentColor : ""} />
+                1. Escuderías
+            </button>
+
+            <button
+                onClick={() => setActiveTab('drivers')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                activeTab === 'drivers' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+            >
+                <Users size={18} className={activeTab === 'drivers' ? accentColor : ""} />
+                2. Pilotos
+            </button>
+
+            <button
+                onClick={() => setActiveTab('calendar')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                activeTab === 'calendar' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+            >
+                <CalendarIcon size={18} className={activeTab === 'calendar' ? accentColor : ""} />
+                3. Calendario
+            </button>
+
+            <button
+                onClick={() => setActiveTab('results')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                activeTab === 'results' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+            >
+                <Flag size={18} className={activeTab === 'results' ? accentColor : ""} />
+                4. Resultados
+            </button>
+
+            <div className="h-px bg-white/10 my-2"></div>
+
+            <button
+                onClick={() => setActiveTab('import')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                activeTab === 'import' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+            >
+                <Database size={18} className={activeTab === 'import' ? accentColor : ""} />
+                Importar / Exportar
+            </button>
           </div>
+        </div>
 
-          {/* Image Upload or Manual Entry */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-red-500/50 transition-colors bg-slate-950/30">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Preview" className="max-h-48 rounded-lg shadow-lg" />
-                  ) : (
-                    <div className="p-4 bg-slate-800 rounded-full">
-                      <Upload className="w-8 h-8 text-slate-400" />
-                    </div>
-                  )}
-                  <span className="text-slate-300 font-medium">
-                    {isProcessing ? 'Analizando Imagen...' : 'Subir Captura (IA)'}
-                  </span>
-                  {isProcessing && <Loader2 className="animate-spin text-red-500" />}
-                </label>
-              </div>
-
-              <button 
-                onClick={startManualEntry}
-                className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-blue-500/50 transition-colors bg-slate-950/30 flex flex-col items-center justify-center gap-4 cursor-pointer"
-              >
-                  <div className="p-4 bg-slate-800 rounded-full">
-                      <AlertTriangle className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <span className="text-slate-300 font-medium">Ingreso Manual / Alternativo</span>
-              </button>
-          </div>
-
-          {/* Messages */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg flex items-center gap-3">
-              <AlertTriangle size={20} />
-              {error}
-            </div>
+        {/* Content Area */}
+        <div className="lg:col-span-3">
+          {activeTab === 'teams' && (
+            <TeamsEditor 
+              data={data} 
+              onUpdateData={onUpdateData} 
+              activeSeason={activeSeason} 
+              isHistorical={isHistorical} 
+            />
           )}
-          {success && (
-            <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg flex items-center gap-3">
-              <CheckCircle size={20} />
-              {success}
-            </div>
+          {activeTab === 'drivers' && (
+            <DriversEditor 
+              data={data} 
+              onUpdateData={onUpdateData} 
+              activeSeason={activeSeason} 
+              isHistorical={isHistorical} 
+            />
           )}
-
-          {/* Parsed Results Editor */}
-          {parsedResults && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white italic uppercase">Revisar y Editar Datos</h3>
-              <div className="bg-slate-950 rounded-xl border border-white/5 overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-900 text-slate-400 text-xs uppercase">
-                    <tr>
-                      <th className="p-3">Pos</th>
-                      <th className="p-3">Piloto</th>
-                      <th className="p-3">Puntos</th>
-                      <th className="p-3">VR</th>
-                      <th className="p-3">Tiempo</th>
-                      <th className="p-3">Pits</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {parsedResults.map((result, idx) => {
-                        const driver = data.drivers.find(d => d.id === result.driverId);
-                        return (
-                          <tr key={idx}>
-                            <td className="p-2">
-                                <input 
-                                    type="number" 
-                                    value={result.position} 
-                                    onChange={(e) => handleResultChange(idx, 'position', parseInt(e.target.value))}
-                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center"
-                                />
-                            </td>
-                            <td className="p-2 text-slate-300">
-                                {driver ? driver.name : result.driverId}
-                            </td>
-                            <td className="p-2">
-                                <input 
-                                    type="number" 
-                                    value={result.points} 
-                                    onChange={(e) => handleResultChange(idx, 'points', parseInt(e.target.value))}
-                                    className="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-center font-bold"
-                                />
-                            </td>
-                            <td className="p-2">
-                                <input 
-                                    type="checkbox" 
-                                    checked={result.fastestLap} 
-                                    onChange={(e) => handleResultChange(idx, 'fastestLap', e.target.checked)}
-                                    className="w-5 h-5 rounded border-slate-700 bg-slate-900 text-purple-500 focus:ring-purple-500"
-                                />
-                            </td>
-                            <td className="p-2">
-                                <input 
-                                    type="text" 
-                                    value={result.raceTime} 
-                                    onChange={(e) => handleResultChange(idx, 'raceTime', e.target.value)}
-                                    className="w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-400 font-mono text-xs"
-                                />
-                            </td>
-                            <td className="p-2">
-                                <input 
-                                    type="number" 
-                                    value={result.pitStops} 
-                                    onChange={(e) => handleResultChange(idx, 'pitStops', parseInt(e.target.value))}
-                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-400 font-mono text-xs text-center"
-                                />
-                            </td>
-                          </tr>
-                        );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              
-              <button
-                onClick={handleSave}
-                disabled={!selectedRaceId}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl uppercase tracking-wider flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
-              >
-                <Save size={20} />
-                Confirmar y Actualizar Campeonato
-              </button>
-            </div>
+          {activeTab === 'calendar' && (
+            <CalendarEditor 
+              data={data} 
+              onUpdateData={onUpdateData} 
+              activeSeason={activeSeason} 
+              isHistorical={isHistorical} 
+            />
+          )}
+          {activeTab === 'results' && (
+            <ResultsEditor 
+              data={data} 
+              onUpdateData={onUpdateData} 
+              activeSeason={activeSeason} 
+              isHistorical={isHistorical} 
+            />
+          )}
+          {activeTab === 'import' && (
+            <JsonImporter 
+              currentData={data} 
+              onUpdateData={onUpdateData} 
+              activeSeason={activeSeason} 
+              isHistorical={isHistorical} 
+            />
           )}
         </div>
       </div>

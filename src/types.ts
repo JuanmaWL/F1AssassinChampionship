@@ -1,5 +1,7 @@
 export type TeamColor = string;
 
+export type SeasonId = '2024' | '2026';
+
 export interface Driver {
   id: string;
   name: string;
