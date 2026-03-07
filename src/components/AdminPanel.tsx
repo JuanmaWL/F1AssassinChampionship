@@ -5,6 +5,8 @@ import { GoogleGenAI } from '@google/genai';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { calculateStandings } from '../lib/calculations';
+import { verifyPassword } from '../lib/auth';
+import { dataService } from '../services/dataService';
 
 interface AdminPanelProps {
   data: ChampionshipData;
@@ -15,6 +17,7 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedRaceId, setSelectedRaceId] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [parsedResults, setParsedResults] = useState<RaceResult[] | null>(null);
@@ -22,13 +25,22 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === '25571440') {
-      setIsAuthenticated(true);
-      setError(null);
-    } else {
-      setError('Contraseña incorrecta');
+    setIsProcessing(true);
+    try {
+        const isValid = await verifyPassword(password);
+        if (isValid) {
+          setIsAuthenticated(true);
+          setError(null);
+        } else {
+          setError('Contraseña incorrecta');
+        }
+    } catch (err) {
+        console.error("Auth error", err);
+        setError("Error de autenticación");
+    } finally {
+        setIsProcessing(false);
     }
   };
 
@@ -184,31 +196,43 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
     setError(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedRaceId || !parsedResults) {
       setError("Por favor selecciona una carrera y asegura que hay resultados.");
       return;
     }
 
-    const updatedRaces = data.races.map(r => {
-      if (r.id === selectedRaceId) {
-        return { ...r, status: 'completed' as const, results: parsedResults };
-      }
-      return r;
-    });
+    setIsSaving(true);
+    try {
+        const updatedRaces = data.races.map(r => {
+        if (r.id === selectedRaceId) {
+            return { ...r, status: 'completed' as const, results: parsedResults };
+        }
+        return r;
+        });
 
-    // Recalculate standings using the centralized function
-    const updatedData = calculateStandings({
-      ...data,
-      races: updatedRaces
-    });
+        // Recalculate standings using the centralized function
+        const updatedData = calculateStandings({
+        ...data,
+        races: updatedRaces
+        });
 
-    onUpdateData(updatedData);
+        // Save to Firebase
+        await dataService.saveData(updatedData);
 
-    setSuccess("¡Datos del campeonato actualizados con éxito!");
-    setParsedResults(null);
-    setPreviewUrl(null);
-    setSelectedRaceId('');
+        // Update local state
+        onUpdateData(updatedData);
+
+        setSuccess("¡Datos del campeonato actualizados y guardados en la nube!");
+        setParsedResults(null);
+        setPreviewUrl(null);
+        setSelectedRaceId('');
+    } catch (err) {
+        console.error("Save error:", err);
+        setError("Error al guardar los datos en la nube. Verifica tu conexión.");
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -229,14 +253,16 @@ export function AdminPanel({ data, onUpdateData }: AdminPanelProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa Contraseña"
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                disabled={isProcessing}
               />
             </div>
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors"
+              disabled={isProcessing}
+              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
             >
-              Desbloquear Panel
+              {isProcessing ? <Loader2 className="animate-spin" size={20} /> : 'Desbloquear Panel'}
             </button>
           </form>
         </div>
