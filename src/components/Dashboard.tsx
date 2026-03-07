@@ -18,6 +18,7 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
   const sortedConstructors = [...data.constructors].sort((a, b) => b.points - a.points);
 
   const hasCompletedRaces = data.races.some(r => r.status === 'completed');
+  const isSeasonFinished = data.races.length > 0 && data.races.every(r => r.status === 'completed');
   const isHistorical = activeSeason === '2024';
 
   return (
@@ -163,7 +164,7 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
       </div>
 
       <StatsOverview data={data} activeSeason={activeSeason} />
-      {hasCompletedRaces && <Podium drivers={sortedDrivers} />}
+      {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
       <DriversTable drivers={sortedDrivers} />
       {hasCompletedRaces && <EvolutionChart data={data} />}
       <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} />

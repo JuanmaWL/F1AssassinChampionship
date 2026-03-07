@@ -504,8 +504,8 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
 
                                     {/* Enhanced Original Position Tooltip */}
                                     {result.originalPosition && result.originalPosition !== result.position && (
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 min-w-[140px] opacity-0 group-hover/pos:opacity-100 transition-all duration-200 pointer-events-none z-50 transform translate-y-2 group-hover/pos:translate-y-0">
-                                            <div className="bg-slate-900 text-white text-xs rounded-lg shadow-xl border border-white/10 overflow-hidden">
+                                        <div className="absolute bottom-full left-0 mb-3 min-w-[160px] opacity-0 group-hover/pos:opacity-100 transition-all duration-200 pointer-events-none z-50 transform translate-y-2 group-hover/pos:translate-y-0">
+                                            <div className="bg-slate-900 text-white text-xs rounded-lg shadow-2xl border border-white/10 overflow-hidden">
                                                 <div className={cn(
                                                     "px-3 py-1.5 border-b border-white/5 font-bold uppercase tracking-wider text-[10px] text-center",
                                                     result.isSanctioned ? "bg-red-500/20 text-red-300" : "bg-blue-500/20 text-blue-300"
@@ -519,7 +519,7 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                                                 </div>
                                             </div>
                                             {/* Arrow */}
-                                            <div className="w-2 h-2 bg-slate-900 border-r border-b border-white/10 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1"></div>
+                                            <div className="w-2 h-2 bg-slate-900 border-r border-b border-white/10 transform rotate-45 absolute left-4 -bottom-1"></div>
                                         </div>
                                     )}
                                 </div>

@@ -27,4 +27,86 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-700;
   }
+
+  /* Glitch Animations */
+  @keyframes glitch-skew {
+    0%, 100% { transform: skew(0deg); }
+    2% { transform: skew(2deg); }
+    4% { transform: skew(-2deg); }
+    6% { transform: skew(1deg); }
+    8% { transform: skew(-1deg); }
+    10%, 90% { transform: skew(0deg); }
+  }
+
+  @keyframes glitch-1 {
+    0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); opacity: .8; }
+    10% { clip-path: inset(20% 0 30% 0); transform: translate(-5px, 3px); opacity: 1; }
+    20% { clip-path: inset(10% 0 60% 0); transform: translate(5px, -3px); opacity: .6; }
+    30% { clip-path: inset(40% 0 40% 0); transform: translate(-5px, 5px); opacity: 1; }
+    40% { clip-path: inset(70% 0 10% 0); transform: translate(5px, -5px); opacity: .7; }
+    50% { clip-path: inset(30% 0 50% 0); transform: translate(-3px, 3px); opacity: .9; }
+    60% { clip-path: inset(50% 0 30% 0); transform: translate(3px, -3px); opacity: .5; }
+    70% { clip-path: inset(80% 0 10% 0); transform: translate(-4px, 4px); opacity: .8; }
+    80% { clip-path: inset(15% 0 70% 0); transform: translate(4px, -4px); opacity: 1; }
+  }
+
+  @keyframes glitch-2 {
+    0%, 100% { clip-path: inset(0 0 0 0); transform: translate(0); opacity: .8; }
+    10% { clip-path: inset(60% 0 20% 0); transform: translate(5px, -3px); opacity: .6; }
+    20% { clip-path: inset(30% 0 50% 0); transform: translate(-5px, 3px); opacity: 1; }
+    30% { clip-path: inset(10% 0 70% 0); transform: translate(5px, -5px); opacity: .7; }
+    40% { clip-path: inset(40% 0 40% 0); transform: translate(-5px, 5px); opacity: .9; }
+    50% { clip-path: inset(70% 0 10% 0); transform: translate(3px, -3px); opacity: .5; }
+    60% { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 3px); opacity: 1; }
+    70% { clip-path: inset(50% 0 30% 0); transform: translate(4px, -4px); opacity: .8; }
+    80% { clip-path: inset(80% 0 10% 0); transform: translate(-4px, 4px); opacity: .6; }
+  }
+
+  @keyframes noise {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-1%, -1%); }
+    20% { transform: translate(1%, 1%); }
+    30% { transform: translate(-1%, 1%); }
+    40% { transform: translate(1%, -1%); }
+    50% { transform: translate(-1%, -1%); }
+    60% { transform: translate(1%, 1%); }
+    70% { transform: translate(-1%, 1%); }
+    80% { transform: translate(1%, -1%); }
+    90% { transform: translate(-1%, -1%); }
+  }
+
+  .glitch-text {
+    position: relative;
+    display: inline-block;
+    animation: glitch-skew 4s infinite;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+  }
+
+  .glitch-text::before {
+    animation: glitch-1 0.8s infinite linear alternate-reverse;
+    color: #e94560;
+    text-shadow: 2px 0 0 #4e9eff, -2px 0 0 lime;
+    z-index: -1;
+  }
+
+  .glitch-text::after {
+    animation: glitch-2 0.8s infinite linear alternate-reverse;
+    color: #4e9eff;
+    text-shadow: 2px 0 0 #e94560, -2px 0 0 #ff0;
+    z-index: -2;
+  }
+
+  .glitch-text:hover {
+    animation: glitch-skew 1s infinite;
+  }
 }

@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 
 interface PodiumProps {
   drivers: Driver[];
+  constructors: Constructor[];
   isSeasonFinished?: boolean;
 }
 
@@ -34,8 +35,12 @@ const FireParticles = ({ colorClass }: { colorClass: string }) => (
   </div>
 );
 
-export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
+export function Podium({ drivers, constructors, isSeasonFinished = false }: PodiumProps) {
   const topThree = drivers.slice(0, 3);
+
+  const getTeamLogo = (teamName: string) => {
+    return constructors.find(c => c.name === teamName)?.logoUrl;
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -49,11 +54,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
 
   const itemVariants = {
     hidden: { opacity: 0, y: 50 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { type: "spring", stiffness: 100 } as any 
-    }
+    visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
   };
 
   return (
@@ -93,15 +94,25 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
             animate={{ opacity: 1, y: 0 }}
             className="text-center relative"
         >
-            <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-widest relative z-10 py-4">
+            <h2 className="text-4xl md:text-6xl font-black italic text-white uppercase tracking-widest relative z-10 py-4 flex flex-col items-center gap-4">
                 {isSeasonFinished ? (
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-pulse drop-shadow-lg">
-                        🏆 PODIO FINAL 🏆
-                    </span>
+                    <>
+                        <span className="glitch-text text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]" data-text="PODIO FINAL">
+                            PODIO FINAL
+                        </span>
+                        <span className="text-sm font-mono tracking-[0.5em] text-slate-500 animate-pulse">
+                            LA GLORIA ES ETERNA
+                        </span>
+                    </>
                 ) : (
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                        LUCHA POR EL CAMPEONATO
-                    </span>
+                    <>
+                        <span className="glitch-text text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" data-text="LUCHA POR EL CAMPEONATO">
+                            LUCHA POR EL CAMPEONATO
+                        </span>
+                        <span className="text-sm font-mono tracking-[0.5em] text-red-500 animate-pulse">
+                            CADA PUNTO CUENTA
+                        </span>
+                    </>
                 )}
             </h2>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-12 bg-blue-500/20 blur-xl rounded-full -z-10"></div>
@@ -130,6 +141,11 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
            <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-slate-300 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end relative overflow-hidden group-hover:border-slate-200">
               <FireParticles colorClass="bg-slate-400" />
               <div className="relative z-10">
+                {getTeamLogo(topThree[1].team) && (
+                  <div className="flex justify-center mb-3">
+                    <img src={getTeamLogo(topThree[1].team)} alt="Team Logo" className="w-10 h-10 object-contain filter drop-shadow-md" />
+                  </div>
+                )}
                 <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans group-hover:text-slate-200 transition-colors">{topThree[1].name}</h3>
                 <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[1].team}</p>
                 <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5 group-hover:border-slate-500/30 transition-colors">
@@ -192,6 +208,11 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                   <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
                   
                   <div className="relative z-10">
+                    {getTeamLogo(topThree[0].team) && (
+                      <div className="flex justify-center mb-4">
+                        <img src={getTeamLogo(topThree[0].team)} alt="Team Logo" className="w-14 h-14 object-contain filter drop-shadow-xl" />
+                      </div>
+                    )}
                     <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-1 truncate drop-shadow-lg font-sans mt-2 group-hover:text-yellow-100 transition-colors">
                         {topThree[0].name}
                     </h3>
@@ -204,7 +225,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                             {topThree[0].points}
                         </span>
                         <span className="text-[10px] text-yellow-600/80 block uppercase font-bold mt-1 tracking-widest">
-                            Puntos Totales
+                            Puntos
                         </span>
                     </div>
                   </div>
@@ -229,6 +250,11 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
            <div className="w-full bg-gradient-to-t from-slate-800/80 to-slate-900/80 border-t-4 border-orange-700 rounded-t-2xl p-6 text-center backdrop-blur-sm shadow-2xl transform hover:-translate-y-2 transition-transform duration-300 min-h-[180px] flex flex-col justify-end relative overflow-hidden group-hover:border-orange-600">
               <FireParticles colorClass="bg-orange-500" />
               <div className="relative z-10">
+                {getTeamLogo(topThree[2].team) && (
+                  <div className="flex justify-center mb-3">
+                    <img src={getTeamLogo(topThree[2].team)} alt="Team Logo" className="w-10 h-10 object-contain filter drop-shadow-md" />
+                  </div>
+                )}
                 <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-1 truncate font-sans group-hover:text-orange-100 transition-colors">{topThree[2].name}</h3>
                 <p className="text-xs text-slate-400 font-mono mb-4 uppercase tracking-widest">{topThree[2].team}</p>
                 <div className="mt-auto bg-slate-950/50 rounded-lg py-2 border border-white/5 group-hover:border-orange-500/30 transition-colors">
