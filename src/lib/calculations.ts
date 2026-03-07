@@ -1,7 +1,7 @@
 import { ChampionshipData, Driver, Constructor, RaceResult } from '../types';
 
-const getPoints = (position: number, dnf: boolean): number => {
-  if (dnf) return 0;
+const getPoints = (position: number, dnf: boolean, disqualified: boolean): number => {
+  if (dnf || disqualified) return 0;
   const pointsMap = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
   return pointsMap[position - 1] || 0;
 };
@@ -21,19 +21,34 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
       race.results.forEach(result => {
         const driver = driversMap.get(result.driverId);
         if (driver) {
-          // Calculate points based on position (2025 Rules: No FL point)
-          const points = getPoints(result.position, result.dnf);
+          // Calculate points based on position + adjustments
+          let points = getPoints(result.position, result.dnf, result.isDisqualified || false);
           
-          // Add points
-          driver.points += points;
+          // Add manual adjustment (penalties/bonuses)
+          if (result.pointsAdjustment) {
+            points += result.pointsAdjustment;
+          }
           
-          // Count fastest laps
-          if (result.fastestLap) {
-            driver.fastestLaps = (driver.fastestLaps || 0) + 1;
+          // CRITICAL FIX: Update the result object's points to match the calculation
+          // This ensures that charts and other views using result.points (like getEvolutionData)
+          // see the correct, post-adjustment value.
+          result.points = points;
+          
+          // Add points to driver
+          const driverInMap = driversMap.get(result.driverId);
+          if (driverInMap) {
+            driverInMap.points += points;
+            if (result.fastestLap) {
+                driverInMap.fastestLaps = (driverInMap.fastestLaps || 0) + 1;
+            }
           }
 
           // Add points to constructor
-          const constructor = Array.from(constructorsMap.values()).find(c => c.name === driver.team);
+          // Find constructor by name (linked via driver.team)
+          // We need to find the constructor ID that matches the driver's team name
+          const driverTeamName = driver.team;
+          const constructor = Array.from(constructorsMap.values()).find(c => c.name === driverTeamName);
+          
           if (constructor) {
             constructor.points += points;
           }

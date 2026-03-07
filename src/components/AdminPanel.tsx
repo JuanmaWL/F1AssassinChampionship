@@ -91,157 +91,178 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
   }
 
   return (
-    <div className="pb-20 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-          <Settings className={cn("w-8 h-8", accentColor)} />
-          Panel de Administración
-          <span className={cn(
-              "text-sm px-3 py-1 rounded-full border bg-slate-900/50 ml-2",
-              isHistorical ? "border-amber-500/30 text-amber-500" : "border-red-500/30 text-red-500"
-          )}>
-              {isHistorical ? "EDITANDO 2024" : "EDITANDO 2026"}
-          </span>
-        </h2>
+    <div className="pb-20 -mx-4 md:-mx-8">
+      {/* Admin Header - Full Width */}
+      <div className="px-4 md:px-8 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+            <Settings className={cn("w-8 h-8", accentColor)} />
+            Panel de Administración
+            <span className={cn(
+                "text-sm px-3 py-1 rounded-full border bg-slate-900/50 ml-2",
+                isHistorical ? "border-amber-500/30 text-amber-500" : "border-red-500/30 text-red-500"
+            )}>
+                {isHistorical ? "EDITANDO 2024" : "EDITANDO 2026"}
+            </span>
+          </h2>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar Navigation */}
-        <div className="lg:col-span-1 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-0 border-t border-white/5 min-h-[70vh]">
+        {/* Sidebar Navigation - Fixed Width on Desktop */}
+        <aside className={cn(
+            "w-full lg:w-72 border-r border-white/5 bg-slate-900/20 backdrop-blur-sm p-6 space-y-8 shrink-0",
+            isHistorical ? "border-amber-500/10" : "border-white/5"
+        )}>
           
-          {/* FAQ / Instructions Block */}
-          <div className={cn(
-              "p-4 rounded-xl border text-xs space-y-2",
-              isHistorical ? "bg-amber-900/10 border-amber-500/20 text-amber-200/80" : "bg-slate-900/50 border-white/10 text-slate-400"
-          )}>
-              <h4 className="font-bold uppercase tracking-wider text-white mb-2 flex items-center gap-2">
-                  <Info size={14} /> Guía Rápida
-              </h4>
-              <p>Para configurar una nueva temporada, sigue este orden recomendado:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-1">
-                  <li><span className="text-white font-bold">Escuderías:</span> Crea equipos y logos.</li>
-                  <li><span className="text-white font-bold">Pilotos:</span> Asigna pilotos a equipos.</li>
-                  <li><span className="text-white font-bold">Calendario:</span> Define las carreras.</li>
-                  <li><span className="text-white font-bold">Resultados:</span> Sube resultados.</li>
-              </ol>
-              <div className="mt-2 pt-2 border-t border-white/10 text-[10px] text-slate-500">
-                <p>⚠️ Si la subida de imágenes falla, verifica que las <strong>Reglas de Storage</strong> en Firebase permitan escritura pública (allow write: if true;).</p>
-              </div>
-          </div>
-
           <div className="space-y-2">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4 px-4">Navegación</p>
             <button
                 onClick={() => setActiveTab('teams')}
                 className={cn(
-                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
                 activeTab === 'teams' 
                     ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
                     : "text-slate-500 hover:text-white hover:bg-white/5"
                 )}
             >
-                <Trophy size={18} className={activeTab === 'teams' ? accentColor : ""} />
+                <Trophy size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'teams' ? accentColor : "")} />
                 1. Escuderías
             </button>
 
             <button
                 onClick={() => setActiveTab('drivers')}
                 className={cn(
-                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
                 activeTab === 'drivers' 
                     ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
                     : "text-slate-500 hover:text-white hover:bg-white/5"
                 )}
             >
-                <Users size={18} className={activeTab === 'drivers' ? accentColor : ""} />
+                <Users size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'drivers' ? accentColor : "")} />
                 2. Pilotos
             </button>
 
             <button
                 onClick={() => setActiveTab('calendar')}
                 className={cn(
-                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
                 activeTab === 'calendar' 
                     ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
                     : "text-slate-500 hover:text-white hover:bg-white/5"
                 )}
             >
-                <CalendarIcon size={18} className={activeTab === 'calendar' ? accentColor : ""} />
+                <CalendarIcon size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'calendar' ? accentColor : "")} />
                 3. Calendario
             </button>
 
             <button
                 onClick={() => setActiveTab('results')}
                 className={cn(
-                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
                 activeTab === 'results' 
                     ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
                     : "text-slate-500 hover:text-white hover:bg-white/5"
                 )}
             >
-                <Flag size={18} className={activeTab === 'results' ? accentColor : ""} />
+                <Flag size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'results' ? accentColor : "")} />
                 4. Resultados
             </button>
 
-            <div className="h-px bg-white/10 my-2"></div>
+            <div className="h-px bg-white/5 my-4 mx-4"></div>
 
             <button
                 onClick={() => setActiveTab('import')}
                 className={cn(
-                "w-full text-left px-4 py-3 rounded-lg font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all",
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
                 activeTab === 'import' 
                     ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
                     : "text-slate-500 hover:text-white hover:bg-white/5"
                 )}
             >
-                <Database size={18} className={activeTab === 'import' ? accentColor : ""} />
-                Importar / Exportar
+                <Database size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'import' ? accentColor : "")} />
+                Mantenimiento
             </button>
           </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="lg:col-span-3">
-          {activeTab === 'teams' && (
-            <TeamsEditor 
-              data={data} 
-              onUpdateData={onUpdateData} 
-              activeSeason={activeSeason} 
-              isHistorical={isHistorical} 
-            />
-          )}
-          {activeTab === 'drivers' && (
-            <DriversEditor 
-              data={data} 
-              onUpdateData={onUpdateData} 
-              activeSeason={activeSeason} 
-              isHistorical={isHistorical} 
-            />
-          )}
-          {activeTab === 'calendar' && (
-            <CalendarEditor 
-              data={data} 
-              onUpdateData={onUpdateData} 
-              activeSeason={activeSeason} 
-              isHistorical={isHistorical} 
-            />
-          )}
-          {activeTab === 'results' && (
-            <ResultsEditor 
-              data={data} 
-              onUpdateData={onUpdateData} 
-              activeSeason={activeSeason} 
-              isHistorical={isHistorical} 
-            />
-          )}
-          {activeTab === 'import' && (
-            <JsonImporter 
-              currentData={data} 
-              onUpdateData={onUpdateData} 
-              activeSeason={activeSeason} 
-              isHistorical={isHistorical} 
-            />
-          )}
-        </div>
+          {/* FAQ / Instructions Block */}
+          <div className={cn(
+              "p-5 rounded-2xl border text-xs space-y-3",
+              isHistorical ? "bg-amber-900/10 border-amber-500/20 text-amber-200/80" : "bg-slate-950 border-white/5 text-slate-400"
+          )}>
+              <h4 className="font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                  <Info size={14} className={accentColor} /> Guía Rápida
+              </h4>
+              <p className="leading-relaxed">Sigue este orden para configurar la temporada:</p>
+              <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500")}>1</span>
+                    <span>Crea las <strong className="text-white">Escuderías</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500")}>2</span>
+                    <span>Registra a los <strong className="text-white">Pilotos</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500")}>3</span>
+                    <span>Define el <strong className="text-white">Calendario</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className={cn("w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0", isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500")}>4</span>
+                    <span>Sube los <strong className="text-white">Resultados</strong>.</span>
+                  </li>
+              </ul>
+              <div className="mt-4 pt-4 border-t border-white/5 text-[10px] italic opacity-60">
+                <p>Usa la IA para procesar capturas de pantalla de los resultados finales.</p>
+              </div>
+          </div>
+        </aside>
+
+        {/* Content Area - Flexible and Scrollable */}
+        <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+          <div className="max-w-full">
+            {activeTab === 'teams' && (
+              <TeamsEditor 
+                data={data} 
+                onUpdateData={onUpdateData} 
+                activeSeason={activeSeason} 
+                isHistorical={isHistorical} 
+              />
+            )}
+            {activeTab === 'drivers' && (
+              <DriversEditor 
+                data={data} 
+                onUpdateData={onUpdateData} 
+                activeSeason={activeSeason} 
+                isHistorical={isHistorical} 
+              />
+            )}
+            {activeTab === 'calendar' && (
+              <CalendarEditor 
+                data={data} 
+                onUpdateData={onUpdateData} 
+                activeSeason={activeSeason} 
+                isHistorical={isHistorical} 
+              />
+            )}
+            {activeTab === 'results' && (
+              <ResultsEditor 
+                data={data} 
+                onUpdateData={onUpdateData} 
+                activeSeason={activeSeason} 
+                isHistorical={isHistorical} 
+              />
+            )}
+            {activeTab === 'import' && (
+              <JsonImporter 
+                currentData={data} 
+                onUpdateData={onUpdateData} 
+                activeSeason={activeSeason} 
+                isHistorical={isHistorical} 
+              />
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );

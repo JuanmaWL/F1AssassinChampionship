@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { ChampionshipData, Race, SeasonId } from '../types';
-import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock, Wrench } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChampionshipData, Race, SeasonId, RaceResult } from '../types';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, Medal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 interface CalendarProps {
   data: ChampionshipData;
@@ -12,15 +13,69 @@ interface CalendarProps {
 export function Calendar({ data, activeSeason }: CalendarProps) {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
 
   const getDriverName = (id: string) => data.drivers.find((d) => d.id === id)?.name || id;
   const getTeamColor = (id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff';
   const getTeamName = (id: string) => data.drivers.find((d) => d.id === id)?.team || 'Unknown';
+  const getTeamLogo = (id: string) => {
+    const driver = data.drivers.find((d) => d.id === id);
+    if (!driver) return undefined;
+    const team = data.constructors.find((c) => c.name === driver.team);
+    return team?.logoUrl;
+  };
 
   const isHistorical = activeSeason === '2024';
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const hoverBorderColor = isHistorical ? "hover:border-amber-500/50" : "hover:border-red-500/50";
   const statusColor = isHistorical ? "bg-amber-500 group-hover:bg-amber-400" : "bg-green-500 group-hover:bg-green-400";
+
+  const sortedResults = useMemo(() => {
+    if (!selectedRace?.results) return [];
+    let sortableItems = [...selectedRace.results];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue: any = a[sortConfig.key as keyof RaceResult];
+        let bValue: any = b[sortConfig.key as keyof RaceResult];
+
+        // Handle special cases
+        if (sortConfig.key === 'driver') {
+            aValue = getDriverName(a.driverId);
+            bValue = getDriverName(b.driverId);
+        }
+        if (sortConfig.key === 'team') {
+            aValue = getTeamName(a.driverId);
+            bValue = getTeamName(b.driverId);
+        }
+
+        // Handle nulls/undefined
+        if (aValue === undefined || aValue === null) return 1;
+        if (bValue === undefined || bValue === null) return -1;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [selectedRace, sortConfig, data]);
+
+  const requestSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+      if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="opacity-30" />;
+      return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-white" /> : <ArrowDown size={12} className="text-white" />;
+  };
 
   return (
     <div className="pb-20">
@@ -66,7 +121,7 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className={cn(
-              "group",
+              "group relative transition-all duration-300 hover:z-50", // Added hover:z-50 and relative
               viewMode === 'list' ? "flex items-center gap-6" : "h-full"
             )}
           >
@@ -83,7 +138,7 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
             <div
                 onClick={() => race.status === 'completed' && setSelectedRace(race)}
                 className={cn(
-                  "relative overflow-hidden rounded-xl border transition-all duration-300 w-full",
+                  "relative rounded-xl border transition-all duration-300 w-full group", // Removed overflow-hidden
                   // Hover Animations
                   "hover:shadow-2xl hover:-translate-y-1",
                   isHistorical ? "hover:shadow-amber-900/10" : "hover:shadow-red-900/10",
@@ -93,46 +148,49 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                   viewMode === 'list' ? "p-6" : "p-6 flex flex-col h-full min-h-[200px]"
                 )}
             >
-                {/* Circuit Background Image (Fictional/Placeholder) */}
-                <div 
-                    className={cn(
-                        "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500",
-                        isHistorical && "sepia"
-                    )}
-                    style={{
-                        backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}
-                />
-
-                {/* Grid View Number - Inside (Improved Position) */}
-                {viewMode === 'grid' && (
-                    <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
-                        {index + 1}
-                    </div>
-                )}
-                
-                {/* Checkered Flag Fade for Completed Races */}
-                {race.status === 'completed' && (
+                {/* Background Container - Handles clipping for images/flags */}
+                <div className="absolute inset-0 overflow-hidden rounded-xl z-0">
+                    {/* Circuit Background Image (Fictional/Placeholder) */}
                     <div 
-                        className="absolute inset-y-0 right-0 w-1/2 opacity-20 pointer-events-none z-0"
+                        className={cn(
+                            "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500",
+                            isHistorical && "sepia"
+                        )}
                         style={{
-                            backgroundImage: `
-                                linear-gradient(to right, transparent, #000),
-                                repeating-conic-gradient(#333 0% 25%, transparent 0% 50%)
-                            `,
-                            backgroundSize: '100% 100%, 20px 20px',
-                            maskImage: 'linear-gradient(to left, black, transparent)'
+                            backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
                         }}
                     />
-                )}
-                
-                {/* Status Indicator Strip */}
-                <div className={cn(
-                  "absolute left-0 top-0 bottom-0 w-1.5 z-10 transition-all duration-300 group-hover:w-2",
-                  race.status === 'completed' ? statusColor : "bg-slate-700 group-hover:bg-slate-600"
-                )} />
+
+                    {/* Grid View Number - Inside */}
+                    {viewMode === 'grid' && (
+                        <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
+                            {index + 1}
+                        </div>
+                    )}
+                    
+                    {/* Checkered Flag Fade for Completed Races - Increased Opacity */}
+                    {race.status === 'completed' && (
+                        <div 
+                            className="absolute inset-y-0 right-0 w-1/2 opacity-40 pointer-events-none z-0" 
+                            style={{
+                                backgroundImage: `
+                                    linear-gradient(to right, transparent, #000),
+                                    repeating-conic-gradient(#333 0% 25%, transparent 0% 50%)
+                                `,
+                                backgroundSize: '100% 100%, 20px 20px',
+                                maskImage: 'linear-gradient(to left, black, transparent)'
+                            }}
+                        />
+                    )}
+                    
+                    {/* Status Indicator Strip */}
+                    <div className={cn(
+                      "absolute left-0 top-0 bottom-0 w-1.5 z-10 transition-all duration-300 group-hover:w-2",
+                      race.status === 'completed' ? statusColor : "bg-slate-700 group-hover:bg-slate-600"
+                    )} />
+                </div>
 
                 <div className={cn(
                     "flex justify-between gap-4 pl-4 h-full relative z-10",
@@ -169,36 +227,81 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                         "flex items-center gap-4",
                         viewMode === 'grid' ? "mt-auto pt-4 border-t border-white/5 justify-between" : ""
                     )}>
-                      <div className="flex -space-x-3">
+                      <div className="flex -space-x-2 items-end translate-y-1">
                         {race.results.slice(0, 3).map((result, i) => (
-                          <div key={result.driverId} className="group/tooltip relative z-10 hover:z-30 transition-all">
+                          <div key={result.driverId} className="group/tooltip relative z-10 hover:z-[100] transition-all">
                               <div
                                 className={cn(
-                                  "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative shadow-lg transition-transform group-hover/tooltip:scale-110",
-                                  i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
-                                  i === 1 ? "bg-slate-300 text-black border-slate-400" :
-                                  "bg-orange-700 text-white border-orange-600"
+                                  "relative flex items-center justify-center font-black italic text-white shadow-lg transition-transform group-hover/tooltip:scale-110 group-hover/tooltip:-translate-y-2",
+                                  i === 0 ? "w-16 h-16 z-20 bg-gradient-to-br from-yellow-300 to-yellow-600 border-2 border-yellow-200 rounded-xl rotate-3 shadow-[0_0_20px_rgba(234,179,8,0.4)]" : 
+                                  i === 1 ? "w-12 h-12 bg-gradient-to-br from-slate-200 to-slate-400 border border-slate-100 rounded-lg -rotate-3 shadow-[0_0_15px_rgba(148,163,184,0.3)]" :
+                                  "w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-700 border border-orange-300 rounded-lg rotate-6 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
                                 )}
                               >
-                                {i === 0 ? '1' : i === 1 ? '2' : '3'}
+                                <span className="drop-shadow-md text-lg">{i === 0 ? '1' : i === 1 ? '2' : '3'}</span>
+                                {i === 0 && <Trophy size={18} className="absolute -top-6 text-yellow-300 drop-shadow-[0_0_5px_rgba(253,224,71,0.8)]" />}
                               </div>
                               
-                              {/* Custom Tooltip */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                                  <div className="bg-slate-900/90 backdrop-blur-md text-white text-xs rounded-lg shadow-xl p-3 border border-white/10 flex flex-col items-center gap-1 min-w-[120px]">
-                                      <span className="font-black italic text-sm tracking-tight">{getDriverName(result.driverId)}</span>
-                                      <div className="flex items-center gap-1.5 mt-0.5">
-                                          <div 
-                                              className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
-                                              style={{ backgroundColor: getTeamColor(result.driverId), color: getTeamColor(result.driverId) }}
-                                          />
-                                          <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold">
-                                              {getTeamName(result.driverId)}
-                                          </span>
+                              {/* Custom Tooltip - F1 Podium Style */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-[100] transform translate-y-2 group-hover/tooltip:translate-y-0">
+                                  <div className={cn(
+                                      "rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-[180px] border-2",
+                                      i === 0 ? "border-yellow-400 bg-slate-900" : 
+                                      i === 1 ? "border-slate-300 bg-slate-900" : 
+                                      "border-orange-500 bg-slate-900"
+                                  )}>
+                                      {/* Podium Header */}
+                                      <div className={cn(
+                                          "px-4 py-2 text-xs font-black uppercase tracking-widest text-center flex items-center justify-center gap-2",
+                                          i === 0 ? "bg-yellow-400 text-black" : 
+                                          i === 1 ? "bg-slate-300 text-black" : 
+                                          "bg-orange-500 text-white"
+                                      )}>
+                                          {i === 0 && <Trophy size={14} className="fill-current" />}
+                                          {i === 0 ? 'GANADOR' : i === 1 ? '2º LUGAR' : '3º LUGAR'}
+                                      </div>
+                                      
+                                      <div className="p-4 flex flex-col items-center gap-3 bg-slate-900 relative">
+                                        {/* Podium Glow Effect */}
+                                        <div className={cn(
+                                            "absolute top-0 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full blur-[40px] opacity-20 pointer-events-none",
+                                            i === 0 ? "bg-yellow-500" : i === 1 ? "bg-slate-400" : "bg-orange-500"
+                                        )} />
+
+                                        {/* Team Logo */}
+                                        {getTeamLogo(result.driverId) ? (
+                                            <div className="w-16 h-16 flex items-center justify-center filter drop-shadow-2xl relative z-10">
+                                                <img src={getTeamLogo(result.driverId)} alt="Team" className="w-full h-full object-contain" />
+                                            </div>
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center relative z-10">
+                                                <span className="font-bold text-lg text-slate-500">?</span>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="text-center relative z-10">
+                                            <div className="font-black italic text-lg tracking-tighter leading-none mb-1.5 text-white">
+                                                {getDriverName(result.driverId)}
+                                            </div>
+                                            <div className="flex items-center justify-center gap-1.5 bg-white/5 rounded-full px-3 py-1 border border-white/10">
+                                                <div 
+                                                    className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
+                                                    style={{ backgroundColor: getTeamColor(result.driverId), color: getTeamColor(result.driverId) }}
+                                                />
+                                                <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold">
+                                                    {getTeamName(result.driverId)}
+                                                </span>
+                                            </div>
+                                        </div>
                                       </div>
                                   </div>
                                   {/* Tooltip Arrow */}
-                                  <div className="w-3 h-3 bg-slate-900/90 border-r border-b border-white/10 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1.5 backdrop-blur-md"></div>
+                                  <div className={cn(
+                                      "w-4 h-4 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-2 border-r border-b border-white/10",
+                                      i === 0 ? "bg-slate-900 border-yellow-400" : 
+                                      i === 1 ? "bg-slate-900 border-slate-300" : 
+                                      "bg-slate-900 border-orange-500"
+                                  )}></div>
                               </div>
                           </div>
                         ))}
@@ -229,39 +332,55 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
             onClick={() => setSelectedRace(null)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-slate-900 border border-white/10 w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl"
+              className="bg-slate-900 border border-white/10 w-full max-w-6xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 p-6 flex justify-between items-start z-10">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className={cn("text-white text-xs font-bold px-2 py-0.5 rounded uppercase", isHistorical ? "bg-amber-600" : "bg-red-600")}>
-                        Ronda {data.races.findIndex(r => r.id === selectedRace.id) + 1}
-                    </span>
-                    <span className="text-slate-400 text-sm font-mono">
-                        {formatDate(selectedRace.date)}
-                    </span>
+              {/* Enhanced Header with Background */}
+              <div className="relative overflow-hidden border-b border-white/10">
+                  {/* Background Image with Overlay */}
+                  <div 
+                      className="absolute inset-0 z-0 opacity-40 grayscale"
+                      style={{
+                          backgroundImage: `url(https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400)`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center'
+                      }}
+                  />
+                  <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
+                  
+                  <div className="relative z-10 p-8 flex justify-between items-start">
+                    <div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <span className={cn("text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg", isHistorical ? "bg-amber-600" : "bg-red-600")}>
+                                Ronda {data.races.findIndex(r => r.id === selectedRace.id) + 1}
+                            </span>
+                            <span className="text-slate-300 text-sm font-mono flex items-center gap-2 bg-black/30 px-3 py-1 rounded-full border border-white/10">
+                                <Clock size={12} />
+                                {formatDate(selectedRace.date)}
+                            </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter drop-shadow-2xl">
+                            {selectedRace.name}
+                        </h3>
+                        <p className="text-slate-300 flex items-center gap-2 text-lg mt-2 font-medium">
+                            <MapPin size={18} className={isHistorical ? "text-amber-500" : "text-red-500"} /> 
+                            {selectedRace.circuit}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setSelectedRace(null)}
+                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10"
+                    >
+                        <X size={24} />
+                    </button>
                   </div>
-                  <h3 className="text-3xl font-black italic text-white uppercase tracking-tight">
-                    {selectedRace.name}
-                  </h3>
-                  <p className="text-slate-400 flex items-center gap-2 text-sm mt-1">
-                    <MapPin size={14} /> {selectedRace.circuit}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedRace(null)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-                >
-                  <X size={20} />
-                </button>
               </div>
 
               <div className="p-6">
@@ -269,61 +388,157 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
-                        <th className="py-3 px-2 w-12 text-center">Pos</th>
-                        <th className="py-3 px-2">Piloto</th>
-                        <th className="py-3 px-2 hidden sm:table-cell">Equipo</th>
-                        <th className="py-3 px-2 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                                <Clock size={14} /> Tiempo
-                            </div>
-                        </th>
-                        <th className="py-3 px-2 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                                <Timer size={14} /> VR
-                            </div>
-                        </th>
-                        <th className="py-3 px-2 text-center">
+                        <th 
+                            className="py-3 px-2 w-16 text-center cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('position')}
+                        >
                             <div className="flex items-center justify-center gap-1">
-                                <Wrench size={14} /> Pits
+                                Pos <SortIcon columnKey="position" />
                             </div>
                         </th>
-                        <th className="py-3 px-2 text-right">Pts</th>
+                        <th 
+                            className="py-3 px-2 cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('driver')}
+                        >
+                            <div className="flex items-center gap-1">
+                                Piloto <SortIcon columnKey="driver" />
+                            </div>
+                        </th>
+                        <th 
+                            className="py-3 px-2 hidden sm:table-cell cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('team')}
+                        >
+                            <div className="flex items-center gap-1">
+                                Equipo <SortIcon columnKey="team" />
+                            </div>
+                        </th>
+                        <th 
+                            className="py-3 px-2 text-right cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('raceTime')}
+                        >
+                            <div className="flex items-center justify-end gap-1">
+                                <Clock size={14} /> Tiempo <SortIcon columnKey="raceTime" />
+                            </div>
+                        </th>
+                        <th 
+                            className="py-3 px-2 text-right cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('fastestLap')}
+                        >
+                            <div className="flex items-center justify-end gap-1">
+                                <Timer size={14} /> VR <SortIcon columnKey="fastestLap" />
+                            </div>
+                        </th>
+                        <th 
+                            className="py-3 px-2 text-center cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('pitStops')}
+                        >
+                            <div className="flex items-center justify-center gap-1">
+                                <Wrench size={14} /> Pits <SortIcon columnKey="pitStops" />
+                            </div>
+                        </th>
+                        <th 
+                            className="py-3 px-2 text-right cursor-pointer hover:text-white transition-colors group"
+                            onClick={() => requestSort('points')}
+                        >
+                            <div className="flex items-center justify-end gap-1">
+                                Pts <SortIcon columnKey="points" />
+                            </div>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedRace.results?.map((result) => (
+                      {sortedResults.map((result) => (
                         <tr
                           key={result.driverId}
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          className={cn(
+                              "border-b border-white/5 transition-colors",
+                              result.isSanctioned ? "bg-red-500/10 hover:bg-red-500/20" : "hover:bg-white/5"
+                          )}
                         >
                           <td className="py-3 px-2 font-mono text-center font-bold">
                             {result.dnf ? (
                                 <span className="text-red-500">DNF</span>
+                            ) : result.isDisqualified ? (
+                                <span className="text-red-600">DSQ</span>
                             ) : (
-                                <span className="text-slate-400">{result.position}</span>
+                                <div className="group/pos relative flex justify-center cursor-help">
+                                    <span className={cn(
+                                        "relative transition-colors",
+                                        result.isSanctioned ? "text-red-400" :
+                                        (result.originalPosition && result.originalPosition !== result.position) ? "text-blue-400" : "text-slate-400",
+                                        (result.originalPosition && result.originalPosition !== result.position) && "underline decoration-dotted decoration-white/30 underline-offset-4"
+                                    )}>
+                                        {result.position}
+                                        
+                                        {/* Indicator dot if changed */}
+                                        {(result.originalPosition && result.originalPosition !== result.position) && (
+                                            <span className="absolute -top-1 -right-2 flex h-2 w-2">
+                                              <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", result.isSanctioned ? "bg-red-400" : "bg-blue-400")}></span>
+                                              <span className={cn("relative inline-flex rounded-full h-2 w-2", result.isSanctioned ? "bg-red-500" : "bg-blue-500")}></span>
+                                            </span>
+                                        )}
+                                    </span>
+
+                                    {/* Enhanced Original Position Tooltip */}
+                                    {result.originalPosition && result.originalPosition !== result.position && (
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 min-w-[140px] opacity-0 group-hover/pos:opacity-100 transition-all duration-200 pointer-events-none z-50 transform translate-y-2 group-hover/pos:translate-y-0">
+                                            <div className="bg-slate-900 text-white text-xs rounded-lg shadow-xl border border-white/10 overflow-hidden">
+                                                <div className={cn(
+                                                    "px-3 py-1.5 border-b border-white/5 font-bold uppercase tracking-wider text-[10px] text-center",
+                                                    result.isSanctioned ? "bg-red-500/20 text-red-300" : "bg-blue-500/20 text-blue-300"
+                                                )}>
+                                                    {result.isSanctioned ? "Sancionado" : "Posición Original"}
+                                                </div>
+                                                <div className="p-3 text-center font-mono text-lg font-bold flex items-center justify-center gap-2">
+                                                    <span className="text-slate-400 line-through decoration-red-500/50">{result.originalPosition}</span>
+                                                    <span className="text-slate-600 text-xs">➔</span>
+                                                    <span className={cn(result.isSanctioned ? "text-red-400" : "text-blue-400")}>{result.position}</span>
+                                                </div>
+                                            </div>
+                                            {/* Arrow */}
+                                            <div className="w-2 h-2 bg-slate-900 border-r border-b border-white/10 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1"></div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                           </td>
                           <td className="py-3 px-2">
                             <div className="flex items-center gap-3">
                               <div
-                                className="w-1 h-8 rounded-full"
+                                className="w-1.5 h-6 -skew-x-12"
                                 style={{ backgroundColor: getTeamColor(result.driverId) }}
                               />
                               <div>
                                 <div className="font-bold text-white flex items-center gap-2">
                                     {getDriverName(result.driverId)}
+                                    {result.isSanctioned && (
+                                        <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-mono flex items-center gap-1" title={result.penalty || "Sancionado"}>
+                                            <AlertTriangle size={10} />
+                                            {result.penalty || "PEN"}
+                                        </span>
+                                    )}
                                     {result.fastestLap && !result.dnf && (
                                         <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded border border-purple-500/30 font-mono flex items-center gap-1" title="Vuelta Rápida">
                                         <Timer size={10} />
                                         </span>
                                     )}
                                 </div>
-                                <div className="text-xs text-slate-500 sm:hidden">{getTeamName(result.driverId)}</div>
+                                <div className="text-xs text-slate-500 sm:hidden flex items-center gap-1 mt-0.5">
+                                    {getTeamLogo(result.driverId) && (
+                                        <img src={getTeamLogo(result.driverId)} alt="Team Logo" className="w-3 h-3 object-contain" />
+                                    )}
+                                    {getTeamName(result.driverId)}
+                                </div>
                               </div>
                             </div>
                           </td>
                           <td className="py-3 px-2 text-sm text-slate-400 hidden sm:table-cell">
-                            {getTeamName(result.driverId)}
+                            <div className="flex items-center gap-2">
+                                {getTeamLogo(result.driverId) && (
+                                    <img src={getTeamLogo(result.driverId)} alt="Team Logo" className="w-5 h-5 object-contain" />
+                                )}
+                                {getTeamName(result.driverId)}
+                            </div>
                           </td>
                           <td className="py-3 px-2 text-right font-mono text-sm text-slate-300">
                             {result.dnf ? '-' : (result.raceTime || '-')}
@@ -338,13 +553,26 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                             {result.dnf ? '-' : (result.pitStops || 0)}
                           </td>
                           <td className="py-3 px-2 text-right font-mono font-bold text-white">
-                            {result.dnf ? <span className="text-slate-600">0</span> : `+${result.points}`}
+                            {(result.dnf || result.isDisqualified) ? <span className="text-slate-600">0</span> : `+${result.points}`}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Race Report Display */}
+                {selectedRace.raceReport && (
+                    <div className="mt-8 pt-8 border-t border-white/10">
+                        <h4 className="text-lg font-bold text-white italic uppercase mb-4 flex items-center gap-2">
+                            <FileText size={18} className="text-slate-400" />
+                            Reporte de Comisarios
+                        </h4>
+                        <div className="bg-slate-950/50 rounded-xl p-6 border border-white/5 text-sm text-slate-300 leading-relaxed prose prose-invert prose-sm max-w-none">
+                            <ReactMarkdown>{selectedRace.raceReport}</ReactMarkdown>
+                        </div>
+                    </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

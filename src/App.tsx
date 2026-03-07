@@ -57,7 +57,7 @@ export default function App() {
 
       {/* Header */}
       <header className={cn(
-          "fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b h-16 flex items-center justify-between px-4 md:px-8 transition-colors duration-500",
+          "fixed top-0 left-0 right-0 z-[60] backdrop-blur-md border-b h-16 flex items-center justify-between px-4 md:px-8 transition-colors duration-500",
           isHistorical ? "bg-slate-950/90 border-amber-900/30" : "bg-slate-950/80 border-white/5"
       )}>
         <div className="flex items-center gap-4">

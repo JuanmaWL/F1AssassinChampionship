@@ -31,6 +31,11 @@ export interface RaceResult {
   raceTime?: string; // Total race time or gap (e.g., "1:32:45.123" or "+12.456s")
   fastestLapTime?: string; // Best lap time (e.g., "1:18.456")
   pitStops?: number;
+  penalty?: string; // e.g. "+5s", "DSQ", "Grid Drop"
+  pointsAdjustment?: number; // e.g. -2, -10 (points deducted from championship)
+  isSanctioned?: boolean; // Flag to highlight if the driver received a penalty
+  isDisqualified?: boolean; // Flag to highlight if the driver was disqualified
+  originalPosition?: number; // Position before penalties (optional)
 }
 
 export interface Race {
@@ -42,6 +47,7 @@ export interface Race {
   status: RaceStatus;
   results?: RaceResult[];
   polePosition?: string; // Driver ID
+  raceReport?: string; // Markdown text for race incidents and reports
 }
 
 export interface ChampionshipData {

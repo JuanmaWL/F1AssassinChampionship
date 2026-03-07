@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flag, Trophy, Timer, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { ChampionshipData } from '../../types';
+import { ChampionshipData, SeasonId } from '../../types';
 import { formatDate } from '../../lib/utils';
 
 interface StatsOverviewProps {
