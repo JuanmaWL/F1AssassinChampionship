@@ -95,7 +95,7 @@ export function Calendar({ data }: CalendarProps) {
 
                 {/* Grid View Number - Inside (Improved Position) */}
                 {viewMode === 'grid' && (
-                    <div className="absolute -bottom-6 -right-2 text-[120px] leading-none font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
+                    <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
                         {index + 1}
                     </div>
                 )}
@@ -157,17 +157,35 @@ export function Calendar({ data }: CalendarProps) {
                     )}>
                       <div className="flex -space-x-3">
                         {race.results.slice(0, 3).map((result, i) => (
-                          <div
-                            key={result.driverId}
-                            className={cn(
-                              "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative z-10 shadow-lg transition-transform hover:scale-110 hover:z-30",
-                              i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
-                              i === 1 ? "bg-slate-300 text-black border-slate-400" :
-                              "bg-orange-700 text-white border-orange-600"
-                            )}
-                            title={getDriverName(result.driverId)}
-                          >
-                            {i === 0 ? '1' : i === 1 ? '2' : '3'}
+                          <div key={result.driverId} className="group/tooltip relative z-10 hover:z-30 transition-all">
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-full border-2 border-slate-900 flex items-center justify-center text-xs font-bold text-white relative shadow-lg transition-transform group-hover/tooltip:scale-110",
+                                  i === 0 ? "w-12 h-12 z-20 bg-yellow-500 text-black border-yellow-400" : 
+                                  i === 1 ? "bg-slate-300 text-black border-slate-400" :
+                                  "bg-orange-700 text-white border-orange-600"
+                                )}
+                              >
+                                {i === 0 ? '1' : i === 1 ? '2' : '3'}
+                              </div>
+                              
+                              {/* Custom Tooltip */}
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                  <div className="bg-slate-900/90 backdrop-blur-md text-white text-xs rounded-lg shadow-xl p-3 border border-white/10 flex flex-col items-center gap-1 min-w-[120px]">
+                                      <span className="font-black italic text-sm tracking-tight">{getDriverName(result.driverId)}</span>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                          <div 
+                                              className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
+                                              style={{ backgroundColor: getTeamColor(result.driverId), color: getTeamColor(result.driverId) }}
+                                          />
+                                          <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold">
+                                              {getTeamName(result.driverId)}
+                                          </span>
+                                      </div>
+                                  </div>
+                                  {/* Tooltip Arrow */}
+                                  <div className="w-3 h-3 bg-slate-900/90 border-r border-b border-white/10 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-1.5 backdrop-blur-md"></div>
+                              </div>
                           </div>
                         ))}
                       </div>
