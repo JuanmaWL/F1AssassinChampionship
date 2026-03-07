@@ -90,20 +90,20 @@ const initialConstructors = [
   { id: 'c8', name: 'Assassin\'s Mania Racing Team', color: '#00FFFF', points: 0, logoUrl: 'https://picsum.photos/seed/assassin/200/200' },
 ];
 
-// Races Definition (2025 Dates)
+// Races Definition (2026 Dates)
 const racesDef = [
-  { id: 'r1', name: 'Gran Premio de China', circuit: 'Shanghai International Circuit', date: '2025-03-02T21:00:00+01:00', flagCode: 'cn' },
-  { id: 'r2', name: 'Gran Premio de Singapur', circuit: 'Marina Bay Street Circuit', date: '2025-03-16T21:00:00+01:00', flagCode: 'sg' },
-  { id: 'r3', name: 'Gran Premio de Australia', circuit: 'Albert Park Circuit', date: '2025-03-30T21:00:00+02:00', flagCode: 'au' },
-  { id: 'r4', name: 'Gran Premio de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2025-04-13T21:00:00+02:00', flagCode: 'ae' },
-  { id: 'r5', name: 'Gran Premio de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2025-04-27T21:00:00+02:00', flagCode: 'br' },
-  { id: 'r6', name: 'Gran Premio de Azerbaiyán', circuit: 'Baku City Circuit', date: '2025-05-11T21:00:00+02:00', flagCode: 'az' },
-  { id: 'r7', name: 'Gran Premio de Japón', circuit: 'Suzuka International Racing Course', date: '2025-05-25T21:00:00+02:00', flagCode: 'jp' },
-  { id: 'r8', name: 'Gran Premio de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2025-06-08T21:00:00+02:00', flagCode: 'be' },
-  { id: 'r9', name: 'Gran Premio de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2025-06-22T21:00:00+02:00', flagCode: 'gb' },
-  { id: 'r10', name: 'Gran Premio de Bahrein', circuit: 'Bahrain International Circuit', date: '2025-07-06T21:00:00+02:00', flagCode: 'bh' },
-  { id: 'r11', name: 'Gran Premio de Mónaco', circuit: 'Circuit de Monaco', date: '2025-07-20T21:00:00+02:00', flagCode: 'mc' },
-  { id: 'r12', name: 'Gran Premio de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2025-08-03T21:00:00+02:00', flagCode: 'es' },
+  { id: 'r1', name: 'GP de China', circuit: 'Shanghai International Circuit', date: '2026-03-02T21:00:00+01:00', flagCode: 'cn' },
+  { id: 'r2', name: 'GP de Singapur', circuit: 'Marina Bay Street Circuit', date: '2026-03-16T21:00:00+01:00', flagCode: 'sg' },
+  { id: 'r3', name: 'GP de Australia', circuit: 'Albert Park Circuit', date: '2026-03-30T21:00:00+02:00', flagCode: 'au' },
+  { id: 'r4', name: 'GP de Abu Dhabi', circuit: 'Yas Marina Circuit', date: '2026-04-13T21:00:00+02:00', flagCode: 'ae' },
+  { id: 'r5', name: 'GP de Brasil', circuit: 'Autódromo José Carlos Pace', date: '2026-04-27T21:00:00+02:00', flagCode: 'br' },
+  { id: 'r6', name: 'GP de Azerbaiyán', circuit: 'Baku City Circuit', date: '2026-05-11T21:00:00+02:00', flagCode: 'az' },
+  { id: 'r7', name: 'GP de Japón', circuit: 'Suzuka International Racing Course', date: '2026-05-25T21:00:00+02:00', flagCode: 'jp' },
+  { id: 'r8', name: 'GP de Bélgica', circuit: 'Circuit de Spa-Francorchamps', date: '2026-06-08T21:00:00+02:00', flagCode: 'be' },
+  { id: 'r9', name: 'GP de Gran Bretaña', circuit: 'Silverstone Circuit', date: '2026-06-22T21:00:00+02:00', flagCode: 'gb' },
+  { id: 'r10', name: 'GP de Bahrein', circuit: 'Bahrain International Circuit', date: '2026-07-06T21:00:00+02:00', flagCode: 'bh' },
+  { id: 'r11', name: 'GP de Mónaco', circuit: 'Circuit de Monaco', date: '2026-07-20T21:00:00+02:00', flagCode: 'mc' },
+  { id: 'r12', name: 'GP de España', circuit: 'Circuit de Barcelona-Catalunya', date: '2026-08-03T21:00:00+02:00', flagCode: 'es' },
 ];
 
 // Simulate Championship - All pending

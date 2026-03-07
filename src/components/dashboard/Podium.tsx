@@ -93,7 +93,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥈</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-slate-400/20 to-transparent z-0"></div>
               </div>
-              <div className="absolute -top-2 -right-2 bg-slate-300 text-slate-900 text-xs font-black px-2 py-1 rounded shadow-lg rotate-12 z-20">
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-slate-200 text-slate-900 text-xs font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-slate-900">
                   P2
               </div>
            </div>
@@ -111,29 +111,67 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
 
       {/* 1st Place */}
       {topThree[0] && (
-        <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-12 md:mt-0 group relative w-full">
-           <div className="relative mb-8">
-              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-24 h-24 z-20">
-                  <Crown className="w-full h-full text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)] animate-[bounce_3s_infinite]" />
-              </div>
-              
-              <div className="w-40 h-40 rounded-full border-4 border-yellow-400 flex items-center justify-center bg-slate-900 shadow-[0_0_50px_rgba(250,204,21,0.5)] z-10 relative overflow-hidden group-hover:scale-110 transition-transform duration-500">
-                 <span className="text-7xl z-10 filter drop-shadow-lg">🥇</span>
-                 <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/30 to-transparent z-0 animate-pulse"></div>
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
-              </div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-sm font-black px-4 py-1 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] whitespace-nowrap z-20 uppercase tracking-widest">
-                  LÍDER
-              </div>
+        <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-12 md:-mt-16 group relative w-full">
+           {/* Floating Status Icon */}
+           <div className="absolute -top-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+              <motion.div
+                animate={{ 
+                    y: [0, -8, 0],
+                    rotate: [0, -2, 2, 0],
+                    filter: ["drop-shadow(0 0 10px rgba(234,179,8,0.5))", "drop-shadow(0 0 25px rgba(234,179,8,0.8))", "drop-shadow(0 0 10px rgba(234,179,8,0.5))"]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                {isSeasonFinished ? (
+                    <Trophy className="w-24 h-24 text-yellow-400" strokeWidth={1} />
+                ) : (
+                    <Crown className="w-24 h-24 text-yellow-400" strokeWidth={1} />
+                )}
+              </motion.div>
            </div>
 
-           <div className="w-full bg-gradient-to-t from-yellow-900/20 to-slate-900/90 border-t-4 border-yellow-400 rounded-t-2xl p-8 text-center backdrop-blur-md shadow-[0_0_40px_rgba(250,204,21,0.15)] transform hover:-translate-y-3 transition-transform duration-300 min-h-[220px] flex flex-col justify-end relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent pointer-events-none"></div>
-              <h3 className="text-3xl font-bold text-white uppercase tracking-tight mb-1 truncate drop-shadow-md font-sans">{topThree[0].name}</h3>
-              <p className="text-sm text-yellow-500/80 font-mono mb-6 uppercase tracking-widest font-bold">{topThree[0].team}</p>
-              <div className="mt-auto bg-yellow-500/10 rounded-xl py-3 border border-yellow-500/20">
-                  <span className="text-4xl font-black text-yellow-400 font-mono">{topThree[0].points}</span>
-                  <span className="text-xs text-yellow-600 block uppercase font-bold mt-1">Puntos Totales</span>
+           <div className="relative w-full max-w-[320px]">
+              {/* Avatar Container */}
+              <div className="relative z-20 mx-auto w-48 h-48 mb-[-3rem]">
+                  <div className={`w-full h-full rounded-full border-[6px] flex items-center justify-center bg-slate-950 shadow-[0_0_50px_rgba(234,179,8,0.3)] relative overflow-hidden group-hover:scale-105 transition-transform duration-500 ${isSeasonFinished ? 'border-yellow-500' : 'border-yellow-500'}`}>
+                     <span className="text-8xl z-10 filter drop-shadow-2xl">🥇</span>
+                     
+                     {/* Animated Background */}
+                     <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0_340deg,rgba(234,179,8,0.5)_360deg)] animate-[spin_4s_linear_infinite] opacity-30"></div>
+                     <div className="absolute inset-1 bg-slate-900 rounded-full"></div>
+                  </div>
+                  
+                  {/* Label Badge */}
+                  <div className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-sm font-black px-6 py-1.5 rounded-full shadow-[0_0_20px_rgba(234,179,8,0.6)] whitespace-nowrap z-30 uppercase tracking-widest border-4 border-slate-900 flex items-center gap-2">
+                      {isSeasonFinished ? <Trophy size={14} strokeWidth={3} /> : <Crown size={14} strokeWidth={3} />}
+                      <span>{isSeasonFinished ? 'CAMPEÓN' : 'LÍDER ACTUAL'}</span>
+                  </div>
+              </div>
+
+              {/* Card Content */}
+              <div className={`w-full rounded-[2rem] p-8 pt-16 text-center backdrop-blur-xl shadow-2xl transform transition-all duration-500 group-hover:-translate-y-2 border-t-4 relative overflow-hidden ${
+                  isSeasonFinished 
+                    ? 'bg-gradient-to-b from-yellow-900/60 to-slate-950 border-yellow-500' 
+                    : 'bg-gradient-to-b from-yellow-900/40 to-slate-950 border-yellow-500'
+              }`}>
+                  {/* Background Texture */}
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                  
+                  <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-1 truncate drop-shadow-lg font-sans mt-2 relative z-10">
+                    {topThree[0].name}
+                  </h3>
+                  <p className="text-sm font-mono mb-6 uppercase tracking-[0.3em] font-bold text-yellow-500/80 relative z-10">
+                    {topThree[0].team}
+                  </p>
+                  
+                  <div className="relative z-10 bg-black/40 rounded-xl py-4 border border-yellow-500/20 shadow-inner">
+                      <span className="text-5xl font-black text-yellow-400 font-mono tracking-tighter drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                        {topThree[0].points}
+                      </span>
+                      <span className="text-[10px] text-yellow-600/80 block uppercase font-bold mt-1 tracking-widest">
+                        Puntos Totales
+                      </span>
+                  </div>
               </div>
            </div>
         </motion.div>
@@ -147,7 +185,7 @@ export function Podium({ drivers, isSeasonFinished = false }: PodiumProps) {
                  <span className="text-5xl z-10 filter drop-shadow-lg">🥉</span>
                  <div className="absolute inset-0 bg-gradient-to-tr from-orange-700/20 to-transparent z-0"></div>
               </div>
-              <div className="absolute -top-2 -left-2 bg-orange-700 text-white text-xs font-black px-2 py-1 rounded shadow-lg -rotate-12 z-20">
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-orange-800 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg z-20 border-2 border-slate-900">
                   P3
               </div>
            </div>
