@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { ChampionshipData, Race, SeasonId, RaceResult } from '../types';
-import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, Medal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, Medal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { GlobeCalendar } from './GlobeCalendar';
 
 interface CalendarProps {
   data: ChampionshipData;
@@ -12,7 +13,7 @@ interface CalendarProps {
 
 export function Calendar({ data, activeSeason }: CalendarProps) {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
 
   const getDriverName = (id: string) => data.drivers.find((d) => d.id === id)?.name || id;
@@ -78,12 +79,69 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
   };
 
   return (
-    <div className="pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-            <CalendarIcon className={cn("w-8 h-8", accentColor)} />
-            Calendario de Carreras
-        </h2>
+    <div className="pb-20 relative">
+      {/* F1 Style Background for Globe View */}
+      {viewMode === 'globe' && (
+        <div 
+          className="absolute inset-0 w-screen left-1/2 -translate-x-1/2 overflow-hidden pointer-events-none z-0"
+          style={{
+            maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)'
+          }}
+        >
+          {/* Base gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 opacity-80"></div>
+          
+          {/* Grid lines */}
+          <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+          
+          {/* Speed lines */}
+          <div className="absolute inset-0 opacity-20">
+            {[...Array(15)].map((_, i) => (
+              <div
+                key={`line-${i}`}
+                className={cn("absolute h-px w-full bg-gradient-to-r from-transparent to-transparent", isHistorical ? "via-amber-500" : "via-red-500")}
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `-${Math.random() * 100}%`,
+                  animation: `speedLine ${Math.random() * 3 + 2}s linear infinite`,
+                  animationDelay: `${Math.random() * 2}s`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Particles */}
+          <div className="absolute inset-0">
+            {[...Array(40)].map((_, i) => (
+              <div
+                key={`particle-${i}`}
+                className={cn("absolute rounded-full animate-pulse", isHistorical ? "bg-amber-500" : "bg-red-500")}
+                style={{
+                  width: Math.random() * 3 + 1 + 'px',
+                  height: Math.random() * 3 + 1 + 'px',
+                  top: Math.random() * 100 + '%',
+                  left: Math.random() * 100 + '%',
+                  opacity: Math.random() * 0.5 + 0.1,
+                  animationDuration: Math.random() * 3 + 2 + 's',
+                  animationDelay: Math.random() * 2 + 's',
+                  boxShadow: `0 0 ${Math.random() * 10 + 5}px ${isHistorical ? 'rgba(245, 158, 11, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Vignette effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(2,6,23,0.8)_100%)]"></div>
+        </div>
+      )}
+
+      <div className="relative z-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+              <CalendarIcon className={cn("w-8 h-8", accentColor)} />
+              Calendario de Carreras
+          </h2>
         
         {/* View Toggle */}
         {data.races.length > 0 && (
@@ -108,6 +166,16 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                   <LayoutGrid size={18} />
                   Grid
               </button>
+              <button
+                  onClick={() => setViewMode('globe')}
+                  className={cn(
+                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                      viewMode === 'globe' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                  )}
+              >
+                  <Globe size={18} />
+                  Mundo
+              </button>
           </div>
         )}
       </div>
@@ -130,6 +198,13 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                   <div key={i} className={cn("w-3 h-1 rounded-full animate-pulse", isHistorical ? "bg-amber-500/30" : "bg-red-500/30")} style={{ animationDelay: `${i * 0.2}s` }} />
               ))}
           </div>
+        </motion.div>
+      ) : viewMode === 'globe' ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <GlobeCalendar races={data.races} accentColor={accentColor} />
         </motion.div>
       ) : (
         <div className={cn(
@@ -601,6 +676,16 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      
+      <style>{`
+        @keyframes speedLine {
+          0% { transform: translateX(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateX(200vw); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

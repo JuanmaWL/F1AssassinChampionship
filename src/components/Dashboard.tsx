@@ -158,7 +158,7 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
         {/* Historical Watermark */}
         {isHistorical && (
             <div className="absolute top-4 right-4 border border-amber-500/30 px-3 py-1 rounded text-amber-500/50 font-mono text-xs uppercase tracking-widest rotate-[-5deg]">
-                Finalizada
+                Finalizado
             </div>
         )}
       </div>
