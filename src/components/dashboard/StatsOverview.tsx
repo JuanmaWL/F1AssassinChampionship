@@ -174,14 +174,14 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                 <div>
                     <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-emerald-500 group-hover:text-emerald-400'}`}>
                         <span className={`w-2 h-2 rounded-full animate-pulse ${isSeasonFinished ? 'bg-slate-500' : 'bg-emerald-500'}`}></span>
-                        {isSeasonFinished ? 'PUNTOS FINALES' : 'PUNTOS EN JUEGO'}
+                        PUNTOS EN JUEGO
                     </h3>
                     <div className="flex items-baseline gap-2">
                         <span className={`text-5xl font-black italic tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300 ${isSeasonFinished ? 'text-slate-500' : 'text-white'}`}>
                             {pointsRemaining}
                         </span>
                         <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
-                            PTS
+                            PUNTOS
                         </span>
                     </div>
                 </div>

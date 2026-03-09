@@ -98,3 +98,48 @@ export function getEvolutionData(data: ChampionshipData, topNDrivers: number = 5
     return point;
   });
 }
+
+export function getConstructorEvolutionData(data: ChampionshipData, topNConstructors: number = 5) {
+  const topConstructors = [...data.constructors]
+    .sort((a, b) => b.points - a.points)
+    .slice(0, topNConstructors);
+
+  const completedRaces = data.races.filter(r => r.status === 'completed');
+  
+  // Initialize cumulative points for top constructors
+  const constructorPoints = new Map<string, number>();
+  topConstructors.forEach(c => constructorPoints.set(c.id, 0));
+
+  // Map driverId to constructorId
+  const driverToConstructor = new Map<string, string>();
+  data.drivers.forEach(d => {
+    const constructor = data.constructors.find(c => c.name === d.team);
+    if (constructor) {
+      driverToConstructor.set(d.id, constructor.id);
+    }
+  });
+
+  return completedRaces.map(race => {
+    const point = { name: race.name }; // X-axis label
+    
+    // Update cumulative points for this race
+    if (race.results) {
+      race.results.forEach(result => {
+        const constructorId = driverToConstructor.get(result.driverId);
+        if (constructorId && constructorPoints.has(constructorId)) {
+          const current = constructorPoints.get(constructorId) || 0;
+          const newTotal = current + result.points;
+          constructorPoints.set(constructorId, newTotal);
+        }
+      });
+    }
+
+    // Add current totals to the data point
+    topConstructors.forEach(constructor => {
+      // @ts-ignore - Dynamic property assignment for Recharts
+      point[constructor.name] = constructorPoints.get(constructor.id);
+    });
+
+    return point;
+  });
+}

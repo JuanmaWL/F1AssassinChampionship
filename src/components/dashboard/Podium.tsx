@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Crown, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
-import { Driver } from '../../types';
+import { Driver, Constructor } from '../../types';
 import { cn } from '../../lib/utils';
+import { F1CarAnimation } from './F1CarAnimation';
+import { Confetti } from './Confetti';
 
 interface PodiumProps {
   drivers: Driver[];
@@ -37,6 +39,14 @@ const FireParticles = ({ colorClass }: { colorClass: string }) => (
 
 export function Podium({ drivers, constructors, isSeasonFinished = false }: PodiumProps) {
   const topThree = drivers.slice(0, 3);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleWinnerClick = () => {
+    if (isSeasonFinished && !showConfetti) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000); // Stop confetti generation after 5 seconds
+    }
+  };
 
   const getTeamLogo = (teamName: string) => {
     return constructors.find(c => c.name === teamName)?.logoUrl;
@@ -86,6 +96,7 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
       </div>
 
       <div className="relative z-10 mb-16 md:mb-24">
+        {showConfetti && <Confetti />}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
              <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent"></div>
         </div>
@@ -152,6 +163,15 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
                     <span className="text-2xl font-black text-slate-300 font-mono">{topThree[1].points}</span>
                     <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
                 </div>
+                {isSeasonFinished && (
+                  <div className="mt-4 flex justify-center w-full">
+                    <F1CarAnimation 
+                      primaryColor={topThree[1].teamColor || '#E85725'} 
+                      helmetColor="#ffffff" 
+                      className="w-full max-w-[120px] opacity-80"
+                    />
+                  </div>
+                )}
               </div>
            </div>
         </motion.div>
@@ -159,7 +179,11 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
 
       {/* 1st Place */}
       {topThree[0] && (
-        <motion.div variants={itemVariants} className="order-1 md:order-2 flex flex-col items-center z-20 -mt-8 md:-mt-12 group relative w-full">
+        <motion.div 
+          variants={itemVariants} 
+          className={cn("order-1 md:order-2 flex flex-col items-center z-20 -mt-8 md:-mt-12 group relative w-full", isSeasonFinished ? "cursor-pointer" : "")}
+          onClick={handleWinnerClick}
+        >
            {/* Floating Status Icon - Moved closer */}
            <div className="absolute -top-14 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
               <motion.div
@@ -228,6 +252,16 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
                             Puntos
                         </span>
                     </div>
+                    {isSeasonFinished && (
+                      <div className="mt-6 flex justify-center w-full relative">
+                        <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full"></div>
+                        <F1CarAnimation 
+                          primaryColor={topThree[0].teamColor || '#E85725'} 
+                          helmetColor="#F59E0B" 
+                          className="w-full max-w-[160px] relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                        />
+                      </div>
+                    )}
                   </div>
               </div>
            </div>
@@ -261,6 +295,15 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
                     <span className="text-2xl font-black text-orange-400 font-mono">{topThree[2].points}</span>
                     <span className="text-[10px] text-slate-500 block uppercase font-bold">Puntos</span>
                 </div>
+                {isSeasonFinished && (
+                  <div className="mt-4 flex justify-center w-full">
+                    <F1CarAnimation 
+                      primaryColor={topThree[2].teamColor || '#E85725'} 
+                      helmetColor="#ffffff" 
+                      className="w-full max-w-[120px] opacity-80"
+                    />
+                  </div>
+                )}
               </div>
            </div>
         </motion.div>

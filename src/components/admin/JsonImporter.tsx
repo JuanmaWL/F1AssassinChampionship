@@ -300,13 +300,16 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     linkElement.click();
   };
 
-  const tabs: { id: ImportSection; label: string; icon: React.ElementType }[] = [
-    { id: 'full', label: 'Completo', icon: Database },
-    { id: 'edit', label: 'Editor JSON', icon: Edit },
-    { id: 'drivers', label: 'Pilotos', icon: Users },
+  const tabsGroup1: { id: ImportSection; label: string; icon: React.ElementType }[] = [
     { id: 'teams', label: 'Escuderías', icon: Trophy },
+    { id: 'drivers', label: 'Pilotos', icon: Users },
     { id: 'calendar', label: 'Calendario', icon: CalendarIcon },
     { id: 'results', label: 'Resultados', icon: Flag },
+  ];
+
+  const tabsGroup2: { id: ImportSection; label: string; icon: React.ElementType }[] = [
+    { id: 'full', label: 'Completo', icon: Database },
+    { id: 'edit', label: 'Editor JSON', icon: Edit },
   ];
 
   const getPlaceholderText = () => {
@@ -324,34 +327,62 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col gap-4 mb-2">
         <h3 className="text-xl font-bold text-white italic uppercase">Gestión de Datos</h3>
         
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 bg-slate-900/50 p-1 rounded-lg border border-white/5">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveSection(tab.id);
-                setJsonContent('');
-                setTextContent('');
-                setImagePreview(null);
-                setImageType('');
-                setError(null);
-                setSuccess(null);
-              }}
-              className={cn(
-                "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
-                activeSection === tab.id
-                  ? cn("bg-white text-slate-900 shadow-sm", isHistorical && "bg-amber-500 text-black")
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
-              )}
-            >
-              <tab.icon size={14} />
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-wrap gap-2 bg-slate-900/50 p-1 rounded-lg border border-white/5">
+            {tabsGroup1.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveSection(tab.id);
+                  setJsonContent('');
+                  setTextContent('');
+                  setImagePreview(null);
+                  setImageType('');
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
+                  activeSection === tab.id
+                    ? cn("bg-white text-slate-900 shadow-sm", isHistorical && "bg-amber-500 text-black")
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <tab.icon size={14} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 bg-slate-900/50 p-1 rounded-lg border border-white/5">
+            {tabsGroup2.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveSection(tab.id);
+                  setJsonContent('');
+                  setTextContent('');
+                  setImagePreview(null);
+                  setImageType('');
+                  setError(null);
+                  setSuccess(null);
+                }}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
+                  activeSection === tab.id
+                    ? cn("bg-white text-slate-900 shadow-sm", isHistorical && "bg-amber-500 text-black")
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                )}
+              >
+                <tab.icon size={14} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

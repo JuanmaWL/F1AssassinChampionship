@@ -166,8 +166,8 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
       <StatsOverview data={data} activeSeason={activeSeason} />
       {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
       <DriversTable drivers={sortedDrivers} />
-      {hasCompletedRaces && <EvolutionChart data={data} />}
       <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} />
+      {hasCompletedRaces && <EvolutionChart data={data} />}
     </div>
   );
 }
