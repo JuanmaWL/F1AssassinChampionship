@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Timer, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Driver } from '../../types';

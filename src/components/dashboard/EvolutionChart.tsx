@@ -11,7 +11,6 @@ import {
 } from 'recharts';
 import { motion } from 'motion/react';
 import { ChampionshipData, Driver, Constructor } from '../../types';
-import { getEvolutionData, getConstructorEvolutionData } from '../../lib/calculations';
 import { cn } from '../../lib/utils';
 import { Users, Trophy, TrendingUp, Hash, Maximize, Minimize } from 'lucide-react';
 
@@ -64,8 +63,8 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
   const allDriversCount = data.drivers.length;
   const allConstructorsCount = data.constructors.length;
   
-  const sortedDrivers = [...data.drivers].sort((a, b) => b.points - a.points);
-  const sortedConstructors = [...data.constructors].sort((a, b) => b.points - a.points);
+  const sortedDrivers = React.useMemo(() => [...data.drivers].sort((a, b) => b.points - a.points), [data.drivers]);
+  const sortedConstructors = React.useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
   
   const [hiddenItems, setHiddenItems] = React.useState<string[]>([]);
 

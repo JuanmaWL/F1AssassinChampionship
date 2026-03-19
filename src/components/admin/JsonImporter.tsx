@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChampionshipData, SeasonId, Driver, Constructor, Race, RaceResult } from '../../types';
+import { ChampionshipData, SeasonId, Race } from '../../types';
 import { Upload, Download, AlertTriangle, Check, FileJson, FileText, Bot, Database, Users, Flag, Trophy, Calendar as CalendarIcon, Image as ImageIcon, X, Edit } from 'lucide-react';
 import { dataService } from '../../services/dataService';
 import { cn } from '../../lib/utils';

@@ -1,4 +1,4 @@
-import { ChampionshipData, Driver, Constructor, RaceResult } from '../types';
+import { ChampionshipData, Driver, Constructor } from '../types';
 
 const getPoints = (position: number, dnf: boolean, disqualified: boolean): number => {
   if (dnf || disqualified) return 0;

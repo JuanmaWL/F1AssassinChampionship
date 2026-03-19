@@ -10,9 +10,11 @@ interface ConstructorsTableProps {
 }
 
 export function ConstructorsTable({ constructors, hasCompletedRaces }: ConstructorsTableProps) {
-  const sortedConstructors = hasCompletedRaces 
-    ? [...constructors].sort((a, b) => b.points - a.points)
-    : [...constructors].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedConstructors = React.useMemo(() => {
+    return hasCompletedRaces 
+      ? [...constructors].sort((a, b) => b.points - a.points)
+      : [...constructors].sort((a, b) => a.name.localeCompare(b.name));
+  }, [constructors, hasCompletedRaces]);
 
   return (
     <motion.div

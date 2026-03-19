@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Trophy, Play, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp, ChevronDown } from 'lucide-react';
+import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const RACES = [
@@ -116,6 +116,16 @@ export function Draw() {
   // Sound effects (visual only for now, but we prepare the state)
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  const timeoutRefs = React.useRef<NodeJS.Timeout[]>([]);
+  const animFrameRefs = React.useRef<number[]>([]);
+
+  React.useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(clearTimeout);
+      animFrameRefs.current.forEach(cancelAnimationFrame);
+    };
+  }, []);
+
   // Hook to simulate pointer ticking
   React.useEffect(() => {
     if (!isSpinning) {
@@ -141,14 +151,19 @@ export function Draw() {
           lastTickAngle = currentSlice;
           // Trigger pointer flick with more subtle physics
           setPointerRotation(-25);
-          setTimeout(() => setPointerRotation(0), 50);
+          const tId = setTimeout(() => setPointerRotation(0), 50);
+          timeoutRefs.current.push(tId);
         }
       }
-      requestAnimationFrame(checkTick);
+      const aId = requestAnimationFrame(checkTick);
+      animFrameRefs.current.push(aId);
     };
 
     const animId = requestAnimationFrame(checkTick);
-    return () => cancelAnimationFrame(animId);
+    animFrameRefs.current.push(animId);
+    return () => {
+      cancelAnimationFrame(animId);
+    };
   }, [isSpinning]);
 
   const fireConfetti = () => {
@@ -174,10 +189,12 @@ export function Draw() {
       });
 
       if (Date.now() < end) {
-        requestAnimationFrame(frame);
+        const aId = requestAnimationFrame(frame);
+        animFrameRefs.current.push(aId);
       }
     };
-    frame();
+    const initialAId = requestAnimationFrame(frame);
+    animFrameRefs.current.push(initialAId);
   };
 
   const spinWheel = () => {
@@ -206,19 +223,21 @@ export function Draw() {
     const newRotation = rotation + (spins * 360) + extra;
     setRotation(newRotation);
 
-    setTimeout(() => {
+    const tId1 = setTimeout(() => {
       setWinningRace(winner);
       setShowWinner(true);
       setIsSpinning(false);
 
       fireConfetti();
 
-      setTimeout(() => {
+      const tId2 = setTimeout(() => {
         setSelectedRaces(prev => [...prev, winner]);
         setShowWinner(false);
       }, 4000);
+      timeoutRefs.current.push(tId2);
 
     }, 6000);
+    timeoutRefs.current.push(tId1);
   };
 
   const resetDraw = () => {

@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
-import { Calendar } from './components/Calendar';
-import { AdminPanel } from './components/AdminPanel';
-import { Draw } from './components/Draw';
 import { IntroAnimation } from './components/IntroAnimation';
 import { mockData } from './mockData';
 import { ChampionshipData, SeasonId } from './types';
@@ -11,7 +8,19 @@ import { cn } from './lib/utils';
 import { AnimatePresence } from 'motion/react';
 import { dataService } from './services/dataService';
 
+// Lazy loaded components
+const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
+const AdminPanel = lazy(() => import('./components/AdminPanel').then(module => ({ default: module.AdminPanel })));
+const Draw = lazy(() => import('./components/Draw').then(module => ({ default: module.Draw })));
+
 type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw';
+
+const LoadingSpinner = () => (
+  <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
+    <Loader2 className="w-10 h-10 animate-spin mb-4 text-red-500" />
+    <p className="font-mono text-xs uppercase tracking-widest">Cargando módulo...</p>
+  </div>
+);
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -214,12 +223,12 @@ export default function App() {
                 <p className="font-mono text-xs uppercase tracking-widest">Cargando datos...</p>
             </div>
         ) : (
-            <>
+            <Suspense fallback={<LoadingSpinner />}>
                 {activeTab === 'dashboard' && <Dashboard data={data} activeSeason={activeSeason} />}
                 {activeTab === 'calendar' && <Calendar data={data} activeSeason={activeSeason} />}
                 {activeTab === 'draw' && <Draw />}
                 {activeTab === 'admin' && <AdminPanel data={data} onUpdateData={setData} activeSeason={activeSeason} />}
-            </>
+            </Suspense>
         )}
       </main>
 

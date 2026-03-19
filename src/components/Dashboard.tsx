@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { ChampionshipData, SeasonId } from '../types';
 import { StatsOverview } from './dashboard/StatsOverview';
 import { Podium } from './dashboard/Podium';
@@ -14,12 +14,26 @@ interface DashboardProps {
 }
 
 export function Dashboard({ data, activeSeason }: DashboardProps) {
-  const sortedDrivers = [...data.drivers].sort((a, b) => b.points - a.points);
-  const sortedConstructors = [...data.constructors].sort((a, b) => b.points - a.points);
+  const sortedDrivers = useMemo(() => [...data.drivers].sort((a, b) => b.points - a.points), [data.drivers]);
+  const sortedConstructors = useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
 
-  const hasCompletedRaces = data.races.some(r => r.status === 'completed');
-  const isSeasonFinished = data.races.length > 0 && data.races.every(r => r.status === 'completed');
+  const hasCompletedRaces = useMemo(() => data.races.some(r => r.status === 'completed'), [data.races]);
+  const isSeasonFinished = useMemo(() => data.races.length > 0 && data.races.every(r => r.status === 'completed'), [data.races]);
   const isHistorical = activeSeason === '2024';
+
+  const speedLines = useMemo(() => [...Array(5)].map((_, i) => ({
+    top: `${Math.random() * 100}%`,
+    duration: Math.random() * 2 + 1,
+    delay: Math.random() * 2
+  })), []);
+
+  const particles = useMemo(() => [...Array(15)].map((_, i) => ({
+    x: Math.random() * 100 + "%",
+    y: Math.random() * 100 + "%",
+    yOffset: Math.random() * -20 - 10,
+    duration: Math.random() * 3 + 2,
+    delay: Math.random() * 2
+  })), []);
 
   return (
     <div className="space-y-12 pb-20">
@@ -44,22 +58,22 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
 
         {/* Moving Light/Speed Lines */}
         <div className="absolute inset-0 overflow-hidden">
-            {[...Array(5)].map((_, i) => (
+            {speedLines.map((line, i) => (
                 <motion.div
                     key={i}
                     className={cn(
                         "absolute h-[1px] w-full",
                         isHistorical ? "bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     )}
-                    style={{ top: `${Math.random() * 100}%` }}
+                    style={{ top: line.top }}
                     animate={{
                         x: ['-100%', '100%'],
                         opacity: [0, 1, 0]
                     }}
                     transition={{
-                        duration: Math.random() * 2 + 1,
+                        duration: line.duration,
                         repeat: Infinity,
-                        delay: Math.random() * 2,
+                        delay: line.delay,
                         ease: "linear"
                     }}
                 />
@@ -84,7 +98,7 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
 
         {/* Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(15)].map((_, i) => (
+            {particles.map((particle, i) => (
                 <motion.div
                     key={`p-${i}`}
                     className={cn(
@@ -92,19 +106,19 @@ export function Dashboard({ data, activeSeason }: DashboardProps) {
                         isHistorical ? "bg-amber-500/30" : "bg-white/30"
                     )}
                     initial={{ 
-                        x: Math.random() * 100 + "%", 
-                        y: Math.random() * 100 + "%",
+                        x: particle.x, 
+                        y: particle.y,
                         scale: 0 
                     }}
                     animate={{ 
-                        y: [null, Math.random() * -20 - 10], // Float up slightly
+                        y: [null, particle.yOffset], // Float up slightly
                         opacity: [0, 0.8, 0],
                         scale: [0, 1, 0]
                     }}
                     transition={{
-                        duration: Math.random() * 3 + 2,
+                        duration: particle.duration,
                         repeat: Infinity,
-                        delay: Math.random() * 2
+                        delay: particle.delay
                     }}
                 />
             ))}

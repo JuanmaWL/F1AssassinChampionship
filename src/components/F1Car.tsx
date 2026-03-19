@@ -1,4 +1,3 @@
-import React from 'react';
 import './F1Car.css';
 
 export function F1Car() {

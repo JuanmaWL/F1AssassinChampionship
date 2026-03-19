@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChampionshipData, Driver, SeasonId, Constructor } from '../../types';
-import { Save, Plus, Trash2, Edit2, X, Check, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
 

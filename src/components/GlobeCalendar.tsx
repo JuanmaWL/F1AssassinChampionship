@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { Race } from '../types';
-import { cn } from '../lib/utils';
 
 interface GlobeCalendarProps {
   races: Race[];
@@ -124,7 +123,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
         const outro = svg
           .select("g")
           .attr("opacity", "1")
-          .transition()
+          .transition("outro-fade")
           .delay(200) // Faster
           .attr("opacity", "0")
           .remove();
@@ -179,7 +178,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             .attr("height", controlSize)
             .attr("opacity", "0");
 
-          const intro = groupMap.attr("opacity", "0").transition().attr("opacity", "1");
+          const intro = groupMap.attr("opacity", "0").transition("intro-fade").attr("opacity", "1");
 
           const sphere = { type: "Sphere" as const };
 
@@ -297,22 +296,26 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             }
 
             // Faster animations
-            const transitionText = d3.transition().duration(200).ease(d3.easeQuadIn);
-            const transitionPath = d3.transition(transitionText).transition().duration(350);
-            const transitionPoint = d3.transition(transitionPath).transition().duration(150).ease(d3.easeQuadOut);
-
             foreignObject
-              .transition(transitionText)
+              .transition("tooltip-out")
+              .duration(200)
+              .ease(d3.easeQuadIn)
               .style("opacity", "0");
 
             groupData
               .select("path")
-              .transition(transitionPath)
+              .transition("path-out")
+              .delay(200)
+              .duration(350)
               .attr("stroke-dashoffset", "1");
 
-            groupData.select("circle").transition(transitionPoint).attr("r", "0");
-
-            transitionPoint.on("end", () => {
+            groupData.select("circle")
+              .transition("circle-out")
+              .delay(550)
+              .duration(150)
+              .ease(d3.easeQuadOut)
+              .attr("r", "0")
+              .on("end", () => {
               const { coordinates: source } = from;
 
               const start = projection(source);
@@ -354,7 +357,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                 .attr("stroke-dashoffset", "1");
 
               // Faster rotation
-              const transition = d3.transition().duration(450).ease(d3.easeQuadInOut);
+              const transition = d3.transition("globe-focus").duration(450).ease(d3.easeQuadInOut);
 
               transition
                 .tween("focus", () => {
@@ -430,14 +433,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                   foreignObject.attr("transform", `translate(${x} ${y})`);
 
-                  const transitionPoint = d3.transition().duration(150).ease(d3.easeQuadIn);
-                  const transitionPath = d3.transition(transitionPoint).transition().duration(250).ease(d3.easeQuadInOut);
-                  const transitionText = d3.transition(transitionPath).transition().duration(150).ease(d3.easeQuadOut);
-
                   groupData
                     .select("circle")
                     .attr("r", "0")
-                    .transition(transitionPoint)
+                    .transition("circle-in")
+                    .duration(150)
+                    .ease(d3.easeQuadIn)
                     .attr("r", "6");
 
                   groupData
@@ -445,12 +446,17 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                     .attr("pathLength", "1")
                     .attr("stroke-dasharray", "1")
                     .attr("stroke-dashoffset", "1")
-                    .transition(transitionPath)
+                    .transition("path-in")
+                    .duration(200)
+                    .ease(d3.easeQuadOut)
                     .attr("stroke-dashoffset", "0");
 
-                  foreignObject.transition(transitionText).style("opacity", "1");
-
-                  transitionText.on("end", () => {
+                  foreignObject
+                    .transition("tooltip-in")
+                    .duration(200)
+                    .ease(d3.easeQuadOut)
+                    .style("opacity", "1")
+                    .on("end", () => {
                     const { length } = data;
 
                     groupsControls
@@ -503,7 +509,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             const endAngle = long * -1 + 30;
 
             const transition = d3
-              .transition()
+              .transition("globe-intro")
               .duration(500) // Faster
               .delay(100)
               .ease(d3.easeQuadInOut);
@@ -542,14 +548,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                 foreignObject.attr("transform", `translate(${x} ${y})`);
 
-                const transitionPoint = d3.transition().duration(150).ease(d3.easeQuadIn);
-                const transitionPath = d3.transition(transitionPoint).transition().duration(250).ease(d3.easeQuadInOut);
-                const transitionText = d3.transition(transitionPath).transition().duration(150).ease(d3.easeQuadOut);
-
                 groupData
                   .select("circle")
                   .attr("r", "0")
-                  .transition(transitionPoint)
+                  .transition("circle-in")
+                  .duration(150)
+                  .ease(d3.easeQuadIn)
                   .attr("r", "6");
 
                 groupData
@@ -557,14 +561,21 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   .attr("pathLength", "1")
                   .attr("stroke-dasharray", "1")
                   .attr("stroke-dashoffset", "1")
-                  .transition(transitionPath)
+                  .transition("path-in")
+                  .delay(150)
+                  .duration(250)
+                  .ease(d3.easeQuadInOut)
                   .attr("stroke-dashoffset", "0");
 
-                foreignObject.transition(transitionText).style("opacity", "1");
-
-                transitionText.on("end", () => {
+                foreignObject
+                  .transition("tooltip-in")
+                  .delay(400)
+                  .duration(150)
+                  .ease(d3.easeQuadOut)
+                  .style("opacity", "1")
+                  .on("end", () => {
                   groupControls
-                    .transition()
+                    .transition("controls-in")
                     .attr("opacity", "1")
                     .on("end", () => {
                       const { length } = data;

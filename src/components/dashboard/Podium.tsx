@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Crown, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Driver, Constructor } from '../../types';

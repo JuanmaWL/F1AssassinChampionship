@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Flag, Zap } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { F1Car } from './F1Car';
 
 import { SeasonId } from '../types';

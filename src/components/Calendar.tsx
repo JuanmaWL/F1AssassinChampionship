@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ChampionshipData, Race, SeasonId, RaceResult } from '../types';
-import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, Medal, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
