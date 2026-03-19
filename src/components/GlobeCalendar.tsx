@@ -201,7 +201,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
           groupCountries
             .selectAll("path")
-            .data(topojson.feature(json, json.objects.countries).features)
+            .data((topojson.feature(json, json.objects.countries as any) as any).features)
             .enter()
             .append("path")
             .attr("d", path as any)
@@ -366,7 +366,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   const o = d3.interpolate(1, -1);
 
                   return (t) => {
-                    projection.rotate(i(t));
+                    projection.rotate(i(t) as [number, number, number]);
 
                     groupCountries.selectAll("path").attr("d", path as any);
 
@@ -403,7 +403,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   };
                 })
                 .on("end", () => {
-                  const projCoords = projection(coordinates);
+                  const projCoords = projection(coordinates as [number, number]);
                   if (!projCoords) return;
                   
                   groupData
@@ -513,12 +513,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                 const i = d3.interpolateArray([startAngle, 0, 0], [endAngle, 0, 0]);
 
                 return (t) => {
-                  projection.rotate(i(t));
+                  projection.rotate(i(t) as [number, number, number]);
                   groupCountries.selectAll("path").attr("d", path as any);
                 };
               })
               .on("end", () => {
-                const projCoords = projection(coordinates);
+                const projCoords = projection(coordinates as [number, number]);
                 if (!projCoords) return;
                 
                 groupData

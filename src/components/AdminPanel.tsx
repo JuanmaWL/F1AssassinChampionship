@@ -15,7 +15,7 @@ interface AdminPanelProps {
   activeSeason: SeasonId;
 }
 
-type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import';
+type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings';
 
 export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -183,6 +183,19 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
                 <Database size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'import' ? accentColor : "")} />
                 Mantenimiento
             </button>
+
+            <button
+                onClick={() => setActiveTab('settings')}
+                className={cn(
+                "w-full text-left px-4 py-3 rounded-xl font-bold uppercase text-sm tracking-wider flex items-center gap-3 transition-all group",
+                activeTab === 'settings' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+            >
+                <Settings size={18} className={cn("transition-transform group-hover:scale-110", activeTab === 'settings' ? accentColor : "")} />
+                Ajustes
+            </button>
           </div>
 
           {/* FAQ / Instructions Block */}
@@ -260,6 +273,37 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
+            )}
+            {activeTab === 'settings' && (
+              <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
+                <h3 className="text-xl font-black italic uppercase text-white mb-6">Ajustes Generales</h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-white/5">
+                    <div>
+                      <h4 className="text-white font-bold uppercase tracking-wider text-sm">Sorteo de Calendario</h4>
+                      <p className="text-slate-400 text-xs mt-1">Activa la pestaña de sorteo (Wheel of Fortune) para la presentación del campeonato.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={!!data.isDrawActive}
+                        onChange={(e) => {
+                          onUpdateData({
+                            ...data,
+                            isDrawActive: e.target.checked
+                          });
+                        }}
+                      />
+                      <div className={cn(
+                        "w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all",
+                        data.isDrawActive ? (isHistorical ? "bg-amber-600" : "bg-red-600") : ""
+                      )}></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </main>

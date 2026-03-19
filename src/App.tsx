@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { Calendar } from './components/Calendar';
 import { AdminPanel } from './components/AdminPanel';
+import { Draw } from './components/Draw';
 import { IntroAnimation } from './components/IntroAnimation';
 import { mockData } from './mockData';
 import { ChampionshipData, SeasonId } from './types';
-import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History } from 'lucide-react';
+import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History, Dices } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence } from 'motion/react';
 import { dataService } from './services/dataService';
 
-type Tab = 'dashboard' | 'calendar' | 'admin';
+type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw';
 
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -132,6 +133,21 @@ export default function App() {
                 <span className="hidden md:inline">Calendario</span>
             </button>
 
+            {data.isDrawActive && (
+              <button
+                  onClick={() => setActiveTab('draw')}
+                  className={cn(
+                      "px-3 py-2 rounded-md transition-all flex items-center gap-2 text-xs md:text-sm font-bold uppercase tracking-wider",
+                      activeTab === 'draw' 
+                          ? cn("bg-white/10 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-white/10", isHistorical && "shadow-amber-500/10")
+                          : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                  )}
+              >
+                  <Dices size={16} className={cn(activeTab === 'draw' ? (isHistorical ? "text-amber-500" : "text-red-500") : "")} />
+                  <span className="hidden md:inline">Sorteo</span>
+              </button>
+            )}
+
             <div className="w-[1px] h-6 bg-white/10 mx-1 md:mx-2"></div>
 
             <button
@@ -201,6 +217,7 @@ export default function App() {
             <>
                 {activeTab === 'dashboard' && <Dashboard data={data} activeSeason={activeSeason} />}
                 {activeTab === 'calendar' && <Calendar data={data} activeSeason={activeSeason} />}
+                {activeTab === 'draw' && <Draw />}
                 {activeTab === 'admin' && <AdminPanel data={data} onUpdateData={setData} activeSeason={activeSeason} />}
             </>
         )}

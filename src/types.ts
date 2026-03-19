@@ -54,4 +54,5 @@ export interface ChampionshipData {
   drivers: Driver[];
   constructors: Constructor[];
   races: Race[];
+  isDrawActive?: boolean;
 }
