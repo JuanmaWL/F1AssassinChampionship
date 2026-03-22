@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChampionshipData, Race, SeasonId, RaceResult } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -15,6 +15,18 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
+
+  // Scroll lock when race details are open
+  useEffect(() => {
+    if (selectedRace) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedRace]);
 
   const getDriverName = (id: string) => data.drivers.find((d) => d.id === id)?.name || id;
   const getTeamColor = (id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff';
@@ -453,30 +465,30 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
                   />
                   <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
                   
-                  <div className="relative z-10 p-8 flex justify-between items-start">
+                  <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
-                            <span className={cn("text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg", isHistorical ? "bg-amber-600" : "bg-red-600")}>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className={cn("text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-lg", isHistorical ? "bg-amber-600" : "bg-red-600")}>
                                 Ronda {data.races.findIndex(r => r.id === selectedRace.id) + 1}
                             </span>
-                            <span className="text-slate-300 text-sm font-mono flex items-center gap-2 bg-black/30 px-3 py-1 rounded-full border border-white/10">
-                                <Clock size={12} />
+                            <span className="text-slate-300 text-[10px] font-mono flex items-center gap-1.5 bg-black/30 px-2 py-0.5 rounded-full border border-white/10">
+                                <Clock size={10} />
                                 {formatDate(selectedRace.date)}
                             </span>
                         </div>
-                        <h3 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter drop-shadow-2xl">
+                        <h3 className="text-2xl md:text-3xl font-black italic text-white uppercase tracking-tighter drop-shadow-2xl">
                             {selectedRace.name}
                         </h3>
-                        <p className="text-slate-300 flex items-center gap-2 text-lg mt-2 font-medium">
-                            <MapPin size={18} className={isHistorical ? "text-amber-500" : "text-red-500"} /> 
+                        <p className="text-slate-300 flex items-center gap-2 text-sm mt-1 font-medium">
+                            <MapPin size={14} className={isHistorical ? "text-amber-500" : "text-red-500"} /> 
                             {selectedRace.circuit}
                         </p>
                     </div>
                     <button
                         onClick={() => setSelectedRace(null)}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10"
+                        className="p-1.5 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10"
                     >
-                        <X size={24} />
+                        <X size={20} />
                     </button>
                   </div>
               </div>
