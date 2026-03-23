@@ -23,11 +23,17 @@ export function ConstructorsTable({ constructors, hasCompletedRaces }: Construct
       transition={{ delay: 0.4 }}
       className="bg-slate-900/50 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
     >
-      <div className="p-6 border-b border-white/10">
-          <h2 className="text-2xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-          <span className="w-1 h-8 bg-blue-600 rounded-full block"></span>
-          Mundial de Constructores
-          </h2>
+      <div className="p-6 border-b border-white/10 bg-gradient-to-r from-blue-900/20 to-transparent">
+          <div className="flex items-center gap-4">
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_0_20px_rgba(59,130,246,0.3)] border border-blue-400/50">
+              <img src="/icons/escudo.svg" alt="Mundial de Constructores" className="w-7 h-7 drop-shadow-md" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 uppercase tracking-tighter pr-2">
+                Mundial de Constructores
+              </h2>
+            </div>
+          </div>
       </div>
       
       <div className="overflow-x-auto">
@@ -71,14 +77,33 @@ export function ConstructorsTable({ constructors, hasCompletedRaces }: Construct
                       >
                           <td className="py-4 px-6 text-center font-mono font-bold text-slate-400 group-hover:text-white">
                               {hasCompletedRaces && index < 3 ? (
-                                  <span className={cn(
-                                      "inline-flex items-center justify-center w-8 h-8 rounded-full text-white shadow-lg",
-                                      index === 0 ? "bg-yellow-500" :
-                                      index === 1 ? "bg-slate-400" :
-                                      "bg-orange-700"
-                                  )}>
-                                      {index + 1}
-                                  </span>
+                                  <div className="relative flex items-center justify-center w-10 h-10 mx-auto">
+                                      {index === 0 && (
+                                          <>
+                                              <div className="absolute inset-0 bg-yellow-500/30 rounded-full blur-md animate-pulse" />
+                                              <div className="absolute -inset-2 bg-gradient-to-tr from-yellow-600/0 via-yellow-400/40 to-yellow-200/0 rounded-full animate-[spin_3s_linear_infinite]" />
+                                          </>
+                                      )}
+                                      {index === 1 && (
+                                          <>
+                                              <div className="absolute inset-0 bg-slate-300/30 rounded-full blur-md animate-pulse" style={{ animationDelay: '0.5s' }} />
+                                              <div className="absolute -inset-1 bg-gradient-to-tr from-slate-500/0 via-slate-300/40 to-slate-100/0 rounded-full animate-[spin_4s_linear_infinite_reverse]" />
+                                          </>
+                                      )}
+                                      {index === 2 && (
+                                          <>
+                                              <div className="absolute inset-0 bg-orange-700/30 rounded-full blur-md animate-pulse" style={{ animationDelay: '1s' }} />
+                                          </>
+                                      )}
+                                      <span className={cn(
+                                          "relative z-10 flex items-center justify-center w-8 h-8 rounded-full text-white font-black shadow-lg border border-white/20",
+                                          index === 0 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-950 shadow-[0_0_15px_rgba(234,179,8,0.5)]" :
+                                          index === 1 ? "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900 shadow-[0_0_15px_rgba(148,163,184,0.5)]" :
+                                          "bg-gradient-to-br from-orange-500 to-orange-800 text-orange-50 shadow-[0_0_15px_rgba(194,65,12,0.5)]"
+                                      )}>
+                                          {index + 1}
+                                      </span>
+                                  </div>
                               ) : (
                                   <span>{index + 1}</span>
                               )}

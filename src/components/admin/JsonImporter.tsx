@@ -102,7 +102,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
             team: string; // Team name if mentioned, else "Unknown"
             teamColor: string; // Hex color if mentioned or known, else "#000000"
             points: number; // Default to 0
-            avatarUrl: string; // Default to "https://api.dicebear.com/7.x/avataaars/svg?seed=[id]"
+            avatarUrl: string; // Default to "https://api.dicebear.com/7.x/avataaars/svg?seed=[id]&top=shortHair,shortHairTheCaesar,shortHairDreads01,shortHairDreads02,shortHairFrizzle,shortHairShaggyMullet,shortHairShortCurly,shortHairShortFlat,shortHairShortRound,shortHairShortWaved,shortHairSides,shortHairTheCaesarSidePart"
           }
         `;
       } else if (promptType === 'teams') {
