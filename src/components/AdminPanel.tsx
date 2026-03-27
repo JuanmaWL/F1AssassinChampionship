@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ChampionshipData, SeasonId } from '../types';
 import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
@@ -8,23 +7,17 @@ import { DriversEditor } from './admin/DriversEditor';
 import { TeamsEditor } from './admin/TeamsEditor';
 import { CalendarEditor } from './admin/CalendarEditor';
 import { JsonImporter } from './admin/JsonImporter';
-
-interface AdminPanelProps {
-  data: ChampionshipData;
-  onUpdateData: (newData: ChampionshipData) => void;
-  activeSeason: SeasonId;
-}
+import { useChampionship } from '../context/ChampionshipContext';
 
 type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings';
 
-export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps) {
+export function AdminPanel() {
+  const { data, setData, activeSeason, isHistorical } = useChampionship();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
-
-  const isHistorical = activeSeason === '2024';
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
   const ringColor = isHistorical ? "focus:ring-amber-500" : "focus:ring-red-500";
@@ -237,7 +230,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
             {activeTab === 'teams' && (
               <TeamsEditor 
                 data={data} 
-                onUpdateData={onUpdateData} 
+                onUpdateData={setData} 
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
@@ -245,7 +238,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
             {activeTab === 'drivers' && (
               <DriversEditor 
                 data={data} 
-                onUpdateData={onUpdateData} 
+                onUpdateData={setData} 
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
@@ -253,7 +246,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
             {activeTab === 'calendar' && (
               <CalendarEditor 
                 data={data} 
-                onUpdateData={onUpdateData} 
+                onUpdateData={setData} 
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
@@ -261,7 +254,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
             {activeTab === 'results' && (
               <ResultsEditor 
                 data={data} 
-                onUpdateData={onUpdateData} 
+                onUpdateData={setData} 
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
@@ -269,7 +262,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
             {activeTab === 'import' && (
               <JsonImporter 
                 currentData={data} 
-                onUpdateData={onUpdateData} 
+                onUpdateData={setData} 
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
@@ -290,7 +283,7 @@ export function AdminPanel({ data, onUpdateData, activeSeason }: AdminPanelProps
                         className="sr-only peer" 
                         checked={!!data.isDrawActive}
                         onChange={(e) => {
-                          onUpdateData({
+                          setData({
                             ...data,
                             isDrawActive: e.target.checked
                           });

@@ -1,17 +1,14 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChampionshipData, Race, SeasonId, RaceResult } from '../types';
+import { Race, RaceResult } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { GlobeCalendar } from './GlobeCalendar';
+import { useChampionship } from '../context/ChampionshipContext';
 
-interface CalendarProps {
-  data: ChampionshipData;
-  activeSeason: SeasonId;
-}
-
-export function Calendar({ data, activeSeason }: CalendarProps) {
+export function Calendar() {
+  const { data, activeSeason, isHistorical } = useChampionship();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
@@ -38,7 +35,6 @@ export function Calendar({ data, activeSeason }: CalendarProps) {
     return team?.logoUrl;
   };
 
-  const isHistorical = activeSeason === '2024';
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const hoverBorderColor = isHistorical ? "hover:border-amber-500/50" : "hover:border-red-500/50";
   const statusColor = isHistorical ? "bg-amber-500 group-hover:bg-amber-400" : "bg-green-500 group-hover:bg-green-400";

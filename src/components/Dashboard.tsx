@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { ChampionshipData, SeasonId } from '../types';
 import { StatsOverview } from './dashboard/StatsOverview';
 import { Podium } from './dashboard/Podium';
 import { DriversTable } from './dashboard/DriversTable';
@@ -7,19 +6,16 @@ import { ConstructorsTable } from './dashboard/ConstructorsTable';
 import { EvolutionChart } from './dashboard/EvolutionChart';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
+import { useChampionship } from '../context/ChampionshipContext';
 
-interface DashboardProps {
-  data: ChampionshipData;
-  activeSeason: SeasonId;
-}
+export function Dashboard() {
+  const { data, activeSeason, isHistorical } = useChampionship();
 
-export function Dashboard({ data, activeSeason }: DashboardProps) {
   const sortedDrivers = useMemo(() => [...data.drivers].sort((a, b) => b.points - a.points), [data.drivers]);
   const sortedConstructors = useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
 
   const hasCompletedRaces = useMemo(() => data.races.some(r => r.status === 'completed'), [data.races]);
   const isSeasonFinished = useMemo(() => data.races.length > 0 && data.races.every(r => r.status === 'completed'), [data.races]);
-  const isHistorical = activeSeason === '2024';
 
   const speedLines = useMemo(() => [...Array(5)].map((_, i) => ({
     top: `${Math.random() * 100}%`,

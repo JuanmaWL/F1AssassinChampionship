@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { ChampionshipData, Race, SeasonId } from '../../types';
 import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
+import { useEditorState } from '../../hooks/useEditorState';
 
 interface CalendarEditorProps {
   data: ChampionshipData;
@@ -12,32 +12,25 @@ interface CalendarEditorProps {
 }
 
 export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical }: CalendarEditorProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Race>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const {
+    editingId,
+    editForm,
+    setEditForm,
+    isSaving,
+    saveMessage,
+    handleCancel,
+    startEditing,
+    startNew,
+    withSave,
+  } = useEditorState<Race>();
 
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
-  const handleEdit = (race: Race) => {
-    setEditingId(race.id);
-    setEditForm(race);
-    setSaveMessage(null);
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditForm({});
-    setSaveMessage(null);
-  };
-
   const handleSave = async () => {
     if (!editForm.name || !editForm.circuit || !editForm.date) return;
 
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       let updatedRaces = [...data.races];
       
       if (editingId === 'new') {
@@ -62,42 +55,22 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
       const updatedData = { ...data, races: updatedRaces };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      setEditingId(null);
-      setEditForm({});
-      setSaveMessage("Guardado correctamente");
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      console.error("Error saving race:", error);
-      setSaveMessage("Error al guardar");
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Estás seguro de eliminar esta carrera permanentemente? Esta acción no se puede deshacer.")) return;
     
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       const updatedRaces = data.races.filter(r => r.id !== id);
       const updatedData = { ...data, races: updatedRaces };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      setSaveMessage("Carrera eliminada");
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      console.error("Error deleting race:", error);
-      setSaveMessage("Error al eliminar");
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleAddNew = () => {
-    setEditingId('new');
-    setEditForm({ name: '', circuit: '', date: '', flagCode: '' });
-    setSaveMessage(null);
+    startNew({ name: '', circuit: '', date: '', flagCode: '' });
   };
 
   return (
@@ -276,7 +249,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => handleEdit(race)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
+                        <button onClick={() => startEditing(race.id, race)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(race.id)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30">

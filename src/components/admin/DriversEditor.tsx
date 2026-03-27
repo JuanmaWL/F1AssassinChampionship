@@ -3,6 +3,7 @@ import { ChampionshipData, Driver, SeasonId, Constructor } from '../../types';
 import { Plus, Trash2, Edit2, X, Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
+import { useEditorState } from '../../hooks/useEditorState';
 
 interface DriversEditorProps {
   data: ChampionshipData;
@@ -91,34 +92,27 @@ function TeamSelect({ teams, value, onChange }: TeamSelectProps) {
 }
 
 export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }: DriversEditorProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Driver>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const {
+    editingId,
+    editForm,
+    setEditForm,
+    isSaving,
+    saveMessage,
+    handleCancel,
+    startEditing,
+    startNew,
+    withSave,
+  } = useEditorState<Driver>();
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
   // Sort drivers alphabetically by name
   const sortedDrivers = [...data.drivers].sort((a, b) => a.name.localeCompare(b.name));
 
-  const handleEdit = (driver: Driver) => {
-    setEditingId(driver.id);
-    setEditForm(driver);
-    setSaveMessage(null);
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditForm({});
-    setSaveMessage(null);
-  };
-
   const handleSave = async () => {
     if (!editForm.name || !editForm.team) return;
 
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       let updatedDrivers = [...data.drivers];
       
       if (editingId === 'new') {
@@ -140,42 +134,22 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
       const updatedData = { ...data, drivers: updatedDrivers };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      setEditingId(null);
-      setEditForm({});
-      setSaveMessage("Guardado correctamente");
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      console.error("Error saving driver:", error);
-      setSaveMessage("Error al guardar");
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Estás seguro de eliminar este piloto permanentemente? Esta acción no se puede deshacer.")) return;
     
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       const updatedDrivers = data.drivers.filter(d => d.id !== id);
       const updatedData = { ...data, drivers: updatedDrivers };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      setSaveMessage("Piloto eliminado");
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      console.error("Error deleting driver:", error);
-      setSaveMessage("Error al eliminar");
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleAddNew = () => {
-    setEditingId('new');
-    setEditForm({ name: '', team: '', teamColor: '#FFFFFF' });
-    setSaveMessage(null);
+    startNew({ name: '', team: '', teamColor: '#FFFFFF' });
   };
 
   const handleTeamChange = (teamName: string) => {
@@ -311,7 +285,7 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => handleEdit(driver)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
+                        <button onClick={() => startEditing(driver.id, driver)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(driver.id)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30">

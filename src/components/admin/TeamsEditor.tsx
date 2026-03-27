@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, X, Check, Upload, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
 import { storageService } from '../../services/storageService';
+import { useEditorState } from '../../hooks/useEditorState';
 
 interface TeamsEditorProps {
   data: ChampionshipData;
@@ -13,27 +14,31 @@ interface TeamsEditorProps {
 }
 
 export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: TeamsEditorProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Constructor>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    editingId,
+    editForm,
+    setEditForm,
+    isSaving,
+    saveMessage,
+    handleCancel: baseHandleCancel,
+    startEditing: baseStartEditing,
+    startNew: baseStartNew,
+    withSave,
+  } = useEditorState<Constructor>();
+
   const [isUploading, setIsUploading] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [uploadMode, setUploadMode] = useState<'storage' | 'base64'>('base64');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
   const handleEdit = (team: Constructor) => {
-    setEditingId(team.id);
-    setEditForm(team);
-    setSaveMessage(null);
+    baseStartEditing(team.id, team);
     setIsUploading(false);
   };
 
   const handleCancel = () => {
-    setEditingId(null);
-    setEditForm({});
-    setSaveMessage(null);
+    baseHandleCancel();
     setIsUploading(false);
   };
 
@@ -101,9 +106,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
   const handleSave = async () => {
     if (!editForm.name || !editForm.color) return;
 
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       let updatedTeams = [...data.constructors];
       
       if (editingId === 'new') {
@@ -124,45 +127,22 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       const updatedData = { ...data, constructors: updatedTeams };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      
-      setEditingId(null);
-      setEditForm({});
-      setSaveMessage(`Guardado correctamente en Temporada ${activeSeason}`);
-      
-      // Clear message after 3 seconds
-      setTimeout(() => setSaveMessage(null), 3000);
-
-    } catch (error) {
-      console.error("Error saving team:", error);
-      alert("Error al guardar en Firebase. Revisa la consola.");
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Estás seguro de eliminar esta escudería permanentemente?")) return;
     
-    setIsSaving(true);
-    setSaveMessage(null);
-    try {
+    await withSave(async () => {
       const updatedTeams = data.constructors.filter(t => t.id !== id);
       const updatedData = { ...data, constructors: updatedTeams };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
-      setSaveMessage(`Escudería eliminada de Temporada ${activeSeason}`);
-      setTimeout(() => setSaveMessage(null), 3000);
-    } catch (error) {
-      console.error("Error deleting team:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleAddNew = () => {
-    setEditingId('new');
-    setEditForm({ name: '', color: '#FFFFFF', logoUrl: '' });
-    setSaveMessage(null);
+    baseStartNew({ name: '', color: '#FFFFFF', logoUrl: '' });
     setIsUploading(false);
   };
 

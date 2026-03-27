@@ -1,12 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { IntroAnimation } from './components/IntroAnimation';
-import { mockData } from './mockData';
-import { ChampionshipData, SeasonId } from './types';
 import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History, Dices } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence } from 'motion/react';
-import { dataService } from './services/dataService';
+import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
 
 // Lazy loaded components
 const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
@@ -22,12 +20,11 @@ const LoadingSpinner = () => (
   </div>
 );
 
-export default function App() {
+function AppContent() {
   const [showIntro, setShowIntro] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
-  const [activeSeason, setActiveSeason] = useState<SeasonId>('2026');
-  const [data, setData] = useState<ChampionshipData>(mockData);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const { data, activeSeason, setActiveSeason, isHistorical, isLoading } = useChampionship();
 
   // Prevent scrolling during intro
   useEffect(() => {
@@ -37,24 +34,6 @@ export default function App() {
       document.body.style.overflow = 'unset';
     }
   }, [showIntro]);
-
-  // Load data from Firebase on mount and when season changes
-  useEffect(() => {
-    const loadData = async () => {
-        setIsLoading(true);
-        try {
-            const fetchedData = await dataService.getData(activeSeason);
-            setData(fetchedData);
-        } catch (error) {
-            console.error("Failed to load data:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    loadData();
-  }, [activeSeason]);
-
-  const isHistorical = activeSeason === '2024';
 
   return (
     <div className={cn(
@@ -224,10 +203,10 @@ export default function App() {
             </div>
         ) : (
             <Suspense fallback={<LoadingSpinner />}>
-                {activeTab === 'dashboard' && <Dashboard data={data} activeSeason={activeSeason} />}
-                {activeTab === 'calendar' && <Calendar data={data} activeSeason={activeSeason} />}
+                {activeTab === 'dashboard' && <Dashboard />}
+                {activeTab === 'calendar' && <Calendar />}
                 {activeTab === 'draw' && <Draw />}
-                {activeTab === 'admin' && <AdminPanel data={data} onUpdateData={setData} activeSeason={activeSeason} />}
+                {activeTab === 'admin' && <AdminPanel />}
             </Suspense>
         )}
       </main>
@@ -243,5 +222,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ChampionshipProvider>
+      <AppContent />
+    </ChampionshipProvider>
   );
 }
