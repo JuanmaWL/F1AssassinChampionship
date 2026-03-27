@@ -14,7 +14,6 @@ export const storageService = {
     }
 
     try {
-      console.log(`[Storage] Iniciando subida de ${file.name} a ${path}...`);
       const storageRef = ref(storage, path);
       
       // Add a timeout to prevent infinite spinners
@@ -24,11 +23,7 @@ export const storageService = {
       );
 
       const snapshot = await Promise.race([uploadPromise, timeoutPromise]);
-      console.log("[Storage] Subida completada. Obteniendo URL de descarga...");
-      
       const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log("[Storage] URL obtenida:", downloadURL);
-      
       return downloadURL;
     } catch (error: any) {
       console.error("[Storage] Error detallado:", error);

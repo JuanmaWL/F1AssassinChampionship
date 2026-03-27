@@ -12,7 +12,6 @@ export const dataService = {
    */
   async getData(seasonId: SeasonId): Promise<ChampionshipData> {
     if (!db) {
-      console.log("Firebase not configured, using mock data.");
       return seasonId === '2024' ? mockData2024 : mockData;
     }
 
@@ -23,8 +22,6 @@ export const dataService = {
       if (docSnap.exists()) {
         return docSnap.data() as ChampionshipData;
       } else {
-        console.log(`No data found for season ${seasonId} in Firebase.`);
-        // Return appropriate mock data based on season
         if (seasonId === '2024') {
             return mockData2024;
         }
@@ -44,14 +41,12 @@ export const dataService = {
    */
   async saveData(data: ChampionshipData, seasonId: SeasonId): Promise<void> {
     if (!db) {
-      console.info("Firebase not configured, changes will not persist (Local Mode).");
       return;
     }
 
     try {
       const docRef = doc(db, COLLECTION_NAME, seasonId);
       await setDoc(docRef, data);
-      console.log(`Data successfully saved to Firebase for season ${seasonId}!`);
     } catch (error) {
       console.error("Error saving data to Firebase:", error);
       throw error;

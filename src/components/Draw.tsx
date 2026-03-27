@@ -113,9 +113,6 @@ export function Draw() {
   const [isStreamMode, setIsStreamMode] = useState(false);
   const [showInfo, setShowInfo] = useState(true);
 
-  // Sound effects (visual only for now, but we prepare the state)
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
   const timeoutRefs = React.useRef<NodeJS.Timeout[]>([]);
   const animFrameRefs = React.useRef<number[]>([]);
 

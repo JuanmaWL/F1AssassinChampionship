@@ -29,9 +29,7 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
             points += result.pointsAdjustment;
           }
           
-          // CRITICAL FIX: Update the result object's points to match the calculation
-          // This ensures that charts and other views using result.points (like getEvolutionData)
-          // see the correct, post-adjustment value.
+          // Sync result.points so charts using result.points see the post-adjustment value
           result.points = points;
           
           // Add points to driver
@@ -91,8 +89,7 @@ export function getEvolutionData(data: ChampionshipData, topNDrivers: number = 5
 
     // Add current totals to the data point
     topDrivers.forEach(driver => {
-      // @ts-ignore - Dynamic property assignment for Recharts
-      point[driver.name] = driverPoints.get(driver.id);
+      (point as Record<string, number | string>)[driver.name] = driverPoints.get(driver.id) ?? 0;
     });
 
     return point;
@@ -136,8 +133,7 @@ export function getConstructorEvolutionData(data: ChampionshipData, topNConstruc
 
     // Add current totals to the data point
     topConstructors.forEach(constructor => {
-      // @ts-ignore - Dynamic property assignment for Recharts
-      point[constructor.name] = constructorPoints.get(constructor.id);
+      (point as Record<string, number | string>)[constructor.name] = constructorPoints.get(constructor.id) ?? 0;
     });
 
     return point;

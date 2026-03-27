@@ -21,7 +21,6 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
   const [uploadMode, setUploadMode] = useState<'storage' | 'base64'>('base64');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
   const handleEdit = (team: Constructor) => {

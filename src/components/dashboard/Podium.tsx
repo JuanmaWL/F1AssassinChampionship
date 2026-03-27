@@ -12,6 +12,21 @@ interface PodiumProps {
   isSeasonFinished?: boolean;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.3
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
+};
+
 const FireParticles = ({ colorClass }: { colorClass: string }) => (
   <div className="absolute inset-0 overflow-hidden rounded-t-2xl pointer-events-none z-0">
     {[...Array(12)].map((_, i) => (
@@ -50,21 +65,6 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
 
   const getTeamLogo = (teamName: string) => {
     return constructors.find(c => c.name === teamName)?.logoUrl;
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
   };
 
   return (

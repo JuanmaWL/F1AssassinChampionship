@@ -96,7 +96,6 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
   // Sort drivers alphabetically by name
