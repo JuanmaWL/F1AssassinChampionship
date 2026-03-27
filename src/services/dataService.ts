@@ -30,7 +30,7 @@ export const dataService = {
     } catch (error: any) {
       console.error("Error fetching data from Firebase:", error);
       if (error.code === 'permission-denied') {
-        alert("Error de Permisos en Firestore: Ve a Firebase Console -> Firestore Database -> Rules y cambia 'allow read, write: if false;' por 'allow read, write: if true;'");
+        console.warn("Firestore: permiso denegado. Revisa las Rules en Firebase Console.");
       }
       return seasonId === '2024' ? mockData2024 : mockData;
     }

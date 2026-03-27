@@ -1,6 +1,7 @@
 export type TeamColor = string;
 
-export type SeasonId = '2024' | '2026';
+export const SEASONS = ['2024', '2026'] as const;
+export type SeasonId = typeof SEASONS[number];
 
 export interface Driver {
   id: string;

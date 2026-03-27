@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity, X, Medal, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -36,7 +36,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
     };
   }, [selectedDriver, activeFastestLapDriver]);
 
-  const getDriverStats = (driverId: string) => {
+  const getDriverStats = useCallback((driverId: string) => {
     const completedRaces = races.filter(r => r.status === 'completed' && r.results);
     const driverResults = completedRaces.map(r => r.results!.find(res => res.driverId === driverId)).filter(Boolean) as RaceResult[];
     
@@ -55,7 +55,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
       bestPosition: bestPosition === 999 ? '-' : bestPosition,
       avgPosition: avgPosition ? avgPosition.toFixed(1) : '-'
     };
-  };
+  }, [races]);
 
   return (
     <motion.div
