@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChampionshipData, Driver, SeasonId, Constructor } from '../../types';
 import { Plus, Trash2, Edit2, X, Check, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -107,14 +107,14 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
-  // Sort drivers
-  const sortedDrivers = [...data.drivers].sort((a, b) => {
+  // Sort drivers — memoized to avoid re-sorting on every render
+  const sortedDrivers = useMemo(() => [...data.drivers].sort((a, b) => {
     if (sortBy === 'team') {
       const teamCompare = a.team.localeCompare(b.team);
       return teamCompare !== 0 ? teamCompare : a.name.localeCompare(b.name);
     }
     return a.name.localeCompare(b.name);
-  });
+  }), [data.drivers, sortBy]);
 
   const handleSave = async () => {
     if (!editForm.name || !editForm.team) return;

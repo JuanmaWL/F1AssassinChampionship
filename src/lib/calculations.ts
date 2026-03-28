@@ -15,24 +15,34 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
     data.constructors.map(c => [c.id, { ...c, points: 0 }])
   );
 
+  // Deep-copy races so we don't mutate the original data in the context
+  const processedRaces = data.races.map(race => ({
+    ...race,
+    results: race.results ? race.results.map(r => ({ ...r })) : undefined,
+  }));
+
+  // Precompute driver → constructor map (O(1) lookup instead of O(n) per result)
+  const driverToConstructor = new Map<string, Constructor>();
+  data.drivers.forEach(d => {
+    const constructor = Array.from(constructorsMap.values()).find(c => c.name === d.team);
+    if (constructor) driverToConstructor.set(d.id, constructor);
+  });
+
   // Process each completed race
-  data.races.forEach(race => {
+  processedRaces.forEach(race => {
     if (race.status === 'completed' && race.results) {
       race.results.forEach(result => {
         const driver = driversMap.get(result.driverId);
         if (driver) {
-          // Calculate points based on position + adjustments
           let points = getPoints(result.position, result.dnf, result.isDisqualified || false);
           
-          // Add manual adjustment (penalties/bonuses)
           if (result.pointsAdjustment) {
             points += result.pointsAdjustment;
           }
           
-          // Sync result.points so charts using result.points see the post-adjustment value
+          // Sync result.points on the copy so getEvolutionData sees post-adjustment values
           result.points = points;
           
-          // Add points to driver
           const driverInMap = driversMap.get(result.driverId);
           if (driverInMap) {
             driverInMap.points += points;
@@ -41,12 +51,7 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
             }
           }
 
-          // Add points to constructor
-          // Find constructor by name (linked via driver.team)
-          // We need to find the constructor ID that matches the driver's team name
-          const driverTeamName = driver.team;
-          const constructor = Array.from(constructorsMap.values()).find(c => c.name === driverTeamName);
-          
+          const constructor = driverToConstructor.get(result.driverId);
           if (constructor) {
             constructor.points += points;
           }
@@ -57,6 +62,7 @@ export function calculateStandings(data: ChampionshipData): ChampionshipData {
 
   return {
     ...data,
+    races: processedRaces,
     drivers: Array.from(driversMap.values()),
     constructors: Array.from(constructorsMap.values()),
   };
