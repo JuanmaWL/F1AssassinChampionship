@@ -14,6 +14,7 @@ interface TeamsEditorProps {
 }
 
 export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: TeamsEditorProps) {
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc'>('name_asc');
   const {
     editingId,
     editForm,
@@ -146,11 +147,26 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
     setIsUploading(false);
   };
 
+  const sortedTeams = [...data.constructors].sort((a, b) => {
+    if (sortBy === 'name_desc') {
+      return b.name.localeCompare(a.name);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
             <h3 className="text-xl font-bold text-white italic uppercase">Gestión de Escuderías</h3>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name_asc' | 'name_desc')}
+              className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-300 text-xs focus:outline-none focus:border-slate-500"
+            >
+              <option value="name_asc">Nombre (A-Z)</option>
+              <option value="name_desc">Nombre (Z-A)</option>
+            </select>
             {saveMessage && (
                 <span className="text-green-400 text-sm font-bold animate-pulse flex items-center gap-2">
                     <Check size={14} /> {saveMessage}
@@ -268,7 +284,14 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                 </td>
               </tr>
             )}
-            {data.constructors.map(team => (
+            {data.constructors.length === 0 && editingId !== 'new' && (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-slate-500 italic">
+                  No hay escuderías registradas en esta temporada.
+                </td>
+              </tr>
+            )}
+            {sortedTeams.map(team => (
               <tr key={team.id} className="hover:bg-white/5 transition-colors">
                 {editingId === team.id ? (
                   <>

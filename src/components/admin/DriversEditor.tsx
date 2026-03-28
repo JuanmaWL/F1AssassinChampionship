@@ -92,6 +92,7 @@ function TeamSelect({ teams, value, onChange }: TeamSelectProps) {
 }
 
 export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }: DriversEditorProps) {
+  const [sortBy, setSortBy] = useState<'name' | 'team'>('name');
   const {
     editingId,
     editForm,
@@ -106,8 +107,14 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
-  // Sort drivers alphabetically by name
-  const sortedDrivers = [...data.drivers].sort((a, b) => a.name.localeCompare(b.name));
+  // Sort drivers
+  const sortedDrivers = [...data.drivers].sort((a, b) => {
+    if (sortBy === 'team') {
+      const teamCompare = a.team.localeCompare(b.team);
+      return teamCompare !== 0 ? teamCompare : a.name.localeCompare(b.name);
+    }
+    return a.name.localeCompare(b.name);
+  });
 
   const handleSave = async () => {
     if (!editForm.name || !editForm.team) return;
@@ -124,11 +131,23 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
           points: 0,
           fastestLaps: 0
         };
+        if (editForm.avatarUrl && editForm.avatarUrl.trim() !== '') {
+          newDriver.avatarUrl = editForm.avatarUrl.trim();
+        }
         updatedDrivers.push(newDriver);
       } else {
-        updatedDrivers = updatedDrivers.map(d => 
-          d.id === editingId ? { ...d, ...editForm } as Driver : d
-        );
+        updatedDrivers = updatedDrivers.map(d => {
+          if (d.id === editingId) {
+            const updated = { ...d, ...editForm } as Driver;
+            if (!updated.avatarUrl || updated.avatarUrl.trim() === '') {
+              delete updated.avatarUrl;
+            } else {
+              updated.avatarUrl = updated.avatarUrl.trim();
+            }
+            return updated;
+          }
+          return d;
+        });
       }
 
       const updatedData = { ...data, drivers: updatedDrivers };
@@ -164,7 +183,17 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white italic uppercase">Gestión de Pilotos</h3>
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-bold text-white italic uppercase">Gestión de Pilotos</h3>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'name' | 'team')}
+            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-slate-300 text-xs focus:outline-none focus:border-slate-500"
+          >
+            <option value="name">Ordenar por Piloto</option>
+            <option value="team">Ordenar por Escudería</option>
+          </select>
+        </div>
         <button
           onClick={handleAddNew}
           disabled={editingId !== null}
@@ -196,6 +225,7 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
               <th className="p-4">Nombre</th>
               <th className="p-4 w-1/3">Escudería</th>
               <th className="p-4">Color</th>
+              <th className="p-4 w-1/4">Avatar</th>
               <th className="p-4 text-right">Acciones</th>
             </tr>
           </thead>
@@ -226,6 +256,27 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
                     className="w-10 h-10 rounded cursor-pointer bg-transparent"
                   />
                 </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={editForm.avatarUrl || ''}
+                        onChange={e => setEditForm({...editForm, avatarUrl: e.target.value})}
+                        placeholder="URL Foto (opcional)"
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white text-sm"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center shrink-0">
+                      <img
+                        src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(editForm.id || 'preview')}&backgroundColor=transparent&style=circle`}
+                        alt="Preview"
+                        className="w-10 h-10 rounded-full bg-slate-800"
+                      />
+                      <span className="text-[9px] text-slate-500 mt-1 max-w-[60px] text-center leading-tight">Avatar por defecto (si no hay foto)</span>
+                    </div>
+                  </div>
+                </td>
                 <td className="p-4 text-right">
                   <div className="flex justify-end gap-2">
                     <button onClick={handleSave} disabled={isSaving} className="p-2 bg-green-600 rounded text-white hover:bg-green-700">
@@ -235,6 +286,13 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
                       <X size={16} />
                     </button>
                   </div>
+                </td>
+              </tr>
+            )}
+            {data.drivers.length === 0 && editingId !== 'new' && (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-slate-500 italic">
+                  No hay pilotos registrados en esta temporada.
                 </td>
               </tr>
             )}
@@ -265,6 +323,27 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
                         className="w-10 h-10 rounded cursor-pointer bg-transparent"
                       />
                     </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={editForm.avatarUrl || ''}
+                            onChange={e => setEditForm({...editForm, avatarUrl: e.target.value})}
+                            placeholder="URL Foto (opcional)"
+                            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white text-sm"
+                          />
+                        </div>
+                        <div className="flex flex-col items-center shrink-0">
+                          <img
+                            src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(editForm.id || 'preview')}&backgroundColor=transparent&style=circle`}
+                            alt="Preview"
+                            className="w-10 h-10 rounded-full bg-slate-800"
+                          />
+                          <span className="text-[9px] text-slate-500 mt-1 max-w-[60px] text-center leading-tight">Avatar por defecto (si no hay foto)</span>
+                        </div>
+                      </div>
+                    </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button onClick={handleSave} disabled={isSaving} className="p-2 bg-green-600 rounded text-white hover:bg-green-700">
@@ -282,6 +361,16 @@ export function DriversEditor({ data, onUpdateData, activeSeason, isHistorical }
                     <td className="p-4 text-slate-300">{driver.team}</td>
                     <td className="p-4">
                       <div className="w-6 h-6 rounded-full border border-white/20" style={{ backgroundColor: driver.teamColor }}></div>
+                    </td>
+                    <td className="p-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-900 overflow-hidden" style={{ borderColor: driver.teamColor }}>
+                        <img
+                          src={driver.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver.id)}&backgroundColor=slate800`}
+                          alt={driver.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver.id)}&backgroundColor=slate800`; }}
+                        />
+                      </div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">

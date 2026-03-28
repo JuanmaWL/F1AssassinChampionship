@@ -174,6 +174,13 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                 </td>
               </tr>
             )}
+            {data.races.length === 0 && editingId !== 'new' && (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-slate-500 italic">
+                  No hay carreras registradas en esta temporada.
+                </td>
+              </tr>
+            )}
             {data.races.map(race => (
               <tr key={race.id} className="hover:bg-white/5 transition-colors">
                 {editingId === race.id ? (

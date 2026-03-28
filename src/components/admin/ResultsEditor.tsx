@@ -298,6 +298,20 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     }
   };
 
+  if (data.races.length === 0) {
+    return (
+      <div className={cn("bg-slate-900/50 border rounded-2xl p-12 mb-8 flex flex-col items-center justify-center text-center", borderColor)}>
+        <div className="p-4 bg-slate-800/50 rounded-full mb-4">
+          <AlertTriangle className="w-8 h-8 text-slate-500" />
+        </div>
+        <h3 className="text-lg font-bold text-white italic uppercase mb-2">Calendario no definido</h3>
+        <p className="text-slate-400 max-w-md">
+          No hay carreras registradas en esta temporada. Debes configurar el calendario en la pestaña correspondiente antes de poder ingresar resultados.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("bg-slate-900/50 border rounded-2xl p-6 mb-8", borderColor)}>
         <div className="grid gap-6">

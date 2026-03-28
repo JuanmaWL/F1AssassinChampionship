@@ -45,38 +45,86 @@ export function AdminPanel() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh]">
-        <div className={cn("bg-slate-900 border p-8 rounded-2xl shadow-2xl max-w-md w-full", isHistorical ? "border-amber-500/20" : "border-white/10")}>
-          <div className="flex justify-center mb-6">
-            <div className={cn("p-4 rounded-full", isHistorical ? "bg-amber-500/10" : "bg-red-500/10")}>
-              <Lock className={cn("w-8 h-8", accentColor)} />
+      <div className="flex flex-col items-center justify-center min-h-[70vh] relative">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-10">
+          <div className={cn("w-[800px] h-[800px] rounded-full blur-3xl", isHistorical ? "bg-amber-600" : "bg-red-600")}></div>
+        </div>
+
+        <div className={cn(
+            "relative z-10 bg-slate-900/80 backdrop-blur-xl border p-8 md:p-10 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden", 
+            isHistorical ? "border-amber-500/30 shadow-amber-900/20" : "border-red-500/30 shadow-red-900/20"
+        )}>
+          {/* Top accent bar */}
+          <div className={cn("absolute top-0 left-0 right-0 h-2", isHistorical ? "bg-amber-500" : "bg-red-600")}></div>
+          
+          <div className="flex flex-col items-center mb-8">
+            <div className={cn(
+                "p-4 rounded-2xl mb-4 transform -rotate-6", 
+                isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500"
+            )}>
+              <Lock className="w-10 h-10" />
+            </div>
+            <h2 className="text-3xl font-black italic text-white text-center uppercase tracking-tighter">
+              Control de Carrera
+            </h2>
+            
+            {/* Season Badge */}
+            <div className={cn(
+                "mt-4 px-6 py-2 rounded-full border-2 font-black italic text-xl uppercase tracking-widest shadow-lg",
+                isHistorical 
+                    ? "border-amber-500/50 text-amber-400 bg-amber-950/50 shadow-amber-900/20" 
+                    : "border-red-500/50 text-red-400 bg-red-950/50 shadow-red-900/20"
+            )}>
+              Temporada {activeSeason}
             </div>
           </div>
-          <h2 className="text-2xl font-black italic text-white text-center mb-6 uppercase">Acceso Admin</h2>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingresa Contraseña"
-                className={cn(
-                    "w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-white focus:outline-none transition-colors",
-                    ringColor
-                )}
-                disabled={isProcessing}
-              />
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">
+                Código de Autorización
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={cn(
+                      "w-full bg-slate-950 border-2 rounded-xl px-4 py-4 text-white text-center text-xl tracking-[0.5em] focus:outline-none transition-all",
+                      isHistorical ? "border-slate-800 focus:border-amber-500" : "border-slate-800 focus:border-red-500"
+                  )}
+                  disabled={isProcessing}
+                />
+              </div>
             </div>
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            
+            {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
+                    {error}
+                </div>
+            )}
+            
             <button
               type="submit"
-              disabled={isProcessing}
+              disabled={isProcessing || !password}
               className={cn(
-                  "w-full text-white font-bold py-3 rounded-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2 disabled:opacity-50",
+                  "w-full text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]",
                   buttonColor
               )}
             >
-              {isProcessing ? <Loader2 className="animate-spin" size={20} /> : 'Desbloquear Panel'}
+              {isProcessing ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} /> 
+                    <span>Verificando...</span>
+                  </>
+              ) : (
+                  <>
+                    <span>Acceder</span>
+                    <Lock size={18} className="opacity-50" />
+                  </>
+              )}
             </button>
           </form>
         </div>
