@@ -5,6 +5,7 @@ import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, H
 import { cn } from './lib/utils';
 import { AnimatePresence } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
+import { SEASONS } from './types';
 
 // Lazy loaded components
 const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
@@ -67,29 +68,25 @@ function AppContent() {
 
           {/* Season Selector */}
           <div className="hidden md:flex bg-slate-900/50 rounded-full p-1 border border-white/5">
-            <button
-                onClick={() => setActiveSeason('2024')}
+            {SEASONS.map(season => (
+              <button
+                key={season}
+                onClick={() => setActiveSeason(season)}
                 className={cn(
-                    "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
-                    activeSeason === '2024' 
-                        ? "bg-amber-600 text-white shadow-lg shadow-amber-900/20" 
-                        : "text-slate-500 hover:text-amber-400"
+                  "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
+                  activeSeason === season
+                    ? season === '2024'
+                      ? "bg-amber-600 text-white shadow-lg shadow-amber-900/20"
+                      : "bg-red-600 text-white shadow-lg shadow-red-900/20"
+                    : season === '2024'
+                      ? "text-slate-500 hover:text-amber-400"
+                      : "text-slate-500 hover:text-red-400"
                 )}
-            >
-                <History size={12} />
-                24/25
-            </button>
-            <button
-                onClick={() => setActiveSeason('2026')}
-                className={cn(
-                    "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
-                    activeSeason === '2026' 
-                        ? "bg-red-600 text-white shadow-lg shadow-red-900/20" 
-                        : "text-slate-500 hover:text-red-400"
-                )}
-            >
-                2026
-            </button>
+              >
+                {season === '2024' && <History size={12} />}
+                {season === '2024' ? '24/25' : season}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -170,29 +167,25 @@ function AppContent() {
         {/* Mobile Season Selector */}
         <div className="md:hidden flex justify-center mb-6">
             <div className="bg-slate-900/50 rounded-full p-1 border border-white/5 flex">
-                <button
-                    onClick={() => setActiveSeason('2024')}
+                {SEASONS.map(season => (
+                  <button
+                    key={season}
+                    onClick={() => setActiveSeason(season)}
                     className={cn(
-                        "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
-                        activeSeason === '2024' 
-                            ? "bg-amber-600 text-white shadow-lg shadow-amber-900/20" 
-                            : "text-slate-500 hover:text-amber-400"
+                      "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
+                      activeSeason === season
+                        ? season === '2024'
+                          ? "bg-amber-600 text-white shadow-lg shadow-amber-900/20"
+                          : "bg-red-600 text-white shadow-lg shadow-red-900/20"
+                        : season === '2024'
+                          ? "text-slate-500 hover:text-amber-400"
+                          : "text-slate-500 hover:text-red-400"
                     )}
-                >
-                    <History size={12} />
-                    24/25
-                </button>
-                <button
-                    onClick={() => setActiveSeason('2026')}
-                    className={cn(
-                        "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all",
-                        activeSeason === '2026' 
-                            ? "bg-red-600 text-white shadow-lg shadow-red-900/20" 
-                            : "text-slate-500 hover:text-red-400"
-                    )}
-                >
-                    2026
-                </button>
+                  >
+                    {season === '2024' && <History size={12} />}
+                    {season === '2024' ? '24/25' : season}
+                  </button>
+                ))}
             </div>
         </div>
 

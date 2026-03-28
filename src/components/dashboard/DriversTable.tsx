@@ -305,16 +305,15 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                       style={{ borderColor: selectedDriver.teamColor }}
                     >
                       {(() => {
-                        let displayAvatar = selectedDriver.avatarUrl;
-                        if (displayAvatar && displayAvatar.includes('api.dicebear.com') && displayAvatar.includes('avataaars')) {
-                          if (!displayAvatar.includes('top=')) {
-                            displayAvatar += '&top=shortHair,shortHairTheCaesar,shortHairDreads01,shortHairDreads02,shortHairFrizzle,shortHairShaggyMullet,shortHairShortCurly,shortHairShortFlat,shortHairShortRound,shortHairShortWaved,shortHairSides,shortHairTheCaesarAndSidePart&facialHairProbability=20&facialHair=beardMedium,beardLight,beardMajestic,moustacheFancy,moustacheMagnum';
-                          }
-                        }
-                        return displayAvatar ? (
-                          <img src={displayAvatar} alt={selectedDriver.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Users className="w-10 h-10 text-slate-500" />
+                        const fallbackUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(selectedDriver.id)}&backgroundColor=slate800`;
+                        const avatarSrc = selectedDriver.avatarUrl || fallbackUrl;
+                        return (
+                          <img
+                            src={avatarSrc}
+                            alt={selectedDriver.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.src = fallbackUrl; }}
+                          />
                         );
                       })()}
                     </div>

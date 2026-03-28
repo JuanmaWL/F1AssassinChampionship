@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
+import { dataService } from '../services/dataService';
 import { ResultsEditor } from './admin/ResultsEditor';
 import { DriversEditor } from './admin/DriversEditor';
 import { TeamsEditor } from './admin/TeamsEditor';
@@ -282,11 +283,10 @@ export function AdminPanel() {
                         type="checkbox" 
                         className="sr-only peer" 
                         checked={!!data.isDrawActive}
-                        onChange={(e) => {
-                          setData({
-                            ...data,
-                            isDrawActive: e.target.checked
-                          });
+                        onChange={async (e) => {
+                          const updatedData = { ...data, isDrawActive: e.target.checked };
+                          setData(updatedData);
+                          await dataService.saveData(updatedData, activeSeason);
                         }}
                       />
                       <div className={cn(
