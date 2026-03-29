@@ -37,6 +37,11 @@ function AppContent() {
     }
   }, [showIntro]);
 
+  // Scroll to top when season or tab changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeSeason, activeTab]);
+
   return (
     <div className={cn(
         "min-h-screen font-sans selection:bg-red-500/30 flex flex-col transition-colors duration-500 bg-slate-950",

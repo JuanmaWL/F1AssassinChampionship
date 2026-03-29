@@ -77,7 +77,6 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       
       // Fallback to Base64 if storage fails (CORS issues, network, etc.)
       if (uploadMode === 'storage') {
-          console.log("Intentando fallback automático a Base64...");
           try {
             const base64 = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();

@@ -23,7 +23,6 @@ export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
-  const ringColor = isHistorical ? "focus:ring-amber-500" : "focus:ring-red-500";
   const borderColor = isHistorical ? "border-amber-500/30" : "border-red-500/30";
 
   const handleLogin = async (e: React.FormEvent) => {
