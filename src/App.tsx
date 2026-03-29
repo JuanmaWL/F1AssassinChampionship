@@ -163,7 +163,10 @@ function AppContent() {
       </header>
 
       {/* Main Content */}
-      <main className="pt-24 px-4 md:px-8 max-w-7xl mx-auto flex-grow w-full">
+      <main className={cn(
+        "pt-24 px-4 md:px-8 mx-auto flex-grow w-full transition-all duration-500",
+        activeTab === 'admin' ? "max-w-[1600px]" : "max-w-7xl"
+      )}>
         {/* Mobile Season Selector */}
         <div className="md:hidden flex justify-center mb-6">
             <div className="bg-slate-900/50 rounded-full p-1 border border-white/5 flex">

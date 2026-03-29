@@ -10,6 +10,7 @@ interface ChampionshipContextType {
   setActiveSeason: (season: SeasonId) => void;
   isHistorical: boolean;
   isLoading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const ChampionshipContext = createContext<ChampionshipContextType | undefined>(undefined);
@@ -19,19 +20,20 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<ChampionshipData>(mockData);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = async (showGlobalLoading = true) => {
+      if (showGlobalLoading) setIsLoading(true);
+      try {
+          const fetchedData = await dataService.getData(activeSeason);
+          setData(fetchedData);
+      } catch (error) {
+          console.error("Failed to load data:", error);
+      } finally {
+          if (showGlobalLoading) setIsLoading(false);
+      }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-        setIsLoading(true);
-        try {
-            const fetchedData = await dataService.getData(activeSeason);
-            setData(fetchedData);
-        } catch (error) {
-            console.error("Failed to load data:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    loadData();
+    loadData(true);
   }, [activeSeason]);
 
   const isHistorical = activeSeason === '2024';
@@ -43,7 +45,8 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
       activeSeason,
       setActiveSeason,
       isHistorical,
-      isLoading
+      isLoading,
+      refreshData: () => loadData(false)
     }}>
       {children}
     </ChampionshipContext.Provider>

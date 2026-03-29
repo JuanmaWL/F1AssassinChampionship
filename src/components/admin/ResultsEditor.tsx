@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ChampionshipData, RaceResult, SeasonId } from '../../types';
-import { Upload, Save, Loader2, AlertTriangle, CheckCircle, Wand2 } from 'lucide-react';
+import { Upload, Save, Loader2, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { cn } from '../../lib/utils';
 import { calculateStandings } from '../../lib/calculations';
@@ -222,6 +222,8 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
   const handleRaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const raceId = e.target.value;
     setSelectedRaceId(raceId);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     
     const race = data.races.find(r => r.id === raceId);
     if (race && race.status === 'completed' && race.results) {
@@ -341,27 +343,46 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
                   "border-2 border-dashed border-slate-700 rounded-xl p-8 text-center transition-colors bg-slate-950/30",
                   isHistorical ? "hover:border-amber-500/50" : "hover:border-red-500/50"
               )}>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
-                  {previewUrl ? (
+                {previewUrl ? (
+                  <div className="flex flex-col items-center gap-4 relative">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPreviewUrl(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="absolute -top-4 -right-4 bg-slate-800 hover:bg-red-600 border border-slate-700 hover:border-red-500 text-white p-2 rounded-full shadow-lg transition-all z-10"
+                      title="Borrar imagen"
+                    >
+                      <X size={16} />
+                    </button>
                     <img src={previewUrl} alt="Preview" className="max-h-48 rounded-lg shadow-lg" />
-                  ) : (
-                    <div className="p-4 bg-slate-800 rounded-full">
-                      <Upload className="w-8 h-8 text-slate-400" />
-                    </div>
-                  )}
-                  <span className="text-slate-300 font-medium">
-                    {isProcessing ? 'Analizando Imagen...' : 'Subir Captura (IA)'}
-                  </span>
-                  {isProcessing && <Loader2 className={cn("animate-spin", accentColor)} />}
-                </label>
+                    <span className="text-slate-300 font-medium">
+                      {isProcessing ? 'Analizando Imagen...' : 'Imagen cargada'}
+                    </span>
+                    {isProcessing && <Loader2 className={cn("animate-spin", accentColor)} />}
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-4">
+                      <div className="p-4 bg-slate-800 rounded-full">
+                        <Upload className="w-8 h-8 text-slate-400" />
+                      </div>
+                      <span className="text-slate-300 font-medium">
+                        {isProcessing ? 'Analizando Imagen...' : 'Subir Captura (IA)'}
+                      </span>
+                      {isProcessing && <Loader2 className={cn("animate-spin", accentColor)} />}
+                    </label>
+                  </>
+                )}
               </div>
 
               <button 
