@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { ChampionshipData, SeasonId } from '../types';
 import { mockData } from '../mockData';
 import { dataService } from '../services/dataService';
@@ -17,24 +17,36 @@ const ChampionshipContext = createContext<ChampionshipContextType | undefined>(u
 
 export function ChampionshipProvider({ children }: { children: ReactNode }) {
   const [activeSeason, setActiveSeason] = useState<SeasonId>('2026');
-  const [data, setData] = useState<ChampionshipData>(mockData);
+  const [data, setDataState] = useState<ChampionshipData>(mockData);
   const [isLoading, setIsLoading] = useState(true);
+  const seasonCache = useRef<Map<SeasonId, ChampionshipData>>(new Map());
 
-  const loadData = async (showGlobalLoading = true) => {
-      if (showGlobalLoading) setIsLoading(true);
-      try {
-          const fetchedData = await dataService.getData(activeSeason);
-          setData(fetchedData);
-      } catch (error) {
-          console.error("Failed to load data:", error);
-      } finally {
-          if (showGlobalLoading) setIsLoading(false);
-      }
-  };
+  const setData = useCallback((newData: ChampionshipData) => {
+    seasonCache.current.set(activeSeason, newData);
+    setDataState(newData);
+  }, [activeSeason]);
+
+  const loadData = useCallback(async (showGlobalLoading = true, bypassCache = false) => {
+    if (!bypassCache && seasonCache.current.has(activeSeason)) {
+      setDataState(seasonCache.current.get(activeSeason)!);
+      if (showGlobalLoading) setIsLoading(false);
+      return;
+    }
+    if (showGlobalLoading) setIsLoading(true);
+    try {
+      const fetchedData = await dataService.getData(activeSeason);
+      seasonCache.current.set(activeSeason, fetchedData);
+      setDataState(fetchedData);
+    } catch (error) {
+      console.error("Failed to load data:", error);
+    } finally {
+      if (showGlobalLoading) setIsLoading(false);
+    }
+  }, [activeSeason]);
 
   useEffect(() => {
-    loadData(true);
-  }, [activeSeason]);
+    loadData(true, false);
+  }, [loadData]);
 
   const isHistorical = activeSeason === '2024';
 
@@ -46,7 +58,7 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
       setActiveSeason,
       isHistorical,
       isLoading,
-      refreshData: () => loadData(false)
+      refreshData: () => loadData(false, true)
     }}>
       {children}
     </ChampionshipContext.Provider>

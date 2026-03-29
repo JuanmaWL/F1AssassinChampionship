@@ -38,8 +38,8 @@ function AppContent() {
 
   return (
     <div className={cn(
-        "min-h-screen font-sans selection:bg-red-500/30 flex flex-col transition-colors duration-500",
-        isHistorical ? "bg-slate-950 text-amber-50" : "bg-slate-950 text-slate-200"
+        "min-h-screen font-sans selection:bg-red-500/30 flex flex-col transition-colors duration-500 bg-slate-950",
+        isHistorical ? "text-amber-50" : "text-slate-200"
     )}>
       <AnimatePresence>
         {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} activeSeason={activeSeason} />}
