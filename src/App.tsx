@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { IntroAnimation } from './components/IntroAnimation';
+import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
 import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History, Dices } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence } from 'motion/react';
@@ -193,10 +194,7 @@ function AppContent() {
         </div>
 
         {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
-                <Loader2 className={cn("w-10 h-10 animate-spin mb-4", isHistorical ? "text-amber-500" : "text-red-500")} />
-                <p className="font-mono text-xs uppercase tracking-widest">Cargando datos...</p>
-            </div>
+            <DashboardSkeleton />
         ) : (
             <Suspense fallback={<LoadingSpinner />}>
                 {activeTab === 'dashboard' && <Dashboard />}

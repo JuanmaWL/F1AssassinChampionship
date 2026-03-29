@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { StatsOverview } from './dashboard/StatsOverview';
 import { Podium } from './dashboard/Podium';
 import { DriversTable } from './dashboard/DriversTable';
 import { ConstructorsTable } from './dashboard/ConstructorsTable';
 import { EvolutionChart } from './dashboard/EvolutionChart';
-import { motion } from 'motion/react';
+import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useChampionship } from '../context/ChampionshipContext';
 
@@ -31,10 +31,18 @@ export function Dashboard() {
     delay: Math.random() * 2
   })), []);
 
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const isBannerInView = useInView(bannerRef, { once: false, margin: "100px" });
+
+  const evolutionRef = useRef<HTMLDivElement>(null);
+  const isEvolutionInView = useInView(evolutionRef, { once: true, margin: "0px 0px -100px 0px" });
+
   return (
     <div className="space-y-12 pb-20">
       {/* Animated Banner / Logo Area */}
-      <div className={cn(
+      <div 
+        ref={bannerRef}
+        className={cn(
           "w-full h-48 md:h-64 rounded-2xl overflow-hidden relative border shadow-2xl group bg-slate-950 transition-colors duration-500",
           isHistorical ? "border-amber-500/30" : "border-white/10"
       )}>
@@ -62,10 +70,10 @@ export function Dashboard() {
                         isHistorical ? "bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     )}
                     style={{ top: line.top }}
-                    animate={{
+                    animate={isBannerInView ? {
                         x: ['-100%', '100%'],
                         opacity: [0, 1, 0]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                         duration: line.duration,
                         repeat: Infinity,
@@ -78,10 +86,10 @@ export function Dashboard() {
              {!isHistorical && (
                  <motion.div
                     className="absolute bottom-0 left-0 h-1 bg-red-600 shadow-[0_0_20px_#dc2626] w-20 rounded-full"
-                    animate={{
+                    animate={isBannerInView ? {
                         x: ['-100%', '1200%'], // Moves across widely
                         opacity: [0, 1, 0]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                         duration: 3,
                         repeat: Infinity,
@@ -106,11 +114,11 @@ export function Dashboard() {
                         y: particle.y,
                         scale: 0 
                     }}
-                    animate={{ 
+                    animate={isBannerInView ? { 
                         y: [null, particle.yOffset], // Float up slightly
                         opacity: [0, 0.8, 0],
                         scale: [0, 1, 0]
-                    }}
+                    } : { opacity: 0 }}
                     transition={{
                         duration: particle.duration,
                         repeat: Infinity,
@@ -139,7 +147,7 @@ export function Dashboard() {
                             "absolute inset-0 opacity-50 blur-sm",
                             isHistorical ? "text-amber-500" : "text-red-500"
                         )}
-                        animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.02, 1] }}
+                        animate={isBannerInView ? { opacity: [0.3, 0.6, 0.3], scale: [1, 1.02, 1] } : { opacity: 0 }}
                         transition={{ duration: 2, repeat: Infinity }}
                     >
                         Championship
@@ -177,7 +185,9 @@ export function Dashboard() {
       {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
       <DriversTable drivers={sortedDrivers} constructors={data.constructors} races={data.races} />
       <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} />
-      {hasCompletedRaces && <EvolutionChart data={data} />}
+      <div ref={evolutionRef}>
+        {hasCompletedRaces && isEvolutionInView && <EvolutionChart data={data} />}
+      </div>
     </div>
   );
 }
