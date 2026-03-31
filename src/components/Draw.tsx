@@ -109,8 +109,15 @@ export function Draw() {
   const [rotation, setRotation] = useState(0);
   const [winningRace, setWinningRace] = useState<typeof RACES[0] | null>(null);
   const [showWinner, setShowWinner] = useState(false);
-  const [pointerRotation, setPointerRotation] = useState(0);
   const [isStreamMode, setIsStreamMode] = useState(false);
+
+  const [pointerDeg, setPointerDeg] = useState(0);
+  const pointerIsKicking = useRef(false);
+  const pointerResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks wheel angle between spins for crossing detection
+  const prevWheelAngleRef = useRef(0);
+  // Stores target rotation so the effect closure always has the latest value
+  const targetRotationRef = useRef(0);
   const [showInfo, setShowInfo] = useState(true);
 
   const timeoutRefs = React.useRef<NodeJS.Timeout[]>([]);
@@ -123,43 +130,62 @@ export function Draw() {
     };
   }, []);
 
-  // Hook to simulate pointer ticking
+  // Pointer clicker: detecta cruces de segmento sobre el ángulo de rueda calculado
+  // matemáticamente (no leyendo el DOM), y dispara un tick discreto por cada cruce.
   React.useEffect(() => {
     if (!isSpinning) {
-      setPointerRotation(0);
+      setPointerDeg(0);
       return;
     }
 
-    let lastTickAngle = -1;
-    const sliceAngle = 360 / RACES.length;
-    
-    const checkTick = () => {
-      if (!isSpinning) return;
-      
-      const wheel = document.getElementById('f1-wheel');
-      if (wheel) {
-        const style = window.getComputedStyle(wheel);
-        const matrix = new DOMMatrixReadOnly(style.transform);
-        const angle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
-        const normalizedAngle = (angle < 0 ? angle + 360 : angle);
-        
-        const currentSlice = Math.floor(normalizedAngle / sliceAngle);
-        if (currentSlice !== lastTickAngle) {
-          lastTickAngle = currentSlice;
-          // Trigger pointer flick with more subtle physics
-          setPointerRotation(-25);
-          const tId = setTimeout(() => setPointerRotation(0), 50);
-          timeoutRefs.current.push(tId);
-        }
+    const SLICE = 360 / RACES.length;
+    const DURATION = 6000; // ms — debe coincidir con la duración de la transición de la rueda
+    const startAng = prevWheelAngleRef.current;
+    const totalDelta = targetRotationRef.current - startAng;
+    const KICK_DEG = 22;        // grados de deflexión del pointer en cada tick
+    const HOLD_MS = 110;        // ms que el pointer permanece desviado antes de volver
+
+    let prevAng = startAng;
+    let running = true;
+    const t0 = performance.now();
+
+    const tick = (now: number) => {
+      if (!running) return;
+
+      const elapsed = now - t0;
+      const p = Math.min(elapsed / DURATION, 1);
+      // Ease-out cúbico — aproxima la curva [0.15, 0, 0.15, 1] de la rueda
+      const ep = 1 - Math.pow(1 - p, 3);
+      const currentAng = startAng + totalDelta * ep;
+
+      // Detectar cruce de borde de segmento
+      const prevMod = ((prevAng % SLICE) + SLICE) % SLICE;
+      const currMod = ((currentAng % SLICE) + SLICE) % SLICE;
+      const frameDelta = currentAng - prevAng;
+      const crossed = (frameDelta > 0.05) && (prevMod > currMod || frameDelta >= SLICE);
+
+      if (crossed && !pointerIsKicking.current) {
+        // Cancelar reset pendiente si lo hay
+        if (pointerResetTimer.current) clearTimeout(pointerResetTimer.current);
+        pointerIsKicking.current = true;
+        setPointerDeg(KICK_DEG);
+        pointerResetTimer.current = setTimeout(() => {
+          setPointerDeg(0);
+          pointerIsKicking.current = false;
+        }, HOLD_MS);
       }
-      const aId = requestAnimationFrame(checkTick);
-      animFrameRefs.current.push(aId);
+
+      prevAng = currentAng;
+
+      if (p < 1) {
+        animFrameRefs.current.push(requestAnimationFrame(tick));
+      }
     };
 
-    const animId = requestAnimationFrame(checkTick);
-    animFrameRefs.current.push(animId);
+    animFrameRefs.current.push(requestAnimationFrame(tick));
     return () => {
-      cancelAnimationFrame(animId);
+      running = false;
+      if (pointerResetTimer.current) clearTimeout(pointerResetTimer.current);
     };
   }, [isSpinning]);
 
@@ -218,6 +244,8 @@ export function Draw() {
     if (extra < 0) extra += 360;
     
     const newRotation = rotation + (spins * 360) + extra;
+    targetRotationRef.current = newRotation;
+    prevWheelAngleRef.current = rotation;
     setRotation(newRotation);
 
     const tId1 = setTimeout(() => {
@@ -240,6 +268,11 @@ export function Draw() {
   const resetDraw = () => {
     setSelectedRaces([]);
     setRotation(0);
+    targetRotationRef.current = 0;
+    prevWheelAngleRef.current = 0;
+    setPointerDeg(0);
+    pointerIsKicking.current = false;
+    if (pointerResetTimer.current) clearTimeout(pointerResetTimer.current);
     setWinningRace(null);
     setShowWinner(false);
   };
@@ -410,10 +443,10 @@ export function Draw() {
               isSpinning ? "bg-red-600/25 scale-110" : "bg-red-900/5 scale-100"
             )}></div>
 
-            {/* Pointer with oscillation */}
+            {/* Pointer */}
             <motion.div 
-              animate={{ rotate: pointerRotation }}
-              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              style={{ rotate: pointerDeg }}
+              transition={{ type: 'spring', stiffness: 800, damping: 25, mass: 0.4 }}
               className={cn(
                 "absolute top-0 left-1/2 -translate-x-1/2 z-20 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] transition-all duration-500",
                 isStreamMode ? "-translate-y-8" : "-translate-y-4"

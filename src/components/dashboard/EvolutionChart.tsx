@@ -24,6 +24,14 @@ interface TooltipPayloadEntry {
   payload: Record<string, number | string>;
 }
 
+interface DotRenderProps {
+  cx?: number;
+  cy?: number;
+  payload?: Record<string, number | string>;
+  dataKey?: string | number | ((obj: any) => any);
+  stroke?: string;
+}
+
 interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayloadEntry[];
@@ -161,14 +169,6 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       prev.includes(dataKey) ? prev.filter(k => k !== dataKey) : [...prev, dataKey]
     );
   };
-
-  interface DotRenderProps {
-    cx?: number;
-    cy?: number;
-    payload?: Record<string, number | string>;
-    dataKey?: string | number | ((obj: any) => any);
-    stroke?: string;
-  }
 
   const renderCustomDot = (props: DotRenderProps) => {
       const { cx = 0, cy = 0, payload = {}, dataKey = '', stroke = '#000' } = props;
