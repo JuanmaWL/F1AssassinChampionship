@@ -35,7 +35,15 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
       setError(null);
       setSuccess(null);
     }
-  }, [activeSection, currentData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
+
+  // Refresca el JSON solo si el editor está vacío (primera carga o tras guardar)
+  useEffect(() => {
+    if (activeSection === 'edit' && jsonContent === '') {
+      setJsonContent(JSON.stringify(currentData, null, 2));
+    }
+  }, [currentData]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'json' | 'text' | 'image') => {
     const file = event.target.files?.[0];

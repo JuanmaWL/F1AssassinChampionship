@@ -3,9 +3,8 @@ import { ChampionshipData, RaceResult, SeasonId } from '../../types';
 import { Upload, Save, Loader2, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { cn } from '../../lib/utils';
-import { calculateStandings } from '../../lib/calculations';
+import { calculateStandings, getPoints } from '../../lib/calculations';
 import { dataService } from '../../services/dataService';
-import { getPoints } from '../../lib/calculations';
 
 interface ResultsEditorProps {
   data: ChampionshipData;

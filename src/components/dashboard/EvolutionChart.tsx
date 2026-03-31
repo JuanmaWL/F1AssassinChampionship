@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -18,21 +18,36 @@ interface EvolutionChartProps {
   data: ChampionshipData;
 }
 
-const CustomTooltip = ({ active, payload, label, viewType, metric, constructors }: any) => {
+interface TooltipPayloadEntry {
+  dataKey: string;
+  color: string;
+  payload: Record<string, number | string>;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+  viewType: 'drivers' | 'constructors';
+  metric: 'points' | 'position';
+  constructors: import('../../types').Constructor[];
+}
+
+const CustomTooltip = ({ active, payload, label, viewType, metric, constructors }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     // Sort payload by the actual position in that race
-    const sortedPayload = [...payload].sort((a: any, b: any) => {
+    const sortedPayload = [...payload].sort((a, b) => {
       const posA = a.payload[`${a.dataKey}_pos`] || 99;
       const posB = b.payload[`${b.dataKey}_pos`] || 99;
-      return posA - posB;
+      return (posA as number) - (posB as number);
     });
 
     return (
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl min-w-[200px] z-[9999]">
         <p className="text-slate-200 font-black italic mb-3 border-b border-white/10 pb-2 uppercase tracking-wider">{label}</p>
         <div className="flex flex-col gap-1.5">
-          {sortedPayload.map((entry: any, index: number) => {
-            const constructor = viewType === 'constructors' ? constructors.find((c: any) => c.name === entry.dataKey) : null;
+          {sortedPayload.map((entry, index) => {
+            const constructor = viewType === 'constructors' ? constructors.find(c => c.name === entry.dataKey) : null;
             const pos = entry.payload[`${entry.dataKey}_pos`];
             const pts = entry.payload[`${entry.dataKey}_pts`];
             return (
@@ -56,24 +71,24 @@ const CustomTooltip = ({ active, payload, label, viewType, metric, constructors 
 };
 
 export function EvolutionChart({ data }: EvolutionChartProps) {
-  const [viewType, setViewType] = React.useState<'drivers' | 'constructors'>('drivers');
-  const [metric, setMetric] = React.useState<'points' | 'position'>('points');
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [viewType, setViewType] = useState<'drivers' | 'constructors'>('drivers');
+  const [metric, setMetric] = useState<'points' | 'position'>('points');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const allDriversCount = data.drivers.length;
   const allConstructorsCount = data.constructors.length;
   
-  const sortedDrivers = React.useMemo(() => [...data.drivers].sort((a, b) => b.points - a.points), [data.drivers]);
-  const sortedConstructors = React.useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
+  const sortedDrivers = useMemo(() => [...data.drivers].sort((a, b) => b.points - a.points), [data.drivers]);
+  const sortedConstructors = useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
   
-  const [hiddenItems, setHiddenItems] = React.useState<string[]>([]);
+  const [hiddenItems, setHiddenItems] = useState<string[]>([]);
 
   // Reset hidden items when switching views
-  React.useEffect(() => {
+  useEffect(() => {
     setHiddenItems([]);
   }, [viewType]);
 
-  const chartData = React.useMemo(() => {
+  const chartData = useMemo(() => {
     const completedRaces = data.races.filter(r => r.status === 'completed');
     const isDrivers = viewType === 'drivers';
     const entities = isDrivers ? data.drivers : data.constructors;
@@ -95,7 +110,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
     }
 
     return completedRaces.map(race => {
-      const point: any = { name: race.name };
+      const point: Record<string, number | string> = { name: race.name };
 
       if (race.results) {
         race.results.forEach(result => {
@@ -147,9 +162,17 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
     );
   };
 
-  const renderCustomDot = (props: any) => {
-      const { cx, cy, payload, dataKey, stroke } = props;
-      const pos = payload[`${dataKey}_pos`];
+  interface DotRenderProps {
+    cx?: number;
+    cy?: number;
+    payload?: Record<string, number | string>;
+    dataKey?: string | number | ((obj: any) => any);
+    stroke?: string;
+  }
+
+  const renderCustomDot = (props: DotRenderProps) => {
+      const { cx = 0, cy = 0, payload = {}, dataKey = '', stroke = '#000' } = props;
+      const pos = payload[`${dataKey}_pos`] as number;
       
       if (pos <= 3) {
           const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
@@ -165,8 +188,8 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       );
   };
 
-  const renderConstructorDot = (props: any, constructor: Constructor) => {
-      const { cx, cy } = props;
+  const renderConstructorDot = (props: DotRenderProps, constructor: Constructor) => {
+      const { cx = 0, cy = 0 } = props;
       const size = 22;
       
       return (

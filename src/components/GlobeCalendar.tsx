@@ -55,8 +55,6 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Extract color class (e.g. "text-red-500" -> "red-500")
-  const colorName = accentColor.replace('text-', '');
   const hexColor = accentColor.includes('amber') ? '#f59e0b' : '#ef4444';
   const bgBadgeColor = accentColor.includes('amber') ? 'bg-amber-500' : 'bg-red-500';
 
@@ -271,11 +269,11 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                 </div>
               </div>
               <div class="flex items-center gap-2 text-[11px] text-slate-300 font-mono uppercase tracking-wider mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-${colorName} shrink-0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: ${hexColor}; flex-shrink: 0;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                 <span class="leading-tight">${formattedDate}</span>
               </div>
               <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono uppercase tracking-wider">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-${colorName} shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: ${hexColor}; flex-shrink: 0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span class="leading-tight">${datum.circuit}</span>
               </div>
             `);
@@ -625,7 +623,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
         console.error("Error loading globe data:", error);
       }
     })();
-  }, [races, accentColor, bgBadgeColor, colorName, hexColor]);
+  }, [races, accentColor, bgBadgeColor, hexColor]);
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-3xl p-4 md:p-6 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] group">
