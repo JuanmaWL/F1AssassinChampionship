@@ -4,7 +4,7 @@ import { IntroAnimation } from './components/IntroAnimation';
 import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
 import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History, Dices } from 'lucide-react';
 import { cn } from './lib/utils';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
 import { SEASONS } from './types';
 
@@ -198,16 +198,34 @@ function AppContent() {
             </div>
         </div>
 
-        {isLoading ? (
-            <DashboardSkeleton />
-        ) : (
-            <Suspense fallback={<LoadingSpinner />}>
-                {activeTab === 'dashboard' && <Dashboard />}
-                {activeTab === 'calendar' && <Calendar />}
-                {activeTab === 'draw' && <Draw />}
-                {activeTab === 'admin' && <AdminPanel />}
-            </Suspense>
-        )}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <DashboardSkeleton />
+              </motion.div>
+          ) : (
+              <motion.div
+                key={activeSeason + activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Suspense fallback={<LoadingSpinner />}>
+                    {activeTab === 'dashboard' && <Dashboard />}
+                    {activeTab === 'calendar' && <Calendar />}
+                    {activeTab === 'draw' && <Draw />}
+                    {activeTab === 'admin' && <AdminPanel />}
+                </Suspense>
+              </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Footer */}

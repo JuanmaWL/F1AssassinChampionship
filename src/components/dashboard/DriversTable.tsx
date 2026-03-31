@@ -267,7 +267,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
       </div>
 
       {/* Driver Stats Modal */}
-      {typeof document !== 'undefined' && createPortal(
+      {createPortal(
         <AnimatePresence>
           {selectedDriver && (
             <motion.div
@@ -431,7 +431,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
     )}
 
     {/* Fastest Lap Modal */}
-      {typeof document !== 'undefined' && createPortal(
+      {createPortal(
         <AnimatePresence>
           {activeFastestLapDriver && (
             <motion.div

@@ -7,6 +7,11 @@ import ReactMarkdown from 'react-markdown';
 import { GlobeCalendar } from './GlobeCalendar';
 import { useChampionship } from '../context/ChampionshipContext';
 
+const SortIcon = ({ columnKey, sortConfig }: { columnKey: string; sortConfig: { key: string; direction: 'asc' | 'desc' } | null }) => {
+  if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="opacity-30" />;
+  return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-white" /> : <ArrowDown size={12} className="text-white" />;
+};
+
 export function Calendar() {
   const { data, activeSeason, isHistorical } = useChampionship();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
@@ -79,11 +84,6 @@ export function Calendar() {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
-  };
-
-  const SortIcon = ({ columnKey }: { columnKey: string }) => {
-      if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="opacity-30" />;
-      return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-white" /> : <ArrowDown size={12} className="text-white" />;
   };
 
   return (
@@ -499,7 +499,7 @@ export function Calendar() {
                             onClick={() => requestSort('position')}
                         >
                             <div className="flex items-center justify-center gap-1">
-                                Pos <SortIcon columnKey="position" />
+                                Pos <SortIcon columnKey="position" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -507,7 +507,7 @@ export function Calendar() {
                             onClick={() => requestSort('driver')}
                         >
                             <div className="flex items-center gap-1">
-                                Piloto <SortIcon columnKey="driver" />
+                                Piloto <SortIcon columnKey="driver" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -515,7 +515,7 @@ export function Calendar() {
                             onClick={() => requestSort('team')}
                         >
                             <div className="flex items-center gap-1">
-                                Equipo <SortIcon columnKey="team" />
+                                Equipo <SortIcon columnKey="team" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -523,7 +523,7 @@ export function Calendar() {
                             onClick={() => requestSort('raceTime')}
                         >
                             <div className="flex items-center justify-end gap-1">
-                                <Clock size={14} /> Tiempo <SortIcon columnKey="raceTime" />
+                                <Clock size={14} /> Tiempo <SortIcon columnKey="raceTime" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -531,7 +531,7 @@ export function Calendar() {
                             onClick={() => requestSort('fastestLap')}
                         >
                             <div className="flex items-center justify-end gap-1">
-                                <Timer size={14} /> VR <SortIcon columnKey="fastestLap" />
+                                <Timer size={14} /> VR <SortIcon columnKey="fastestLap" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -539,7 +539,7 @@ export function Calendar() {
                             onClick={() => requestSort('pitStops')}
                         >
                             <div className="flex items-center justify-center gap-1">
-                                <Wrench size={14} /> Pits <SortIcon columnKey="pitStops" />
+                                <Wrench size={14} /> Pits <SortIcon columnKey="pitStops" sortConfig={sortConfig} />
                             </div>
                         </th>
                         <th 
@@ -547,7 +547,7 @@ export function Calendar() {
                             onClick={() => requestSort('points')}
                         >
                             <div className="flex items-center justify-end gap-1">
-                                Pts <SortIcon columnKey="points" />
+                                Pts <SortIcon columnKey="points" sortConfig={sortConfig} />
                             </div>
                         </th>
                       </tr>

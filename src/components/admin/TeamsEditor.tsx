@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { ChampionshipData, Constructor, SeasonId } from '../../types';
 import { Plus, Trash2, Edit2, X, Check, Upload, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -146,12 +146,10 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
     setIsUploading(false);
   };
 
-  const sortedTeams = [...data.constructors].sort((a, b) => {
-    if (sortBy === 'name_desc') {
-      return b.name.localeCompare(a.name);
-    }
+  const sortedTeams = useMemo(() => [...data.constructors].sort((a, b) => {
+    if (sortBy === 'name_desc') return b.name.localeCompare(a.name);
     return a.name.localeCompare(b.name);
-  });
+  }), [data.constructors, sortBy]);
 
   return (
     <div className="space-y-6">

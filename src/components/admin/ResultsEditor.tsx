@@ -5,6 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { cn } from '../../lib/utils';
 import { calculateStandings } from '../../lib/calculations';
 import { dataService } from '../../services/dataService';
+import { getPoints } from '../../lib/calculations';
 
 interface ResultsEditorProps {
   data: ChampionshipData;
@@ -131,23 +132,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
 
     } catch (err) {
       console.error("AI Parsing Error:", err);
-      setError("Fallo en IA (Verifica API Key). Cargando datos de prueba.");
-      
-      setTimeout(() => {
-         const mockParsed: RaceResult[] = data.drivers.map((d, i) => ({
-            driverId: d.id,
-            position: i + 1,
-            points: i === 0 ? 25 : i === 1 ? 18 : i === 2 ? 15 : 0,
-            fastestLap: i === 0,
-            dnf: false,
-            raceTime: i === 0 ? "1:30:00.000" : `+${i * 2}.000s`,
-            fastestLapTime: "1:18.500",
-            pitStops: Math.floor(Math.random() * 3) + 1
-         })).slice(0, 10);
-         setParsedResults(mockParsed);
-         setError(null);
-         setSuccess("Datos de prueba cargados (Modo Demo)");
-      }, 1000);
+      setError("Fallo en IA. Revisa la API Key o introduce los resultados manualmente.");
     }
   };
 
@@ -193,12 +178,6 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     } finally {
       setIsEnhancing(false);
     }
-  };
-
-  const getPoints = (position: number, dnf: boolean, disqualified: boolean): number => {
-    if (dnf || disqualified) return 0;
-    const pointsMap = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
-    return pointsMap[position - 1] || 0;
   };
 
   const handleResultChange = (index: number, field: keyof RaceResult, value: any) => {

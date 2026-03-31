@@ -1,6 +1,6 @@
 import { ChampionshipData, Driver, Constructor } from '../types';
 
-const getPoints = (position: number, dnf: boolean, disqualified: boolean): number => {
+export const getPoints = (position: number, dnf: boolean, disqualified: boolean): number => {
   if (dnf || disqualified) return 0;
   const pointsMap = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
   return pointsMap[position - 1] || 0;

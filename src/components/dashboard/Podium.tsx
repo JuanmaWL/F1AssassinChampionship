@@ -27,26 +27,34 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } }
 };
 
+const FIRE_PARTICLES = [...Array(12)].map(() => ({
+  y: -120 - Math.random() * 60,
+  x: (Math.random() - 0.5) * 40,
+  duration: 1.5 + Math.random() * 1.5,
+  delay: Math.random() * 2,
+  left: `${20 + Math.random() * 60}%`,
+}));
+
 const FireParticles = ({ colorClass }: { colorClass: string }) => (
   <div className="absolute inset-0 overflow-hidden rounded-t-2xl pointer-events-none z-0">
-    {[...Array(12)].map((_, i) => (
+    {FIRE_PARTICLES.map((p, i) => (
       <motion.div
         key={i}
         className={cn("absolute bottom-0 w-1.5 h-1.5 rounded-full blur-[1px]", colorClass)}
         initial={{ opacity: 0, y: 10, x: 0, scale: 0 }}
         animate={{ 
           opacity: [0, 0.6, 0], 
-          y: -120 - Math.random() * 60, 
-          x: (Math.random() - 0.5) * 40,
+          y: p.y,
+          x: p.x,
           scale: [0, 1.5, 0]
         }}
         transition={{ 
-          duration: 1.5 + Math.random() * 1.5, 
+          duration: p.duration, 
           repeat: Infinity, 
-          delay: Math.random() * 2,
+          delay: p.delay,
           ease: "easeOut" 
         }}
-        style={{ left: `${20 + Math.random() * 60}%` }}
+        style={{ left: p.left }}
       />
     ))}
   </div>
