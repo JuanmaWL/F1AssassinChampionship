@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -202,7 +202,10 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       );
   };
 
-  const positionTicks = Array.from({ length: viewType === 'drivers' ? allDriversCount : allConstructorsCount }, (_, i) => i + 1);
+  const positionTicks = useMemo(
+    () => Array.from({ length: viewType === 'drivers' ? allDriversCount : allConstructorsCount }, (_, i) => i + 1),
+    [viewType, allDriversCount, allConstructorsCount]
+  );
 
   return (
     <>

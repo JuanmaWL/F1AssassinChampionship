@@ -35,6 +35,7 @@ function AppContent() {
     } else {
       document.body.style.overflow = 'unset';
     }
+    return () => { document.body.style.overflow = 'unset'; };
   }, [showIntro]);
 
   // Scroll to top when season or tab changes

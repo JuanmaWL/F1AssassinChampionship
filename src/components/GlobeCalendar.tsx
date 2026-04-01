@@ -94,7 +94,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
       .attr("offset", 1)
       .attr("stop-color", "rgba(0, 0, 0, 0.8)");
 
-    const loadingText = svg
+    svg
       .append("g")
       .attr("transform", `translate(${size / 2} ${size / 2})`)
       .attr("text-anchor", "middle")

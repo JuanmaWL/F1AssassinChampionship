@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
@@ -23,9 +23,8 @@ export function AdminPanel() {
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
-  const borderColor = isHistorical ? "border-amber-500/30" : "border-red-500/30";
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     try {

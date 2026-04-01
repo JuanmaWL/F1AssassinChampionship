@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Flag, Trophy, Timer, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ChampionshipData, SeasonId } from '../../types';
@@ -15,6 +15,22 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
   const pointsRemaining = totalRaces > 0 ? remainingRaces * 25 : 0;
   const isSeasonFinished = totalRaces > 0 && remainingRaces === 0;
   const hasStarted = completedRaces > 0;
+
+  // Stable random data for hover particles (avoids recalculation on every render)
+  const particleData = useMemo(() =>
+    Array.from({ length: 15 }, () => ({
+      x: Math.random() * 300,
+      y: Math.random() * 200,
+      floatY: Math.random() * -100,
+      scaleMax: Math.random() * 1.5 + 0.5,
+      duration: Math.random() * 2 + 2,
+      delay: Math.random() * 2,
+      width: Math.random() * 4 + 2,
+      height: Math.random() * 4 + 2,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+    }))
+  , []);
 
   // Find the next pending race to display in the timer
   const nextRace = data.races.find(r => r.status === 'pending');
@@ -71,33 +87,14 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
         
         {/* Hover Particles Effect - Reworked */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none overflow-hidden">
-            {[...Array(15)].map((_, i) => (
+            {particleData.map((p, i) => (
                 <motion.div
                     key={i}
                     className={`absolute rounded-full blur-[1px] ${isSeasonFinished ? 'bg-yellow-400' : 'bg-cyan-400'}`}
-                    initial={{ 
-                        x: Math.random() * 300, 
-                        y: Math.random() * 200, 
-                        opacity: 0,
-                        scale: 0
-                    }}
-                    animate={{ 
-                        y: [null, Math.random() * -100],
-                        opacity: [0, 0.8, 0],
-                        scale: [0, Math.random() * 1.5 + 0.5, 0]
-                    }}
-                    transition={{ 
-                        duration: Math.random() * 2 + 2, 
-                        repeat: Infinity, 
-                        delay: Math.random() * 2,
-                        ease: "easeInOut"
-                    }}
-                    style={{
-                        width: Math.random() * 4 + 2 + 'px',
-                        height: Math.random() * 4 + 2 + 'px',
-                        left: Math.random() * 100 + '%',
-                        top: Math.random() * 100 + '%'
-                    }}
+                    initial={{ x: p.x, y: p.y, opacity: 0, scale: 0 }}
+                    animate={{ y: [null, p.floatY], opacity: [0, 0.8, 0], scale: [0, p.scaleMax, 0] }}
+                    transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
+                    style={{ width: p.width + 'px', height: p.height + 'px', left: p.left + '%', top: p.top + '%' }}
                 />
             ))}
         </div>

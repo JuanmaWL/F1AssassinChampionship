@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export function useEditorState<T>() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<T>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCancel = () => {
     setEditingId(null);
@@ -23,17 +24,18 @@ export function useEditorState<T>() {
   };
 
   const withSave = async (fn: () => Promise<void>) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setIsSaving(true);
     setSaveMessage(null);
     try {
       await fn();
       setSaveMessage('Guardado exitosamente');
-      setTimeout(() => setSaveMessage(null), 3000);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 3000);
       handleCancel();
     } catch (error) {
       console.error('Error saving:', error);
       setSaveMessage('Error al guardar');
-      setTimeout(() => setSaveMessage(null), 3000);
+      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 3000);
     } finally {
       setIsSaving(false);
     }

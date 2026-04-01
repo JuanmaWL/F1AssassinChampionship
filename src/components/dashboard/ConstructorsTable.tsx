@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Trophy } from 'lucide-react';
 import { Constructor } from '../../types';
@@ -10,7 +10,7 @@ interface ConstructorsTableProps {
 }
 
 export function ConstructorsTable({ constructors, hasCompletedRaces }: ConstructorsTableProps) {
-  const sortedConstructors = React.useMemo(() => {
+  const sortedConstructors = useMemo(() => {
     return hasCompletedRaces
       ? constructors
       : [...constructors].sort((a, b) => a.name.localeCompare(b.name));

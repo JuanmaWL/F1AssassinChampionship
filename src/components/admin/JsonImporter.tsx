@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent, ElementType } from 'react';
 import { ChampionshipData, SeasonId, Race } from '../../types';
 import { Upload, Download, AlertTriangle, Check, FileJson, FileText, Bot, Database, Users, Flag, Trophy, Calendar as CalendarIcon, Image as ImageIcon, X, Edit } from 'lucide-react';
 import { dataService } from '../../services/dataService';
@@ -45,7 +45,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     }
   }, [currentData]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'json' | 'text' | 'image') => {
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>, type: 'json' | 'text' | 'image') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -308,14 +308,14 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     linkElement.click();
   };
 
-  const tabsGroup1: { id: ImportSection; label: string; icon: React.ElementType }[] = [
+  const tabsGroup1: { id: ImportSection; label: string; icon: ElementType }[] = [
     { id: 'teams', label: 'Escuderías', icon: Trophy },
     { id: 'drivers', label: 'Pilotos', icon: Users },
     { id: 'calendar', label: 'Calendario', icon: CalendarIcon },
     { id: 'results', label: 'Resultados', icon: Flag },
   ];
 
-  const tabsGroup2: { id: ImportSection; label: string; icon: React.ElementType }[] = [
+  const tabsGroup2: { id: ImportSection; label: string; icon: ElementType }[] = [
     { id: 'full', label: 'Completo', icon: Database },
     { id: 'edit', label: 'Editor JSON', icon: Edit },
   ];

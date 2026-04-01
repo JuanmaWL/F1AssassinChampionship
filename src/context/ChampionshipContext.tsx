@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, ReactNode } from 'react';
 import { ChampionshipData, SeasonId } from '../types';
 import { mockData } from '../mockData';
 import { dataService } from '../services/dataService';
@@ -49,17 +49,20 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
   }, [loadData]);
 
   const isHistorical = activeSeason === '2024';
+  const refreshData = useCallback(() => loadData(false, true), [loadData]);
+
+  const contextValue = useMemo(() => ({
+    data,
+    setData,
+    activeSeason,
+    setActiveSeason,
+    isHistorical,
+    isLoading,
+    refreshData,
+  }), [data, setData, activeSeason, setActiveSeason, isHistorical, isLoading, refreshData]);
 
   return (
-    <ChampionshipContext.Provider value={{
-      data,
-      setData,
-      activeSeason,
-      setActiveSeason,
-      isHistorical,
-      isLoading,
-      refreshData: () => loadData(false, true)
-    }}>
+    <ChampionshipContext.Provider value={contextValue}>
       {children}
     </ChampionshipContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp } from 'lucide-react';
@@ -120,10 +120,10 @@ export function Draw() {
   const targetRotationRef = useRef(0);
   const [showInfo, setShowInfo] = useState(true);
 
-  const timeoutRefs = React.useRef<NodeJS.Timeout[]>([]);
-  const animFrameRefs = React.useRef<number[]>([]);
+  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
+  const animFrameRefs = useRef<number[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       timeoutRefs.current.forEach(clearTimeout);
       animFrameRefs.current.forEach(cancelAnimationFrame);
@@ -132,7 +132,7 @@ export function Draw() {
 
   // Pointer clicker: detecta cruces de segmento sobre el ángulo de rueda calculado
   // matemáticamente (no leyendo el DOM), y dispara un tick discreto por cada cruce.
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isSpinning) {
       setPointerDeg(0);
       return;
@@ -225,6 +225,8 @@ export function Draw() {
 
     setIsSpinning(true);
     setShowWinner(false);
+    animFrameRefs.current.forEach(cancelAnimationFrame);
+    animFrameRefs.current = [];
 
     const unselected = RACES.filter(r => !selectedRaces.find(sr => sr.id === r.id));
     if (unselected.length === 0) {
@@ -266,6 +268,8 @@ export function Draw() {
   };
 
   const resetDraw = () => {
+    animFrameRefs.current.forEach(cancelAnimationFrame);
+    animFrameRefs.current = [];
     setSelectedRaces([]);
     setRotation(0);
     targetRotationRef.current = 0;

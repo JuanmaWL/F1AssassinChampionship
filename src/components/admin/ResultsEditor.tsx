@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { ChampionshipData, RaceResult, SeasonId } from '../../types';
 import { Upload, Save, Loader2, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
@@ -30,7 +30,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
   const ringColor = isHistorical ? "focus:ring-amber-500" : "focus:ring-red-500";
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -197,7 +197,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     setParsedResults(newResults);
   };
 
-  const handleRaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleRaceSelect = (e: ChangeEvent<HTMLSelectElement>) => {
     const raceId = e.target.value;
     setSelectedRaceId(raceId);
     setPreviewUrl(null);

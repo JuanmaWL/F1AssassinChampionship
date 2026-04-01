@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, ChangeEvent } from 'react';
 import { ChampionshipData, Constructor, SeasonId } from '../../types';
 import { Plus, Trash2, Edit2, X, Check, Upload, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -43,7 +43,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
     setIsUploading(false);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 

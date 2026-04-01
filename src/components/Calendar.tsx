@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Race, RaceResult } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,19 +30,41 @@ export function Calendar() {
     };
   }, [selectedRace]);
 
-  const getDriverName = (id: string) => data.drivers.find((d) => d.id === id)?.name || id;
-  const getTeamColor = (id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff';
-  const getTeamName = (id: string) => data.drivers.find((d) => d.id === id)?.team || 'Unknown';
-  const getTeamLogo = (id: string) => {
+  const getDriverName = useCallback((id: string) => data.drivers.find((d) => d.id === id)?.name || id, [data.drivers]);
+  const getTeamColor = useCallback((id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff', [data.drivers]);
+  const getTeamName = useCallback((id: string) => data.drivers.find((d) => d.id === id)?.team || 'Unknown', [data.drivers]);
+  const getTeamLogo = useCallback((id: string) => {
     const driver = data.drivers.find((d) => d.id === id);
     if (!driver) return undefined;
     const team = data.constructors.find((c) => c.name === driver.team);
     return team?.logoUrl;
-  };
+  }, [data.drivers, data.constructors]);
 
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const hoverBorderColor = isHistorical ? "hover:border-amber-500/50" : "hover:border-red-500/50";
   const statusColor = isHistorical ? "bg-amber-500 group-hover:bg-amber-400" : "bg-green-500 group-hover:bg-green-400";
+
+  // Stable random layout data for background decoration (no Math.random() on each render)
+  const speedLineData = useMemo(() =>
+    Array.from({ length: 15 }, () => ({
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+    }))
+  , []);
+  const globeParticleData = useMemo(() =>
+    Array.from({ length: 40 }, () => ({
+      width: Math.random() * 3 + 1,
+      height: Math.random() * 3 + 1,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      opacity: Math.random() * 0.5 + 0.1,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+      glow: Math.random() * 10 + 5,
+    }))
+  , []);
 
   const sortedResults = useMemo(() => {
     if (!selectedRace?.results) return [];
@@ -76,7 +98,7 @@ export function Calendar() {
       });
     }
     return sortableItems;
-  }, [selectedRace, sortConfig, data]);
+  }, [selectedRace, sortConfig, getDriverName, getTeamName]);
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -105,15 +127,15 @@ export function Calendar() {
           
           {/* Speed lines */}
           <div className="absolute inset-0 opacity-20">
-            {[...Array(15)].map((_, i) => (
+            {speedLineData.map((l, i) => (
               <div
                 key={`line-${i}`}
                 className={cn("absolute h-px w-full bg-gradient-to-r from-transparent to-transparent", isHistorical ? "via-amber-500" : "via-red-500")}
                 style={{
-                  top: `${Math.random() * 100}%`,
-                  left: `-${Math.random() * 100}%`,
-                  animation: `speedLine ${Math.random() * 3 + 2}s linear infinite`,
-                  animationDelay: `${Math.random() * 2}s`,
+                  top: `${l.top}%`,
+                  left: `-${l.left}%`,
+                  animation: `speedLine ${l.duration}s linear infinite`,
+                  animationDelay: `${l.delay}s`,
                 }}
               />
             ))}
@@ -121,19 +143,19 @@ export function Calendar() {
 
           {/* Particles */}
           <div className="absolute inset-0">
-            {[...Array(40)].map((_, i) => (
+            {globeParticleData.map((p, i) => (
               <div
                 key={`particle-${i}`}
                 className={cn("absolute rounded-full animate-pulse", isHistorical ? "bg-amber-500" : "bg-red-500")}
                 style={{
-                  width: Math.random() * 3 + 1 + 'px',
-                  height: Math.random() * 3 + 1 + 'px',
-                  top: Math.random() * 100 + '%',
-                  left: Math.random() * 100 + '%',
-                  opacity: Math.random() * 0.5 + 0.1,
-                  animationDuration: Math.random() * 3 + 2 + 's',
-                  animationDelay: Math.random() * 2 + 's',
-                  boxShadow: `0 0 ${Math.random() * 10 + 5}px ${isHistorical ? 'rgba(245, 158, 11, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
+                  width: p.width + 'px',
+                  height: p.height + 'px',
+                  top: p.top + '%',
+                  left: p.left + '%',
+                  opacity: p.opacity,
+                  animationDuration: p.duration + 's',
+                  animationDelay: p.delay + 's',
+                  boxShadow: `0 0 ${p.glow}px ${isHistorical ? 'rgba(245, 158, 11, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
                 }}
               />
             ))}
