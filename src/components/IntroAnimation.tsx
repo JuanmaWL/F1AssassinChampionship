@@ -14,12 +14,12 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
   const [stage, setStage] = useState(0);
 
   useEffect(() => {
-    // Sequence timing
+    // Sequence timing (Refined for a perfect 6-second cinematic experience)
     const timers = [
-      setTimeout(() => setStage(1), 1000), // Lights start
-      setTimeout(() => setStage(2), 2500), // Car/Logo zoom
-      setTimeout(() => setStage(3), 6000), // Fade out
-      setTimeout(() => onComplete(), 6500), // Complete
+      setTimeout(() => setStage(1), 800),  // Lights start & Car enters
+      setTimeout(() => setStage(2), 2400), // Logo reveal & Zoom focus
+      setTimeout(() => setStage(3), 5400), // Final fade out start
+      setTimeout(() => onComplete(), 6000), // Complete
     ];
 
     return () => timers.forEach(clearTimeout);
@@ -29,10 +29,41 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
     <motion.div
       className="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center overflow-hidden"
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6 }}
     >
+      {/* Dynamic Wallpaper Background */}
+      <motion.div 
+        className="absolute inset-0 z-0"
+        style={{ willChange: 'transform, opacity' }}
+        initial={{ scale: 1.15, opacity: 0 }}
+        animate={{ 
+          scale: stage >= 3 ? 1.05 : (stage >= 2 ? 1.0 : 1.1), 
+          opacity: stage >= 3 ? 0 : (stage >= 1 ? 0.45 : 0),
+          filter: stage >= 2 ? 'blur(0px) brightness(1)' : 'blur(4px) brightness(0.8)'
+        }}
+        transition={{ 
+          scale: { duration: 6, ease: "linear" },
+          opacity: { duration: 1.5 },
+          filter: { duration: 2 }
+        }}
+      >
+        <img 
+          src="/images/wallpaper1.png" 
+          alt="F1 Intro Background" 
+          className="w-full h-full object-cover object-center"
+          style={{ imageRendering: 'crisp-edges' }}
+          referrerPolicy="no-referrer"
+        />
+        {/* Overlays for depth and readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60" />
+        <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px]" />
+        
+        {/* Animated scanlines/noise overlay */}
+        <div className="absolute inset-0 opacity-[0.08] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      </motion.div>
+
       {/* Background Grid Effect */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 z-[1]" />
 
       {/* Speed Lines / Particles */}
       <div className="absolute inset-0 overflow-hidden">
