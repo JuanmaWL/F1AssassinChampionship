@@ -21,21 +21,21 @@ export function Footer() {
     {
       name: "Alvillas",
       role: "Organizador",
-      image: "/images/Alvillas.png",
+      image: "/images/alvillas.png",
       twitter: "https://x.com/Alvillasvqk",
       youtube: "https://www.youtube.com/@alvillasvqk"
     },
     {
       name: "Uyimero",
       role: "Diseño Gráfico",
-      image: "/images/Uyimero.png",
+      image: "/images/uyimero.png",
       twitter: "https://x.com/Uyimero",
       youtube: "https://www.youtube.com/@Uyimero"
     },
     {
       name: "Juasmo",
       role: "Desarrollo Web",
-      image: "/images/Juasmo.png",
+      image: "/images/juasmo.png",
       twitter: "https://x.com/juanmawl",
       youtube: "https://www.youtube.com/@Juasmo"
     }
@@ -212,7 +212,7 @@ export function Footer() {
 
           <div className="flex items-center gap-8">
             <a 
-              href="https://github.com/juanmawl/f1-assassins" 
+              href="https://github.com/JuanmaWL/F1AssassinChampionship" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all group/gh hover:-translate-y-0.5"

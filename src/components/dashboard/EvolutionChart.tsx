@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -38,7 +38,7 @@ interface CustomTooltipProps {
   label?: string;
   viewType: 'drivers' | 'constructors';
   metric: 'points' | 'position';
-  constructors: import('../../types').Constructor[];
+  constructors: Constructor[];
 }
 
 const CustomTooltip = ({ active, payload, label, viewType, metric, constructors }: CustomTooltipProps) => {
@@ -83,6 +83,21 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
   const [metric, setMetric] = useState<'points' | 'position'>('points');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showLegend, setShowLegend] = useState(true);
+  const [isLegendTransitioning, setIsLegendTransitioning] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const LEGEND_DURATION = 0.4; // Segundos
+
+  const toggleLegend = () => {
+    setIsLegendTransitioning(true);
+    setShowLegend(!showLegend);
+    
+    // Esperamos a que termine la animación de la leyenda para volver a renderizar el gráfico
+    setTimeout(() => {
+      setIsLegendTransitioning(false);
+    }, LEGEND_DURATION * 1000 + 50); // +50ms de margen de seguridad
+  };
   
   const allDriversCount = data.drivers.length;
   const allConstructorsCount = data.constructors.length;
@@ -91,6 +106,25 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
   const sortedConstructors = useMemo(() => [...data.constructors].sort((a, b) => b.points - a.points), [data.constructors]);
   
   const [hiddenItems, setHiddenItems] = useState<string[]>([]);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   // Reset hidden items when switching views
   useEffect(() => {
@@ -217,6 +251,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         />
       )}
       <motion.div
+        ref={containerRef}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
@@ -298,7 +333,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
           <div className="flex items-center gap-2 ml-auto xl:ml-0">
             {/* Legend Toggle */}
             <button
-              onClick={() => setShowLegend(!showLegend)}
+              onClick={toggleLegend}
               className={cn(
                 "p-2 rounded-lg transition-colors border",
                 showLegend 
@@ -323,89 +358,108 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
       </div>
 
       <div className={cn("flex flex-col lg:flex-row gap-6 p-6", isFullscreen ? "flex-grow min-h-0" : "h-[500px]")}>
-        <div className={cn("flex-grow min-w-0", isFullscreen ? "h-full" : "h-[400px] lg:h-full")}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
+        <motion.div 
+          layout
+          className={cn("flex-grow min-w-0 relative overflow-hidden", isFullscreen ? "h-full" : "h-[400px] lg:h-full")}
+        >
+          {isVisible ? (
+            <ResponsiveContainer 
+              width="100%" 
+              height="100%" 
+              debounce={isLegendTransitioning ? 500 : 50}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
-              <XAxis 
-                dataKey="name" 
-                stroke="#94a3b8" 
-                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
-                tickMargin={10}
-                height={50}
-                interval="preserveStartEnd"
-                tickFormatter={(value) => value.replace(/Gran Premio de |GRAN PREMIO DE |GP de |GP /gi, '')}
-              />
-              <YAxis 
-                stroke="#94a3b8" 
-                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
-                domain={metric === 'position' ? [1, viewType === 'drivers' ? allDriversCount : allConstructorsCount] : ['dataMin', 'dataMax']}
-                reversed={metric === 'position'}
-                ticks={metric === 'position' ? positionTicks : undefined}
-                tickFormatter={(val) => metric === 'position' ? `P${val}` : val}
-                width={60}
-                tickMargin={15}
-              />
-              <Tooltip 
-                content={<CustomTooltip viewType={viewType} metric={metric} constructors={data.constructors} />} 
-                cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '5 5' }} 
-                wrapperStyle={{ zIndex: 9999 }}
-              />
-              <Brush 
-                dataKey="name" 
-                height={40} 
-                stroke="#10b981" 
-                fill="#0f172a"
-                travellerWidth={15}
-                tickFormatter={(value) => value.replace(/Gran Premio de |GRAN PREMIO DE |GP de |GP /gi, '')} 
-              />
-              {viewType === 'drivers' ? (
-                sortedDrivers.map((driver, index) => (
-                  <Line
-                    key={driver.id}
-                    hide={hiddenItems.includes(driver.name)}
-                    type="monotone"
-                    dataKey={driver.name}
-                    stroke={driver.teamColor}
-                    strokeWidth={index < 3 ? 4 : 2}
-                    strokeOpacity={hiddenItems.includes(driver.name) ? 0 : (index < 3 ? 1 : 0.4)}
-                    dot={(props) => renderCustomDot(props)}
-                    activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
-                    connectNulls
-                  />
-                ))
-              ) : (
-                sortedConstructors.map((constructor, index) => (
-                  <Line
-                    key={constructor.id}
-                    hide={hiddenItems.includes(constructor.name)}
-                    type="monotone"
-                    dataKey={constructor.name}
-                    stroke={constructor.color}
-                    strokeWidth={4}
-                    strokeOpacity={hiddenItems.includes(constructor.name) ? 0 : 0.8}
-                    dot={(props) => renderConstructorDot(props, constructor)}
-                    activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
-                    connectNulls
-                  />
-                ))
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+              <LineChart
+                data={chartData}
+                margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#94a3b8" 
+                  tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
+                  tickMargin={10}
+                  height={50}
+                  interval="preserveStartEnd"
+                  tickFormatter={(value) => value.replace(/Gran Premio de |GRAN PREMIO DE |GP de |GP /gi, '')}
+                />
+                <YAxis 
+                  stroke="#94a3b8" 
+                  tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} 
+                  domain={metric === 'position' ? [1, viewType === 'drivers' ? allDriversCount : allConstructorsCount] : ['dataMin', 'dataMax']}
+                  reversed={metric === 'position'}
+                  ticks={metric === 'position' ? positionTicks : undefined}
+                  tickFormatter={(val) => metric === 'position' ? `P${val}` : val}
+                  width={60}
+                  tickMargin={15}
+                />
+                <Tooltip 
+                  content={<CustomTooltip viewType={viewType} metric={metric} constructors={data.constructors} />} 
+                  cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1, strokeDasharray: '5 5' }} 
+                  wrapperStyle={{ zIndex: 9999 }}
+                />
+                <Brush 
+                  dataKey="name" 
+                  height={40} 
+                  stroke="#10b981" 
+                  fill="#0f172a"
+                  travellerWidth={15}
+                  tickFormatter={(value) => value.replace(/Gran Premio de |GRAN PREMIO DE |GP de |GP /gi, '')} 
+                />
+                {viewType === 'drivers' ? (
+                  sortedDrivers.map((driver, index) => (
+                    <Line
+                      key={driver.id}
+                      hide={hiddenItems.includes(driver.name)}
+                      type="monotone"
+                      dataKey={driver.name}
+                      stroke={driver.teamColor}
+                      strokeWidth={index < 3 ? 4 : 2}
+                      strokeOpacity={hiddenItems.includes(driver.name) ? 0 : (index < 3 ? 1 : 0.4)}
+                      dot={(props) => renderCustomDot(props)}
+                      activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                      connectNulls
+                    />
+                  ))
+                ) : (
+                  sortedConstructors.map((constructor) => (
+                    <Line
+                      key={constructor.id}
+                      hide={hiddenItems.includes(constructor.name)}
+                      type="monotone"
+                      dataKey={constructor.name}
+                      stroke={constructor.color}
+                      strokeWidth={4}
+                      strokeOpacity={hiddenItems.includes(constructor.name) ? 0 : 0.8}
+                      dot={(props) => renderConstructorDot(props, constructor)}
+                      activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
+                      connectNulls
+                    />
+                  ))
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950/20 rounded-xl border border-white/5 animate-pulse">
+              <Activity className="w-12 h-12 text-slate-700 mb-4" />
+              <div className="h-4 w-48 bg-slate-800 rounded-full" />
+            </div>
+          )}
+        </motion.div>
 
         {/* Custom Vertical Legend */}
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {showLegend && (
             <motion.div 
-              initial={{ opacity: 0, width: 0, scale: 0.95 }}
-              animate={{ opacity: 1, width: 'auto', scale: 1 }}
-              exit={{ opacity: 0, width: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="w-full lg:w-auto shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto custom-scrollbar pb-2 lg:pb-0 lg:pr-4 origin-right"
+              layout
+              initial={{ opacity: 0, width: 0, x: 20 }}
+              animate={{ opacity: 1, width: 'auto', x: 0 }}
+              exit={{ opacity: 0, width: 0, x: 20 }}
+              transition={{ 
+                duration: LEGEND_DURATION,
+                ease: [0.4, 0, 0.2, 1],
+                opacity: { duration: 0.2 }
+              }}
+              className="w-full lg:w-auto shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto custom-scrollbar pb-2 lg:pb-0 lg:pr-4 origin-right overflow-hidden"
             >
               <div className="hidden lg:flex flex-col mb-2 px-1 shrink-0">
                 <span className="text-slate-400 text-[10px] uppercase tracking-widest font-black">

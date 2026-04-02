@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { IntroAnimation } from './components/IntroAnimation';
 import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
-import { BarChart2, Calendar as CalendarIcon, Settings, Trophy, Play, Loader2, History, Dices, Shield } from 'lucide-react';
+import { BarChart2, Calendar as CalendarIcon, Trophy, Loader2, Dices, Shield } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';

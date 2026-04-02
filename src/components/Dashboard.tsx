@@ -34,9 +34,6 @@ export function Dashboard() {
   const bannerRef = useRef<HTMLDivElement>(null);
   const isBannerInView = useInView(bannerRef, { once: false, margin: "100px" });
 
-  const evolutionRef = useRef<HTMLDivElement>(null);
-  const isEvolutionInView = useInView(evolutionRef, { once: true, margin: "0px 0px -100px 0px" });
-
   return (
     <div className="space-y-12 pb-20">
       {/* Animated Banner / Logo Area */}
@@ -185,9 +182,7 @@ export function Dashboard() {
       {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
       <DriversTable drivers={sortedDrivers} constructors={data.constructors} races={data.races} />
       <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} races={data.races} drivers={data.drivers} />
-      <div ref={evolutionRef}>
-        {hasCompletedRaces && isEvolutionInView && <EvolutionChart data={data} />}
-      </div>
+      {hasCompletedRaces && <EvolutionChart data={data} />}
     </div>
   );
 }
