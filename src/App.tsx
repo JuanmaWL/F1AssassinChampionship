@@ -25,8 +25,18 @@ const LoadingSpinner = () => (
 function AppContent() {
   const [showIntro, setShowIntro] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [isChangingSeason, setIsChangingSeason] = useState(false);
   
   const { data, activeSeason, setActiveSeason, isHistorical, isLoading } = useChampionship();
+
+  const handleSeasonChange = (season: SeasonId) => {
+    if (season === activeSeason) return;
+    setIsChangingSeason(true);
+    setTimeout(() => {
+      setActiveSeason(season);
+      setIsChangingSeason(false);
+    }, 300); // Wait for exit animation to finish
+  };
 
   // Prevent scrolling during intro
   useEffect(() => {
@@ -78,7 +88,7 @@ function AppContent() {
             {SEASONS.map(season => (
               <button
                 key={season}
-                onClick={() => setActiveSeason(season)}
+                onClick={() => handleSeasonChange(season)}
                 className={cn(
                   "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
                   activeSeason === season
@@ -180,7 +190,7 @@ function AppContent() {
                 {SEASONS.map(season => (
                   <button
                     key={season}
-                    onClick={() => setActiveSeason(season)}
+                    onClick={() => handleSeasonChange(season)}
                     className={cn(
                       "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1",
                       activeSeason === season
@@ -210,6 +220,8 @@ function AppContent() {
               >
                 <DashboardSkeleton />
               </motion.div>
+          ) : isChangingSeason ? (
+              null
           ) : (
               <motion.div
                 key={activeSeason + activeTab}

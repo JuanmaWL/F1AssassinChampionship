@@ -12,7 +12,7 @@ import {
 import { motion } from 'motion/react';
 import { ChampionshipData, Driver, Constructor } from '../../types';
 import { cn } from '../../lib/utils';
-import { Users, Trophy, TrendingUp, Hash, Maximize, Minimize } from 'lucide-react';
+import { Users, Trophy, TrendingUp, Hash, Maximize, Minimize, Activity } from 'lucide-react';
 
 interface EvolutionChartProps {
   data: ChampionshipData;
@@ -221,14 +221,20 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         transition={{ delay: 0.5 }}
         className={cn(
           "bg-slate-900/50 backdrop-blur-md border border-white/10 shadow-2xl flex flex-col",
-          isFullscreen ? "fixed inset-2 md:inset-6 z-[100] p-4 md:p-6 rounded-3xl bg-slate-950 overflow-hidden" : "p-6 rounded-2xl relative"
+          isFullscreen ? "fixed inset-2 md:inset-6 z-[100] rounded-3xl bg-slate-950 overflow-hidden" : "rounded-2xl relative overflow-hidden"
         )}
       >
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 mb-6 shrink-0">
-        <h2 className="text-2xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-          <span className="w-1 h-8 bg-green-500 rounded-full block"></span>
-          Evolución del Campeonato
-        </h2>
+      <div className={cn("p-6 border-b border-white/10 bg-gradient-to-r from-green-900/20 to-transparent flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 shrink-0", isFullscreen ? "mb-6 rounded-xl" : "")}>
+        <div className="flex items-center gap-4">
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-green-400/50">
+              <Activity className="w-7 h-7 text-white drop-shadow-md" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 uppercase tracking-tighter pr-2">
+                Evolución del Campeonato
+              </h2>
+            </div>
+        </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
           {/* View Type Toggle */}
@@ -298,7 +304,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         </div>
       </div>
 
-      <div className={cn("flex flex-col lg:flex-row gap-6", isFullscreen ? "flex-grow min-h-0" : "h-[500px]")}>
+      <div className={cn("flex flex-col lg:flex-row gap-6 p-6", isFullscreen ? "flex-grow min-h-0" : "h-[500px]")}>
         <div className={cn("flex-grow min-w-0", isFullscreen ? "h-full" : "h-[400px] lg:h-full")}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart

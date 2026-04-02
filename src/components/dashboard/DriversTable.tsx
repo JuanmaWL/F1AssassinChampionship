@@ -18,6 +18,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(drivers.length / itemsPerPage);
+  const hasStarted = drivers.length > 0 && !drivers.every(d => d.points === 0);
 
   const paginatedDrivers = drivers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -75,22 +76,24 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
               </h2>
             </div>
           </div>
-          <div className="flex gap-2">
-              <button 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                  <ChevronLeft size={20} />
-              </button>
-              <button 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                  <ChevronRight size={20} />
-              </button>
-          </div>
+          {hasStarted && totalPages > 1 && (
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    <ChevronLeft size={20} />
+                </button>
+                <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    <ChevronRight size={20} />
+                </button>
+            </div>
+          )}
       </div>
       
       <div className="overflow-x-auto">
@@ -165,7 +168,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                                               </>
                                           )}
                                           <span className={cn(
-                                              "relative z-10 flex items-center justify-center w-8 h-8 rounded-full text-white font-black shadow-lg border border-white/20",
+                                              "relative z-5 flex items-center justify-center w-8 h-8 rounded-full text-white font-black shadow-lg border border-white/20",
                                               globalIndex === 0 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-950 shadow-[0_0_15px_rgba(234,179,8,0.5)]" :
                                               globalIndex === 1 ? "bg-gradient-to-br from-slate-300 to-slate-500 text-slate-900 shadow-[0_0_15px_rgba(148,163,184,0.5)]" :
                                               "bg-gradient-to-br from-orange-500 to-orange-800 text-orange-50 shadow-[0_0_15px_rgba(194,65,12,0.5)]"
@@ -251,20 +254,22 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
       </div>
       
       {/* Pagination Footer */}
-      <div className="p-4 bg-slate-950/30 border-t border-white/5 flex justify-center">
-          <div className="flex gap-1">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={cn(
-                          "w-2 h-2 rounded-full transition-all",
-                          currentPage === i + 1 ? "bg-red-500 w-6" : "bg-slate-700 hover:bg-slate-500"
-                      )}
-                  />
-              ))}
-          </div>
-      </div>
+      {hasStarted && totalPages > 1 && (
+        <div className="p-4 bg-slate-950/30 border-t border-white/5 flex justify-center">
+            <div className="flex gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={cn(
+                            "w-2 h-2 rounded-full transition-all",
+                            currentPage === i + 1 ? "bg-red-500 w-6" : "bg-slate-700 hover:bg-slate-500"
+                        )}
+                    />
+                ))}
+            </div>
+        </div>
+      )}
 
       {/* Driver Stats Modal */}
       {createPortal(
