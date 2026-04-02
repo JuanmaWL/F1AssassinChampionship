@@ -120,7 +120,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                       <th className="py-4 px-6">Piloto</th>
                       <th className="py-4 px-6 hidden md:table-cell">Equipo</th>
                       <th className="py-4 px-6 text-center" title="Vueltas Rápidas">Vueltas Rápidas</th>
-                      <th className="py-4 px-6 text-right">Puntos</th>
+                      <th className="py-4 px-6 text-right w-32 sm:w-64">Puntos</th>
                   </tr>
               </thead>
               <tbody>
@@ -131,21 +131,26 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                           <motion.tr 
                               key={driver.id}
                               onClick={() => setSelectedDriver(driver)}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.05 }}
+                              initial={{ opacity: 0, x: -10, borderBottomColor: 'rgba(255,255,255,0.05)' }}
+                              animate={{ 
+                                  opacity: 1, 
+                                  x: 0,
+                                  borderBottomColor: globalIndex === 0 ? ['rgba(250,204,21,0.1)', 'rgba(250,204,21,0.8)', 'rgba(250,204,21,0.1)'] :
+                                                     globalIndex === 1 ? ['rgba(203,213,225,0.1)', 'rgba(203,213,225,0.8)', 'rgba(203,213,225,0.1)'] :
+                                                     globalIndex === 2 ? ['rgba(249,115,22,0.1)', 'rgba(249,115,22,0.8)', 'rgba(249,115,22,0.1)'] :
+                                                     'rgba(255,255,255,0.05)'
+                              }}
+                              transition={{ 
+                                  opacity: { delay: index * 0.05 },
+                                  x: { delay: index * 0.05 },
+                                  borderBottomColor: globalIndex < 3 ? { duration: 5, repeat: Infinity, ease: "easeInOut" } : { duration: 0.3 }
+                              }}
                               className={cn(
-                                  "border-b border-white/5 transition-all duration-300 group cursor-pointer",
+                                  "border-b transition-[background-color,opacity,transform] duration-300 group cursor-pointer hover:bg-white/5",
                                   globalIndex === 0 ? "bg-yellow-500/5" : "",
                                   globalIndex === 1 ? "bg-slate-400/5" : "",
                                   globalIndex === 2 ? "bg-orange-700/5" : ""
                               )}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = `linear-gradient(90deg, transparent, ${driver.teamColor}15, transparent)`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = '';
-                              }}
                           >
                               <td className="py-4 px-6 text-center font-mono font-bold text-slate-400 group-hover:text-white">
                                   {globalIndex < 3 ? (
@@ -228,7 +233,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                                   <div className="flex items-center justify-end gap-4 relative z-10">
                                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
                                           <span className="text-xs font-black text-red-400 uppercase tracking-widest drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] hidden sm:inline-block">
-                                              Ver perfil
+                                              Ver piloto
                                           </span>
                                           <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/50">
                                               <ChevronRight size={14} className="text-red-400 animate-pulse" />
@@ -238,12 +243,8 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                                           {driver.points}
                                       </div>
                                   </div>
-                                  {/* Sweep effect and particles */}
+                                  {/* Sweep effect */}
                                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none overflow-hidden rounded-lg transition-opacity duration-300">
-                                     <div className="absolute top-1/2 left-[80%] w-1 h-1 bg-red-400 rounded-full blur-[1px] animate-ping" />
-                                     <div className="absolute top-1/3 right-[10%] w-1.5 h-1.5 bg-white rounded-full blur-[1px] animate-pulse" style={{ animationDuration: '0.5s' }} />
-                                  </div>
                               </td>
                           </motion.tr>
                       );

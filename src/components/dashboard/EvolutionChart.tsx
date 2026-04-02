@@ -9,10 +9,10 @@ import {
   ResponsiveContainer,
   Brush
 } from 'recharts';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ChampionshipData, Driver, Constructor } from '../../types';
 import { cn } from '../../lib/utils';
-import { Users, Trophy, TrendingUp, Hash, Maximize, Minimize, Activity } from 'lucide-react';
+import { Users, Trophy, TrendingUp, Hash, Maximize, Minimize, Activity, LayoutList, MousePointerClick, Eye, EyeOff } from 'lucide-react';
 
 interface EvolutionChartProps {
   data: ChampionshipData;
@@ -82,6 +82,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
   const [viewType, setViewType] = useState<'drivers' | 'constructors'>('drivers');
   const [metric, setMetric] = useState<'points' | 'position'>('points');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showLegend, setShowLegend] = useState(true);
   
   const allDriversCount = data.drivers.length;
   const allConstructorsCount = data.constructors.length;
@@ -293,14 +294,31 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
             </button>
           </div>
 
-          {/* Fullscreen Toggle */}
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors border border-white/5 ml-auto xl:ml-0"
-            title={isFullscreen ? "Minimizar" : "Pantalla Completa"}
-          >
-            {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-          </button>
+          {/* Actions */}
+          <div className="flex items-center gap-2 ml-auto xl:ml-0">
+            {/* Legend Toggle */}
+            <button
+              onClick={() => setShowLegend(!showLegend)}
+              className={cn(
+                "p-2 rounded-lg transition-colors border",
+                showLegend 
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30" 
+                  : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border-white/5"
+              )}
+              title={showLegend ? "Ocultar Leyenda" : "Mostrar Leyenda"}
+            >
+              <LayoutList size={18} />
+            </button>
+
+            {/* Fullscreen Toggle */}
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors border border-white/5"
+              title={isFullscreen ? "Minimizar" : "Pantalla Completa"}
+            >
+              {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -309,7 +327,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={chartData}
-              margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
+              margin={{ top: 20, right: 60, left: 0, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
               <XAxis 
@@ -380,48 +398,72 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         </div>
 
         {/* Custom Vertical Legend */}
-        <div className="w-full lg:w-auto shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto custom-scrollbar pb-2 lg:pb-0">
-          <div className="hidden lg:block text-slate-500 text-[10px] uppercase tracking-widest font-bold mb-1 px-1 shrink-0">
-            Clasificación Actual
-          </div>
-          {(viewType === 'drivers' ? sortedDrivers : sortedConstructors).map((item, index) => {
-            const isHidden = hiddenItems.includes(item.name);
-            const color = viewType === 'drivers' ? (item as Driver).teamColor : (item as Constructor).color;
-            const logo = viewType === 'constructors' ? (item as Constructor).logoUrl : null;
-            
-            return (
-              <div
-                key={item.id}
-                onClick={() => handleLegendClick(item.name)}
-                className={cn(
-                  "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all border shrink-0 lg:shrink min-w-[140px] lg:min-w-0",
-                  isHidden 
-                    ? "opacity-40 border-transparent hover:bg-white/5" 
-                    : "bg-slate-800/40 border-white/5 hover:bg-slate-800 shadow-sm hover:shadow-md hover:border-white/10"
-                )}
-              >
-                <div className="w-1.5 h-6 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                {logo && (
-                  <img src={logo} alt={item.name} className="w-6 h-6 object-contain filter drop-shadow-md shrink-0" />
-                )}
-                <div className="flex flex-col min-w-0 flex-grow">
-                  <span className={cn("text-xs font-bold whitespace-nowrap", isHidden ? "text-slate-500 line-through" : "text-slate-200")}>
-                    {item.name}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {item.points} pts
-                  </span>
-                </div>
-                {!isHidden && metric === 'points' && index < 3 && (
-                  <span className="ml-auto text-sm shrink-0">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</span>
-                )}
-                {!isHidden && metric === 'position' && (
-                  <span className="ml-auto text-xs font-black text-slate-500 shrink-0">P{index + 1}</span>
-                )}
+        <AnimatePresence>
+          {showLegend && (
+            <motion.div 
+              initial={{ opacity: 0, width: 0, scale: 0.95 }}
+              animate={{ opacity: 1, width: 'auto', scale: 1 }}
+              exit={{ opacity: 0, width: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="w-full lg:w-auto shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto custom-scrollbar pb-2 lg:pb-0 lg:pr-4 origin-right"
+            >
+              <div className="hidden lg:flex flex-col mb-2 px-1 shrink-0">
+                <span className="text-slate-400 text-[10px] uppercase tracking-widest font-black">
+                  Clasificación Actual
+                </span>
+                <span className="text-emerald-500/70 text-[9px] uppercase tracking-wider font-bold mt-0.5 flex items-center gap-1">
+                  <MousePointerClick size={10} /> Clic para filtrar
+                </span>
               </div>
-            );
-          })}
-        </div>
+              {(viewType === 'drivers' ? sortedDrivers : sortedConstructors).map((item, index) => {
+                const isHidden = hiddenItems.includes(item.name);
+                const color = viewType === 'drivers' ? (item as Driver).teamColor : (item as Constructor).color;
+                const logo = viewType === 'constructors' ? (item as Constructor).logoUrl : null;
+                
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => handleLegendClick(item.name)}
+                    className={cn(
+                      "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all duration-300 border shrink-0 lg:shrink min-w-[140px] lg:min-w-0 group",
+                      isHidden 
+                        ? "opacity-50 border-white/5 bg-slate-900/50 hover:bg-slate-800 hover:opacity-100" 
+                        : "bg-slate-800/60 border-white/10 hover:bg-slate-800 hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:-translate-y-0.5"
+                    )}
+                  >
+                    <div className={cn("w-1.5 h-6 rounded-full shrink-0 transition-all duration-300", isHidden ? "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100" : "")} style={{ backgroundColor: color }} />
+                    {logo && (
+                      <img src={logo} alt={item.name} className={cn("w-6 h-6 object-contain filter drop-shadow-md shrink-0 transition-all duration-300", isHidden ? "grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100" : "")} />
+                    )}
+                    <div className="flex flex-col min-w-0 flex-grow">
+                      <span className={cn("text-xs font-bold whitespace-nowrap transition-colors duration-300", isHidden ? "text-slate-500 line-through group-hover:text-slate-300 group-hover:no-underline" : "text-slate-200 group-hover:text-white")}>
+                        {item.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {item.points} pts
+                      </span>
+                    </div>
+                    <div className="ml-auto flex items-center justify-center shrink-0 min-w-[24px]">
+                      {/* Default content */}
+                      <div className="group-hover:hidden flex items-center justify-center">
+                        {!isHidden && metric === 'points' && index < 3 && (
+                          <span className="text-sm">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</span>
+                        )}
+                        {!isHidden && metric === 'position' && (
+                          <span className="text-xs font-black text-slate-500">P{index + 1}</span>
+                        )}
+                      </div>
+                      {/* Hover content */}
+                      <div className="hidden group-hover:flex items-center justify-center">
+                        {isHidden ? <Eye size={16} className="text-slate-300" /> : <EyeOff size={16} className="text-emerald-400" />}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
     </>
