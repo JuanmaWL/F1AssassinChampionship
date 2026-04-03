@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
 import { F1Car } from './F1Car';
+import { FOOTER_ASSETS } from '../constants/assets';
 
 import { SeasonId } from '../types';
 
@@ -48,7 +49,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         }}
       >
         <img 
-          src="/images/wallpaper1.png" 
+          src={FOOTER_ASSETS.WALLPAPER} 
           alt="F1 Intro Background" 
           className="w-full h-full object-cover object-center"
           style={{ imageRendering: 'crisp-edges' }}

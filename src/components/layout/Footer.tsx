@@ -1,6 +1,7 @@
 import { Youtube, Github, ExternalLink, Trophy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useChampionship } from '../../context/ChampionshipContext';
+import { FOOTER_ASSETS } from '../../constants/assets';
 
 const XIcon = ({ size = 16, className = "" }: { size?: number, className?: string }) => (
   <svg 
@@ -21,21 +22,21 @@ export function Footer() {
     {
       name: "Alvillas",
       role: "Organizador",
-      image: "/images/alvillas.png",
+      image: FOOTER_ASSETS.ALVILLAS,
       twitter: "https://x.com/Alvillasvqk",
       youtube: "https://www.youtube.com/@alvillasvqk"
     },
     {
       name: "Uyimero",
       role: "Diseño Gráfico",
-      image: "/images/uyimero.png",
+      image: FOOTER_ASSETS.UYIMERO,
       twitter: "https://x.com/Uyimero",
       youtube: "https://www.youtube.com/@Uyimero"
     },
     {
       name: "Juasmo",
       role: "Desarrollo Web",
-      image: "/images/juasmo.png",
+      image: FOOTER_ASSETS.JUASMO,
       twitter: "https://x.com/juanmawl",
       youtube: "https://www.youtube.com/@Juasmo"
     }
@@ -49,7 +50,7 @@ export function Footer() {
       {/* Wallpaper Background with care */}
       <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
         <img 
-          src="/images/wallpaper1.png" 
+          src={FOOTER_ASSETS.WALLPAPER} 
           alt="F1 Wallpaper" 
           className="w-full h-full object-cover object-center scale-100 group-hover:scale-125 group-hover:rotate-1 group-hover:brightness-125 transition-all duration-[8s] ease-out"
           referrerPolicy="no-referrer"
