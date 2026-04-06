@@ -136,6 +136,19 @@ export function AdminPanel() {
     <div className="pb-20 -mx-4 md:-mx-8">
       {/* Admin Header - Full Width */}
       <div className="px-4 md:px-8 mb-8">
+        {/* Mobile/Tablet Warning Message */}
+        <div className="lg:hidden mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="p-2 bg-amber-500/20 rounded-xl text-amber-500 shrink-0">
+            <Info size={20} />
+          </div>
+          <div>
+            <h4 className="text-amber-400 font-black italic uppercase tracking-wider text-sm mb-1">Optimización de Gestión</h4>
+            <p className="text-amber-200/70 text-xs leading-relaxed">
+              Estás en la versión móvil. Para una experiencia de administración completa y cómoda (edición de tablas, carga de imágenes e importaciones), <strong className="text-amber-400">te recomendamos usar la versión de escritorio</strong>.
+            </p>
+          </div>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
             <Settings className={cn("w-8 h-8", accentColor)} />

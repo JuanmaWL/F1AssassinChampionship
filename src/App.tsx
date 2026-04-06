@@ -157,7 +157,7 @@ function AppContent() {
           {/* Right Section: Tools, Season Toggle & Admin */}
           <div className="flex-1 flex items-center justify-end gap-2 md:gap-4">
             {/* Season Toggle - Minimalist - Moved to Right */}
-            <div className="hidden lg:flex items-center">
+            <div className="hidden md:flex items-center">
               <div className="relative bg-slate-900/60 rounded-full p-1 border border-white/5 flex items-center h-10 w-36 overflow-hidden">
                 <motion.div 
                   className={cn("absolute top-1 bottom-1 rounded-full shadow-lg z-0", activeSeason === '2024' ? "bg-amber-600" : "bg-red-600")}
