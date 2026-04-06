@@ -8,12 +8,14 @@ interface StatsOverviewProps {
 }
 
 export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
-  const remainingRaces = data.races.filter((r) => r.status === 'pending').length;
-  const totalRaces = data.races.length;
+  const actualRaces = data.races.length;
+  const totalRaces = actualRaces > 0 ? actualRaces : 12;
+  const remainingRaces = actualRaces > 0 ? data.races.filter((r) => r.status === 'pending').length : 12;
   const completedRaces = totalRaces - remainingRaces;
-  const pointsRemaining = totalRaces > 0 ? remainingRaces * 25 : 0;
-  const isSeasonFinished = totalRaces > 0 && remainingRaces === 0;
+  const pointsRemaining = remainingRaces * 25;
+  const isSeasonFinished = actualRaces > 0 && remainingRaces === 0;
   const hasStarted = completedRaces > 0;
+  const championPoints = data.drivers.length > 0 ? Math.max(...data.drivers.map(d => d.points)) : 0;
 
   // Stable random data for hover particles (avoids recalculation on every render)
   const particleData = useMemo(() =>
@@ -107,12 +109,25 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                         {isSeasonFinished ? `TEMPORADA ${activeSeason}` : 'TEMPORADA'}
                     </h3>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-black italic text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
-                            {totalRaces > 0 ? Math.round((completedRaces / totalRaces) * 100) : 0}%
-                        </span>
-                        <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
-                            {hasStarted ? 'COMPLETADO' : ''}
-                        </span>
+                        {hasStarted ? (
+                            <>
+                                <span className="text-5xl font-black italic text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                    {totalRaces > 0 ? Math.round((completedRaces / totalRaces) * 100) : 0}%
+                                </span>
+                                <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
+                                    {isSeasonFinished ? 'COMPLETADA' : 'COMPLETADO'}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-5xl font-black italic text-white tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                    {totalRaces}
+                                </span>
+                                <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
+                                    CARRERAS
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className={`p-3 rounded-xl border backdrop-blur-sm transition-all duration-300 ${isSeasonFinished ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500 group-hover:bg-yellow-500/20 group-hover:border-yellow-500/40' : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-500 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/40'}`}>
@@ -137,8 +152,8 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                         <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 shadow-[0_0_10px_white]"></div>
                     </motion.div>
                 </div>
-                <p className="text-[10px] text-slate-500 font-mono text-right pt-1">
-                    {isSeasonFinished ? '🏁 Bandera a cuadros' : !hasStarted ? '🚦 Esperando semáforos' : '🚀 La batalla continúa'}
+                <p className="text-[10px] text-slate-500 font-mono text-right pt-1 min-h-[16px]">
+                    {isSeasonFinished ? '' : !hasStarted ? '🚦 Esperando semáforos' : '🚀 La batalla continúa'}
                 </p>
             </div>
         </div>
@@ -178,11 +193,11 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                 <div>
                     <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-emerald-500 group-hover:text-emerald-400'}`}>
                         <span className={`w-2 h-2 rounded-full animate-pulse ${isSeasonFinished ? 'bg-slate-500' : 'bg-emerald-500'}`}></span>
-                        PUNTOS EN JUEGO
+                        {isSeasonFinished ? 'PUNTOS DEL CAMPEÓN' : !hasStarted ? 'PUNTOS TOTALES' : 'PUNTOS EN JUEGO'}
                     </h3>
                     <div className="flex items-baseline gap-2">
                         <span className={`text-5xl font-black italic tracking-tighter drop-shadow-lg group-hover:scale-105 transition-transform duration-300 ${isSeasonFinished ? 'text-slate-500' : 'text-white'}`}>
-                            {pointsRemaining}
+                            {isSeasonFinished ? championPoints : !hasStarted ? totalRaces * 25 : pointsRemaining}
                         </span>
                         <span className="text-sm font-mono text-slate-400 uppercase tracking-widest">
                             PUNTOS
@@ -201,10 +216,10 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                     </div>
                     <div>
                         <p className={`text-[10px] uppercase tracking-wider font-bold transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-emerald-400 group-hover:text-emerald-300'}`}>
-                            {isSeasonFinished ? 'Temporada Cerrada' : !hasStarted ? 'Motores Listos' : 'Oportunidad de Oro'}
+                            {isSeasonFinished ? 'Título Decidido' : !hasStarted ? 'Formato de Puntuación' : 'Oportunidad de Oro'}
                         </p>
                         <p className="text-[10px] text-slate-500 leading-tight">
-                            {isSeasonFinished ? 'Gracias por participar' : !hasStarted ? 'Todo por decidir en pista' : 'Puntos máximos disponibles'}
+                            {isSeasonFinished ? 'Puntuación final del ganador' : !hasStarted ? '25 pts máx por victoria (sin VR)' : 'Puntos máximos disponibles'}
                         </p>
                     </div>
                 </div>
@@ -249,15 +264,15 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
         <div className="p-6 relative z-10 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
                 <div>
-                    <h3 className="text-red-500 text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 group-hover:text-red-400 transition-colors duration-300">
-                        <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                    <h3 className={`text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 mb-1 transition-colors duration-300 ${isSeasonFinished ? 'text-slate-500 group-hover:text-slate-400' : 'text-red-500 group-hover:text-red-400'}`}>
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${isSeasonFinished ? 'bg-slate-500' : 'bg-red-600'}`}></span>
                         {isSeasonFinished ? `TEMPORADA ${activeSeason}` : !hasStarted ? 'GRAN PREMIO INAUGURAL' : 'PRÓXIMO GRAN PREMIO'}
                     </h3>
-                    <span className="text-2xl font-black text-white italic block uppercase tracking-tighter drop-shadow-md group-hover:scale-105 transition-transform duration-300">
+                    <span className={`text-2xl font-black italic block uppercase tracking-tighter drop-shadow-md group-hover:scale-105 transition-transform duration-300 ${isSeasonFinished ? 'text-slate-500' : 'text-white'}`}>
                         {isSeasonFinished ? 'COMPLETADA' : nextRace?.name || 'POR CONFIRMAR'}
                     </span>
                 </div>
-                <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20 text-red-500 group-hover:bg-red-500/20 group-hover:border-red-500/40 transition-all duration-300 backdrop-blur-sm">
+                <div className={`p-3 rounded-xl border backdrop-blur-sm transition-all duration-300 ${isSeasonFinished ? 'bg-slate-800 border-slate-700 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-400' : 'bg-red-500/10 border-red-500/20 text-red-500 group-hover:bg-red-500/20 group-hover:border-red-500/40'}`}>
                     {isSeasonFinished ? <CheckCircle size={28} /> : <Timer size={28} />}
                 </div>
             </div>

@@ -54,6 +54,13 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeSeason, activeTab]);
 
+  // Guard to prevent staying on the draw tab if it's not active in the current season
+  useEffect(() => {
+    if (activeTab === 'draw' && !isLoading && !data.isDrawActive) {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, data.isDrawActive, isLoading]);
+
   return (
     <div className={cn(
         "min-h-screen font-sans selection:bg-red-500/30 flex flex-col transition-colors duration-500 bg-slate-950",

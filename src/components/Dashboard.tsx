@@ -7,6 +7,7 @@ import { EvolutionChart } from './dashboard/EvolutionChart';
 import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useChampionship } from '../context/ChampionshipContext';
+import { FOOTER_ASSETS } from '../constants/assets';
 
 export function Dashboard() {
   const { data, activeSeason, isHistorical } = useChampionship();
@@ -40,7 +41,7 @@ export function Dashboard() {
       <div 
         ref={bannerRef}
         className={cn(
-          "w-full h-48 md:h-64 rounded-2xl overflow-hidden relative border shadow-2xl group bg-slate-950 transition-colors duration-500",
+          "w-full h-64 md:h-96 rounded-2xl overflow-hidden relative border shadow-2xl group bg-slate-950 transition-colors duration-500",
           isHistorical ? "border-amber-500/30" : "border-white/10"
       )}>
         {/* Dynamic Background Gradient */}
@@ -48,6 +49,29 @@ export function Dashboard() {
             "absolute inset-0 bg-gradient-to-r animate-gradient-x",
             isHistorical ? "from-slate-900 via-amber-900/20 to-slate-900" : "from-slate-900 via-slate-800 to-slate-900"
         )}></div>
+        
+        {/* Season Wallpaper (Only for 2026) */}
+        {!isHistorical && (
+            <div className="absolute inset-0 z-0 overflow-hidden">
+                <motion.img 
+                    src={FOOTER_ASSETS.WALLPAPER} 
+                    alt="Season Background" 
+                    className="w-full h-full object-cover object-[center_15%] opacity-40 mix-blend-luminosity"
+                    referrerPolicy="no-referrer"
+                    animate={{
+                        scale: [1.05, 1.12, 1.05],
+                        x: ['-1%', '1%', '-1%'],
+                        y: ['0%', '1.5%', '0%']
+                    }}
+                    transition={{
+                        duration: 30,
+                        ease: "easeInOut",
+                        repeat: Infinity
+                    }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50"></div>
+            </div>
+        )}
         
         {/* Carbon Fiber Texture */}
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay"></div>
