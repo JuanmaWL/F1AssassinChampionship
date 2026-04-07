@@ -74,10 +74,10 @@ function AppContent() {
           isHistorical 
             ? "bg-slate-950/95 border-amber-900/40 shadow-[0_4px_30px_rgba(120,53,15,0.1)]" 
             : "bg-slate-950/90 border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-      )}>        <div className="max-w-[1800px] mx-auto w-full flex items-center px-4 md:px-10 h-full relative">
+      )}>        <div className="max-w-[1800px] mx-auto w-full flex items-center justify-between px-4 md:px-10 h-full gap-4 relative">
           
           {/* Left Section: Logo & Easter Egg Intro */}
-          <div className="flex-1 flex items-center">
+          <div className="flex items-center shrink-0 z-10">
             <div 
               className="flex items-center gap-3 group cursor-pointer relative" 
               onClick={() => setActiveTab('dashboard')}
@@ -106,8 +106,8 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Center Section: Primary Navigation (Desktop) - Perfectly Centered */}
-          <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+          {/* Center Section: Primary Navigation (Desktop) */}
+          <div className="hidden md:flex flex-1 justify-center items-center min-w-0 z-0">
             <nav className="flex items-center bg-slate-900/40 rounded-2xl p-1 border border-white/5 backdrop-blur-sm">
               <button
                 onClick={() => setActiveTab('dashboard')}
@@ -162,7 +162,7 @@ function AppContent() {
           </div>
 
           {/* Right Section: Tools, Season Toggle & Admin */}
-          <div className="flex-1 flex items-center justify-end gap-2 md:gap-4">
+          <div className="flex items-center justify-end gap-2 md:gap-4 shrink-0 z-10">
             {/* Season Toggle - Minimalist - Moved to Right */}
             <div className="hidden md:flex items-center">
               <div className="relative bg-slate-900/60 rounded-full p-1 border border-white/5 flex items-center h-10 w-36 overflow-hidden">

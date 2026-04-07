@@ -65,11 +65,12 @@ export function Footer() {
       {/* Decorative top line */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-red-500/40 to-transparent z-10" />
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12">
+        <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-12 xl:gap-8">
           
           {/* Brand & Official */}
-          <div className="flex flex-col items-center md:items-start space-y-8">
+          <div className="flex flex-col items-center xl:items-start space-y-6 shrink-0">
+            {/* Logo */}
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-14 h-14 rounded-2xl flex items-center justify-center transform -skew-x-12 shadow-2xl transition-all duration-500 group-hover:rotate-3",
@@ -85,46 +86,59 @@ export function Footer() {
               </div>
             </div>
             
-            <div className="flex flex-col items-center md:items-start gap-4">
+            {/* Official Account */}
+            <div className="flex flex-col items-center xl:items-start gap-4">
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-2">
                 <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isHistorical ? "bg-amber-500" : "bg-red-500")} />
                 Cuenta Oficial
               </span>
-              <a 
-                href="https://x.com/F1Assassins" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className={cn(
-                  "group/btn flex items-center gap-4 px-8 py-4 rounded-2xl transition-all duration-500 backdrop-blur-md border shadow-2xl relative overflow-hidden",
-                  isHistorical 
-                    ? "bg-amber-500/10 border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/20 hover:shadow-amber-500/20" 
-                    : "bg-red-500/10 border-red-500/30 hover:border-red-500 hover:bg-red-500/20 hover:shadow-red-500/20"
-                )}
-              >
-                {/* Animated background glow */}
+              <div className="relative">
+                {/* Outer pulsing glow to indicate interactivity */}
                 <div className={cn(
-                  "absolute inset-0 opacity-0 group-hover/btn:opacity-20 transition-opacity duration-500",
-                  isHistorical ? "bg-amber-500" : "bg-red-500"
+                  "absolute -inset-1 rounded-2xl blur-md opacity-30 animate-pulse",
+                  isHistorical ? "bg-amber-500/50" : "bg-red-500/50"
                 )} />
                 
-                <XIcon size={22} className="text-white group-hover/btn:scale-110 transition-transform relative z-10" />
-                <div className="flex flex-col relative z-10">
-                  <span className="text-xs font-black text-slate-400 group-hover/btn:text-slate-300 transition-colors tracking-widest uppercase">Síguenos en X</span>
-                  <span className="text-lg font-black text-white transition-colors tracking-tight">@F1Assassins</span>
-                </div>
-                <ExternalLink size={16} className="text-slate-500 group-hover/btn:text-white transition-all opacity-0 group-hover/btn:opacity-100 translate-x-[-4px] group-hover/btn:translate-x-0 relative z-10" />
-              </a>
+                <a 
+                  href="https://x.com/F1Assassins" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "group/btn flex items-center gap-4 px-6 py-3 rounded-2xl transition-all duration-500 backdrop-blur-md border shadow-xl relative overflow-hidden",
+                    isHistorical 
+                      ? "bg-amber-500/10 border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/20 hover:shadow-amber-500/20" 
+                      : "bg-red-500/10 border-red-500/30 hover:border-red-500 hover:bg-red-500/20 hover:shadow-red-500/20"
+                  )}
+                >
+                  {/* Animated background glow on hover */}
+                  <div className={cn(
+                    "absolute inset-0 opacity-0 group-hover/btn:opacity-20 transition-opacity duration-500",
+                    isHistorical ? "bg-amber-500" : "bg-red-500"
+                  )} />
+                  
+                  <XIcon size={20} className="text-white group-hover/btn:scale-110 transition-transform relative z-10" />
+                  <div className="flex flex-col relative z-10 text-left">
+                    <span className="text-xs font-black text-slate-400 group-hover/btn:text-slate-300 transition-colors tracking-widest uppercase">Síguenos en X</span>
+                    <span className="text-lg font-black text-white transition-colors tracking-tight">@F1Assassins</span>
+                  </div>
+                  <ExternalLink size={16} className="text-slate-500 group-hover/btn:text-white transition-all opacity-0 group-hover/btn:opacity-100 translate-x-[-4px] group-hover/btn:translate-x-0 relative z-10" />
+                </a>
+              </div>
             </div>
           </div>
 
           {/* Collaborators */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-10">
-            {collaborators.map((collab) => (
-              <div key={collab.name} className="flex flex-col items-center sm:items-start space-y-6 group/collab">
-                <div className="flex items-center gap-5 text-center sm:text-left relative">
-                  {/* Profile Image Frame */}
+          <div className="flex flex-col md:flex-row flex-wrap items-center justify-center xl:justify-end gap-8 lg:gap-10">
+            {collaborators.map((collab, index) => (
+              <div key={collab.name} className="flex flex-col sm:flex-row items-center sm:items-start gap-5 group/collab relative">
+                {/* Subtle Separator (only on medium+ screens where they are in a row) */}
+                {index !== 0 && (
+                  <div className="hidden md:block absolute -left-4 lg:-left-5 top-1/2 -translate-y-1/2 w-[1px] h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+                )}
+                
+                {/* Profile Image Frame */}
                   <div className={cn(
-                    "w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-500 group-hover/collab:scale-110 group-hover/collab:rotate-3 shadow-2xl flex-shrink-0",
+                    "w-16 h-16 rounded-2xl overflow-hidden border-2 transition-all duration-500 group-hover/collab:scale-110 group-hover/collab:rotate-3 shadow-xl flex-shrink-0",
                     isHistorical ? "border-amber-500/30 group-hover/collab:border-amber-500" : "border-white/10 group-hover/collab:border-red-500"
                   )}>
                     <img 
@@ -135,8 +149,8 @@ export function Footer() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <h3 className="text-white font-black italic uppercase tracking-tight text-xl relative inline-block whitespace-nowrap">
+                  <div className="space-y-1.5 text-center sm:text-left">
+                    <h3 className="text-white font-black italic uppercase tracking-tight text-lg relative inline-block whitespace-nowrap">
                       {/* Main Name */}
                       <span className="relative z-10">{collab.name}</span>
                       
@@ -149,12 +163,12 @@ export function Footer() {
                       </span>
                     </h3>
                     
-                    <div className="flex items-center justify-center sm:justify-start gap-1.5 h-4">
-                      <div className="w-5 flex items-center justify-center sm:justify-start">
+                    <div className="flex items-center justify-center sm:justify-start gap-1.5 h-3">
+                      <div className="w-4 flex items-center justify-center sm:justify-start">
                         <div className={cn(
                           "h-[1px] transition-all duration-500",
                           isHistorical ? "bg-amber-500/50" : "bg-red-500/50",
-                          "w-2 group-hover/collab:w-5"
+                          "w-2 group-hover/collab:w-4"
                         )} />
                       </div>
                       <p className={cn(
@@ -164,35 +178,34 @@ export function Footer() {
                     </div>
 
                     {/* Socials integrated below role */}
-                    <div className="flex items-center justify-center sm:justify-start gap-2 pt-2">
+                    <div className="flex items-center justify-center sm:justify-start gap-1.5 pt-2">
                       <a 
                         href={collab.twitter} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 border border-white/5 transition-all duration-300 hover:-translate-y-0.5"
+                        className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 border border-white/5 transition-all duration-300 hover:-translate-y-0.5"
                         title={`Twitter de ${collab.name}`}
                       >
-                        <XIcon size={14} />
+                        <XIcon size={12} />
                       </a>
                       <a 
                         href={collab.youtube} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-white/10 border border-white/5 transition-all duration-300 hover:-translate-y-0.5"
+                        className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-white/10 border border-white/5 transition-all duration-300 hover:-translate-y-0.5"
                         title={`YouTube de ${collab.name}`}
                       >
-                        <Youtube size={16} />
+                        <Youtube size={14} />
                       </a>
                     </div>
                   </div>
-                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-10 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col items-center md:items-start gap-4">
             <p className="text-[11px] font-mono tracking-[0.3em] uppercase text-slate-400 font-medium">
               &copy; {new Date().getFullYear()} F1 ASSASSINS CHAMPIONSHIP
