@@ -3,6 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
+import { useChampionship } from '../context/ChampionshipContext';
+import { dataService } from '../services/dataService';
+import { Race } from '../types';
 
 const RACES = [
   { id: 'aus', name: 'GP Australia', short: 'Australia', flagCode: 'au' },
@@ -102,6 +106,8 @@ const Particles = () => {
 };
 
 export function Draw() {
+  const { isAdmin } = useAuth();
+  const { data, activeSeason, setData } = useChampionship();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedRaces, setSelectedRaces] = useState<typeof RACES>([]);
@@ -158,9 +164,11 @@ export function Draw() {
       const ep = 1 - Math.pow(1 - p, 3);
       const currentAng = startAng + totalDelta * ep;
 
-      // Detectar cruce de borde de segmento
-      const prevMod = ((prevAng % SLICE) + SLICE) % SLICE;
-      const currMod = ((currentAng % SLICE) + SLICE) % SLICE;
+      // Detectar cruce de borde de segmento (con offset para los pitotes)
+      const offsetAng = currentAng + SLICE / 2;
+      const prevOffsetAng = prevAng + SLICE / 2;
+      const prevMod = ((prevOffsetAng % SLICE) + SLICE) % SLICE;
+      const currMod = ((offsetAng % SLICE) + SLICE) % SLICE;
       const frameDelta = currentAng - prevAng;
       const crossed = (frameDelta > 0.05) && (prevMod > currMod || frameDelta >= SLICE);
 
@@ -282,6 +290,34 @@ export function Draw() {
   };
 
   const isComplete = selectedRaces.length >= TARGET_RACES_COUNT;
+
+  useEffect(() => {
+    if (isComplete && isAdmin) {
+      const newRaces: Race[] = selectedRaces.map((race, index) => {
+        const date = new Date(2026, 2, 1 + index * 14); // Start March 1st, 2026, every 14 days
+        return {
+          id: `race-${index + 1}`,
+          name: race.name,
+          circuit: `Circuito de ${race.short}`,
+          date: date.toISOString(),
+          flagCode: race.flagCode,
+          status: 'pending'
+        };
+      });
+
+      const newData = {
+        ...data,
+        races: newRaces,
+        isDrawActive: false
+      };
+
+      dataService.saveData(newData, activeSeason)
+        .then(() => {
+          setData(newData);
+        })
+        .catch(err => console.error("Failed to save drawn races", err));
+    }
+  }, [isComplete, isAdmin, data, activeSeason, setData, selectedRaces]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -566,6 +602,21 @@ export function Draw() {
                     </div>
                   );
                 })}
+                
+                {/* Pegs (Pitotes) */}
+                {RACES.map((_, index) => {
+                  const angle = 360 / RACES.length;
+                  const rotationAngle = index * angle + angle / 2;
+                  return (
+                    <div
+                      key={`peg-${index}`}
+                      className="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
+                      style={{ transform: `rotate(${rotationAngle}deg)` }}
+                    >
+                      <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 md:w-3 md:h-3 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.8)] border border-slate-500" />
+                    </div>
+                  );
+                })}
               </motion.div>
             </div>
 
@@ -621,13 +672,32 @@ export function Draw() {
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", delay: 0.3 }}
-                    className="shrink-0"
+                    className="shrink-0 relative"
                   >
                     <img 
                       src={`https://flagcdn.com/w320/${winningRace.flagCode}.png`}
                       alt={winningRace.short}
                       className="h-16 md:h-32 w-auto rounded-lg shadow-2xl border-2 border-white/30"
                     />
+                    
+                    {/* Passport Stamp */}
+                    <motion.div
+                      initial={{ scale: 5, opacity: 0, rotate: -45 }}
+                      animate={{ scale: 1, opacity: 1, rotate: -15 }}
+                      transition={{ 
+                        type: "spring", 
+                        damping: 12, 
+                        stiffness: 200, 
+                        delay: 0.8 
+                      }}
+                      className="absolute -bottom-2 -right-2 md:-bottom-4 md:-right-4 z-10 pointer-events-none drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)]"
+                    >
+                      <div className="relative flex flex-col items-center justify-center px-3 py-1.5 md:px-5 md:py-2.5 rounded-lg border-[3px] md:border-[4px] border-white text-white bg-black/40 backdrop-blur-sm transform -rotate-6">
+                        <div className="absolute inset-0.5 md:inset-1 rounded border-[1.5px] md:border-[2px] border-white border-dashed opacity-80"></div>
+                        <span className="font-black uppercase tracking-widest text-lg md:text-2xl leading-none mt-1">APPROVED</span>
+                        <span className="font-mono text-[8px] md:text-[10px] font-bold tracking-[0.2em] mt-0.5 opacity-90">SEASON 2026</span>
+                      </div>
+                    </motion.div>
                   </motion.div>
  
                   <motion.div

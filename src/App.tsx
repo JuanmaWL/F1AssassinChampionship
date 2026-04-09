@@ -313,10 +313,14 @@ function AppContent() {
   );
 }
 
+import { AuthProvider } from './context/AuthContext';
+
 export default function App() {
   return (
-    <ChampionshipProvider>
-      <AppContent />
-    </ChampionshipProvider>
+    <AuthProvider>
+      <ChampionshipProvider>
+        <AppContent />
+      </ChampionshipProvider>
+    </AuthProvider>
   );
 }

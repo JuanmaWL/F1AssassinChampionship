@@ -9,12 +9,13 @@ import { TeamsEditor } from './admin/TeamsEditor';
 import { CalendarEditor } from './admin/CalendarEditor';
 import { JsonImporter } from './admin/JsonImporter';
 import { useChampionship } from '../context/ChampionshipContext';
+import { useAuth } from '../context/AuthContext';
 
 type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings';
 
 export function AdminPanel() {
   const { data, setData, activeSeason, isHistorical, refreshData } = useChampionship();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAdmin: isAuthenticated, login } = useAuth();
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -30,7 +31,7 @@ export function AdminPanel() {
     try {
         const isValid = await verifyPassword(password);
         if (isValid) {
-          setIsAuthenticated(true);
+          login();
           setError(null);
         } else {
           setError('Contraseña incorrecta');
