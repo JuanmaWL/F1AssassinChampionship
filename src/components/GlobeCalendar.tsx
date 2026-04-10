@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { Race } from '../types';
 
+type D3GeoPath = (feature: any) => string | null;
+type TopoFeature = { type: string; geometry: any; properties: any };
+
 interface GlobeCalendarProps {
   races: Race[];
   accentColor: string;
@@ -198,10 +201,10 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
           groupCountries
             .selectAll("path")
-            .data((topojson.feature(json, json.objects.countries as any) as any).features)
+            .data((topojson.feature(json, json.objects.countries as any) as any).features as TopoFeature[])
             .enter()
             .append("path")
-            .attr("d", path as any)
+            .attr("d", path as unknown as D3GeoPath)
             .attr("fill", "#0f172a") // slate-900
             .attr("stroke", "#1e293b") // slate-800
             .attr("stroke-width", "1");
@@ -369,7 +372,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   return (t) => {
                     projection.rotate(i(t) as [number, number, number]);
 
-                    groupCountries.selectAll("path").attr("d", path as any);
+                    groupCountries.selectAll("path").attr("d", path as unknown as D3GeoPath);
 
                     const start = projection(source);
                     const end = projection(coordinates);
@@ -518,7 +521,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                 return (t) => {
                   projection.rotate(i(t) as [number, number, number]);
-                  groupCountries.selectAll("path").attr("d", path as any);
+                  groupCountries.selectAll("path").attr("d", path as unknown as D3GeoPath);
                 };
               })
               .on("end", () => {

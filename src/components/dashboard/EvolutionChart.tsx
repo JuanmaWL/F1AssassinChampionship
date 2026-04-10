@@ -364,6 +364,7 @@ export function EvolutionChart({ data }: EvolutionChartProps) {
         >
           {isVisible ? (
             <ResponsiveContainer 
+              key={showLegend ? 'with-legend' : 'no-legend'}
               width="100%" 
               height="100%" 
               debounce={isLegendTransitioning ? 500 : 50}
