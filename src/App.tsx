@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
 import { Footer } from './components/layout/Footer';
 import { SEASONS, SeasonId } from './types';
+import { useVisitTracker } from './hooks/useVisitTracker';
 
 // Lazy loaded components
 const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
@@ -24,6 +25,8 @@ const LoadingSpinner = () => (
 );
 
 function AppContent() {
+  useVisitTracker();
+  
   const [showIntro, setShowIntro] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isChangingSeason, setIsChangingSeason] = useState(false);

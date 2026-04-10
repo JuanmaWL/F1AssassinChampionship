@@ -1,9 +1,17 @@
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { ChampionshipData, SeasonId } from "../types";
 import { mockData, mockData2024 } from "../mockData";
 
 const COLLECTION_NAME = "seasons";
+const VISITS_COLLECTION = "visits";
+
+export interface VisitData {
+  hashedIp: string;
+  userAgent: string;
+  deviceType: string;
+  timestamp: number;
+}
 
 export const dataService = {
   /**
@@ -50,6 +58,33 @@ export const dataService = {
     } catch (error) {
       console.error("Error saving data to Firebase:", error);
       throw error;
+    }
+  },
+
+  /**
+   * Saves a visit record to Firestore.
+   */
+  async saveVisit(visit: VisitData): Promise<void> {
+    if (!db) return;
+    try {
+      await addDoc(collection(db, VISITS_COLLECTION), visit);
+    } catch (error) {
+      console.error("Error saving visit to Firebase:", error);
+    }
+  },
+
+  /**
+   * Retrieves all visit records from Firestore.
+   */
+  async getVisits(): Promise<VisitData[]> {
+    if (!db) return [];
+    try {
+      const q = query(collection(db, VISITS_COLLECTION), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => doc.data() as VisitData);
+    } catch (error) {
+      console.error("Error fetching visits from Firebase:", error);
+      return [];
     }
   }
 };

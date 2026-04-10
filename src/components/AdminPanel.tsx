@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass } from 'lucide-react';
+import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
 import { dataService } from '../services/dataService';
@@ -8,10 +8,11 @@ import { DriversEditor } from './admin/DriversEditor';
 import { TeamsEditor } from './admin/TeamsEditor';
 import { CalendarEditor } from './admin/CalendarEditor';
 import { JsonImporter } from './admin/JsonImporter';
+import { MetricsViewer } from './admin/MetricsViewer';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
 
-type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings';
+type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings' | 'metrics';
 
 export function AdminPanel() {
   const { data, setData, activeSeason, isHistorical, refreshData } = useChampionship();
@@ -289,6 +290,21 @@ export function AdminPanel() {
             </button>
 
             <button
+                onClick={() => setActiveTab('metrics')}
+                className={cn(
+                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
+                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
+                activeTab === 'metrics' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+                title={isCollapsed ? "Métricas" : undefined}
+            >
+                <Activity size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'metrics' ? accentColor : "")} />
+                {!isCollapsed && <span className="truncate">Métricas</span>}
+            </button>
+
+            <button
                 onClick={() => setActiveTab('settings')}
                 className={cn(
                 "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
@@ -381,6 +397,9 @@ export function AdminPanel() {
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
+            )}
+            {activeTab === 'metrics' && (
+              <MetricsViewer />
             )}
             {activeTab === 'settings' && (
               <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
