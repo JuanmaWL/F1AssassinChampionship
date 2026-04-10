@@ -130,4 +130,17 @@
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
+
+  @keyframes stamp-land {
+    0% { transform: rotate(-12deg); }
+    10% { transform: rotate(-16deg) scale(0.95); }
+    20% { transform: rotate(-10deg) scale(1.02); }
+    30% { transform: rotate(-13deg); }
+    100% { transform: rotate(-12deg); }
+  }
+
+  .animate-stamp-land {
+    animation: stamp-land 0.5s ease-in-out forwards;
+    animation-delay: 1.3s;
+  }
 }

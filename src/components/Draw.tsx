@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp } from 'lucide-react';
+import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp, Play, List, LayoutGrid } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { useChampionship } from '../context/ChampionshipContext';
@@ -109,12 +109,15 @@ export function Draw() {
   const { isAdmin } = useAuth();
   const { data, activeSeason, setData } = useChampionship();
   const containerRef = useRef<HTMLDivElement>(null);
+  const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedRaces, setSelectedRaces] = useState<typeof RACES>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [winningRace, setWinningRace] = useState<typeof RACES[0] | null>(null);
   const [showWinner, setShowWinner] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [hasPromptedSave, setHasPromptedSave] = useState(false);
   const [isStreamMode, setIsStreamMode] = useState(false);
 
   const [pointerDeg, setPointerDeg] = useState(0);
@@ -125,6 +128,7 @@ export function Draw() {
   // Stores target rotation so the effect closure always has the latest value
   const targetRotationRef = useRef(0);
   const [showInfo, setShowInfo] = useState(true);
+  const [poolViewMode, setPoolViewMode] = useState<'list' | 'grid'>('grid');
 
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
   const animFrameRefs = useRef<number[]>([]);
@@ -148,7 +152,7 @@ export function Draw() {
     const DURATION = 6000; // ms — debe coincidir con la duración de la transición de la rueda
     const startAng = prevWheelAngleRef.current;
     const totalDelta = targetRotationRef.current - startAng;
-    const KICK_DEG = 22;        // grados de deflexión del pointer en cada tick
+    const KICK_DEG = 35;        // grados de deflexión del pointer en cada tick
     const HOLD_MS = 110;        // ms que el pointer permanece desviado antes de volver
 
     let prevAng = startAng;
@@ -198,25 +202,30 @@ export function Draw() {
   }, [isSpinning]);
 
   const fireConfetti = () => {
+    if (!confettiCanvasRef.current) return;
+    
+    const myConfetti = confetti.create(confettiCanvasRef.current, {
+      resize: true,
+      useWorker: true
+    });
+
     const duration = 3000;
     const end = Date.now() + duration;
 
     const frame = () => {
-      confetti({
+      myConfetti({
         particleCount: 5,
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.8 },
         colors: ['#ef4444', '#ffffff', '#000000'],
-        zIndex: 100
       });
-      confetti({
+      myConfetti({
         particleCount: 5,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.8 },
         colors: ['#ef4444', '#ffffff', '#000000'],
-        zIndex: 100
       });
 
       if (Date.now() < end) {
@@ -292,32 +301,38 @@ export function Draw() {
   const isComplete = selectedRaces.length >= TARGET_RACES_COUNT;
 
   useEffect(() => {
-    if (isComplete && isAdmin) {
-      const newRaces: Race[] = selectedRaces.map((race, index) => {
-        const date = new Date(2026, 2, 1 + index * 14); // Start March 1st, 2026, every 14 days
-        return {
-          id: `race-${index + 1}`,
-          name: race.name,
-          circuit: `Circuito de ${race.short}`,
-          date: date.toISOString(),
-          flagCode: race.flagCode,
-          status: 'pending'
-        };
-      });
-
-      const newData = {
-        ...data,
-        races: newRaces,
-        isDrawActive: false
-      };
-
-      dataService.saveData(newData, activeSeason)
-        .then(() => {
-          setData(newData);
-        })
-        .catch(err => console.error("Failed to save drawn races", err));
+    if (isComplete && isAdmin && !hasPromptedSave) {
+      setShowSaveModal(true);
+      setHasPromptedSave(true);
     }
-  }, [isComplete, isAdmin, data, activeSeason, setData, selectedRaces]);
+  }, [isComplete, isAdmin, hasPromptedSave]);
+
+  const handleSaveCalendar = async () => {
+    const newRaces: Race[] = selectedRaces.map((race, index) => {
+      return {
+        id: `race-${index + 1}`,
+        name: race.name,
+        circuit: `Circuito de ${race.short}`,
+        date: "", // Empty date, to be configured manually
+        flagCode: race.flagCode,
+        status: 'pending'
+      };
+    });
+
+    const newData = {
+      ...data,
+      races: newRaces,
+      isDrawActive: false
+    };
+
+    try {
+      await dataService.saveData(newData, activeSeason);
+      setData(newData);
+      setShowSaveModal(false);
+    } catch (err) {
+      console.error("Failed to save drawn races", err);
+    }
+  };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -336,6 +351,10 @@ export function Draw() {
         isFullscreen ? "rounded-none m-0" : "rounded-3xl -mx-4 md:mx-0"
       )}
     >
+      <canvas 
+        ref={confettiCanvasRef}
+        className="fixed inset-0 pointer-events-none z-[150] w-full h-full"
+      />
       <Particles />
       
       {/* Top Bar Controls */}
@@ -378,34 +397,36 @@ export function Draw() {
               "bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl shrink-0 flex flex-col gap-3 h-fit relative transition-all duration-500",
               isStreamMode ? "w-full md:w-1/2" : "w-full"
             )}>
-              <button 
-                onClick={() => setShowInfo(false)} 
-                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-                title="Ocultar Información"
-              >
-                <ChevronUp size={16} />
-              </button>
-              <div className="flex items-center gap-3 mb-1">
-                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                  <Info size={16} className="text-red-500" />
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(220,38,38,0.4)]">
+                    <Info size={16} className="text-white" />
+                  </div>
+                  <strong className="text-white text-sm uppercase tracking-wider font-black italic">Reglas del Sorteo</strong>
                 </div>
-                <strong className="text-white text-sm uppercase tracking-wider font-black italic">Información</strong>
+                <button 
+                  onClick={() => setShowInfo(false)} 
+                  className="text-slate-500 hover:text-white transition-colors p-1"
+                  title="Ocultar Información"
+                >
+                  <ChevronUp size={16} />
+                </button>
               </div>
               
-              <ul className="space-y-3 text-xs text-slate-300 font-medium leading-relaxed">
-                <li className="flex gap-3 items-start">
-                  <span className="w-5 h-5 mt-0.5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 text-[10px] font-bold">1</span>
-                  <span>De los 24 circuitos de 2025 se elegirán <strong>12 mediante la ruleta</strong>.</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-5 h-5 mt-0.5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 text-[10px] font-bold">2</span>
-                  <span>Se seguirá el orden de extracción para el campeonato de 2026.</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-5 h-5 mt-0.5 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 text-[10px] font-bold">3</span>
-                  <span>Los GP elegidos <strong>nunca podrán volver a salir</strong> (sin repeticiones).</span>
-                </li>
-              </ul>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-start group">
+                  <div className="w-6 h-6 rounded-md bg-slate-800 border border-white/5 text-red-500 flex items-center justify-center shrink-0 text-xs font-black italic group-hover:bg-red-600 group-hover:text-white transition-colors">1</div>
+                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Se elegirán <strong>12 Grandes Premios</strong> de entre los 24 circuitos de la temporada 2025.</p>
+                </div>
+                <div className="flex gap-4 items-start group">
+                  <div className="w-6 h-6 rounded-md bg-slate-800 border border-white/5 text-red-500 flex items-center justify-center shrink-0 text-xs font-black italic group-hover:bg-red-600 group-hover:text-white transition-colors">2</div>
+                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Los GP se celebrarán en <strong>orden de extracción</strong> de la ruleta.</p>
+                </div>
+                <div className="flex gap-4 items-start group">
+                  <div className="w-6 h-6 rounded-md bg-slate-800 border border-white/5 text-red-500 flex items-center justify-center shrink-0 text-xs font-black italic group-hover:bg-red-600 group-hover:text-white transition-colors">3</div>
+                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Los GP elegidos <strong>no se pueden repetir</strong>.</p>
+                </div>
+              </div>
             </div>
           ) : (
             <button 
@@ -419,35 +440,74 @@ export function Draw() {
 
           <div className={cn(
             "bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col min-h-0 transition-all duration-500",
-            isStreamMode ? "h-[300px] flex-1 w-full" : "flex-1 overflow-hidden w-full"
+            isStreamMode ? "h-[300px] flex-1 w-full" : "flex-1 overflow-hidden w-full",
+            isFullscreen && "2xl:p-8"
           )}>
-            <h3 className="text-lg font-black italic uppercase tracking-wider text-white mb-3 shrink-0">Candidatos 2026</h3>
-            <div className={cn(
-              "grid gap-1.5 overflow-y-auto pr-2 custom-scrollbar flex-1",
-              isStreamMode ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1"
-            )}>
-              {RACES.map(race => {
-                const isSelected = selectedRaces.some(r => r.id === race.id);
-                return (
-                  <div 
-                    key={race.id}
-                    className={cn(
-                      "flex items-center gap-2 p-1.5 rounded-lg border transition-all text-[10px] font-bold uppercase tracking-tight",
-                      isSelected 
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 opacity-50" 
-                        : "bg-slate-800/50 border-white/5 text-slate-400"
-                    )}
-                  >
-                    <img 
-                      src={`https://flagcdn.com/w20/${race.flagCode}.png`}
-                      alt={race.short}
-                      className="w-4 h-auto rounded-xs grayscale-[0.5]"
-                    />
-                    <span className="truncate">{race.short}</span>
-                    {isSelected && <Check size={10} className="ml-auto" />}
-                  </div>
-                );
-              })}
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <h3 className={cn(
+                "font-black italic uppercase tracking-wider text-white transition-all",
+                isFullscreen ? "text-xl 2xl:text-2xl" : "text-lg"
+              )}>Circuitos</h3>
+              <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
+                <button 
+                  onClick={() => setPoolViewMode('list')}
+                  className={cn(
+                    "p-1.5 rounded-md transition-all",
+                    poolViewMode === 'list' ? "bg-red-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                  )}
+                >
+                  <List size={isFullscreen ? 18 : 14} />
+                </button>
+                <button 
+                  onClick={() => setPoolViewMode('grid')}
+                  className={cn(
+                    "p-1.5 rounded-md transition-all",
+                    poolViewMode === 'grid' ? "bg-red-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                  )}
+                >
+                  <LayoutGrid size={isFullscreen ? 18 : 14} />
+                </button>
+              </div>
+            </div>
+            <div className="relative flex-1 min-h-0 group/scroll">
+              <div className={cn(
+                "grid gap-2 overflow-y-auto pr-2 h-full custom-scrollbar scroll-smooth",
+                poolViewMode === 'grid' || isStreamMode ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2" : "grid-cols-1"
+              )}>
+                {RACES.map(race => {
+                  const isSelected = selectedRaces.some(r => r.id === race.id);
+                  return (
+                    <div 
+                      key={race.id}
+                      className={cn(
+                        "flex items-center gap-3 p-2.5 rounded-xl border transition-all font-bold uppercase tracking-tight",
+                        isFullscreen ? "text-xs 2xl:text-base py-3 px-4" : "text-[11px]",
+                        isSelected 
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 opacity-50" 
+                          : "bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:border-white/10"
+                      )}
+                    >
+                      <img 
+                        src={`https://flagcdn.com/w20/${race.flagCode}.png`}
+                        alt={race.short}
+                        className={cn(
+                          "h-auto rounded-xs grayscale-[0.5] transition-all",
+                          isFullscreen ? "w-7 2xl:w-9" : "w-4"
+                        )}
+                      />
+                      <span className="truncate">{race.short}</span>
+                      {isSelected && <Check size={isFullscreen ? 16 : 10} className="ml-auto" />}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Scroll Indicator Gradient & Hint */}
+              <div className="absolute bottom-0 left-0 right-2 h-12 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none rounded-b-xl flex items-end justify-center pb-1 opacity-0 group-hover/scroll:opacity-100 transition-opacity">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Scroll</span>
+                  <ChevronUp className="text-slate-500 rotate-180" size={10} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -458,19 +518,12 @@ export function Draw() {
           isStreamMode ? "order-1 w-full max-w-5xl" : "order-1 lg:order-2"
         )}>
           <div className="text-center mb-4 relative">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-3 px-4 py-1.5 bg-red-600 text-white rounded-full mb-3 shadow-[0_0_15px_rgba(220,38,38,0.4)]"
-            >
-              <Trophy size={16} className="animate-bounce" />
-              <span className="font-black italic uppercase tracking-widest text-[10px]">F1 World Tour 2026</span>
-            </motion.div>
             <h2 className={cn(
               "font-black italic uppercase tracking-tighter text-white leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] transition-all duration-500",
               isStreamMode ? "text-5xl md:text-7xl lg:text-8xl" : "text-4xl md:text-6xl lg:text-7xl"
             )}>
-              LA <span className="text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-800">RULETA</span>
+              <span className="block text-[11px] font-black tracking-[0.5em] text-red-500/80 uppercase mb-1">F1 WORLD TOUR 2026</span>
+              <span className="block font-black italic uppercase tracking-tighter text-white leading-none">LA RULETA</span>
             </h2>
           </div>
 
@@ -486,22 +539,29 @@ export function Draw() {
             {/* Pointer */}
             <motion.div 
               style={{ rotate: pointerDeg }}
-              transition={{ type: 'spring', stiffness: 800, damping: 25, mass: 0.4 }}
+              animate={isSpinning ? { filter: ['drop-shadow(0 0 8px #ef4444)', 'drop-shadow(0 0 25px #ef4444)', 'drop-shadow(0 0 8px #ef4444)'] } : { filter: 'drop-shadow(0 0 20px rgba(220,38,38,0.9))' }}
+              transition={{ 
+                rotate: { type: 'spring', stiffness: 800, damping: 18, mass: 0.4 },
+                filter: { duration: 0.3, repeat: Infinity }
+              }}
               className={cn(
-                "absolute top-0 left-1/2 -translate-x-1/2 z-20 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] transition-all duration-500",
-                isStreamMode ? "-translate-y-8" : "-translate-y-4"
+                "absolute top-0 left-1/2 -translate-x-1/2 z-20 transition-all duration-500",
+                isStreamMode ? "-translate-y-6" : "-translate-y-2"
               )}
             >
+              <div className="absolute inset-0 bg-white opacity-30 transform scale-110" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}></div>
               <div className={cn(
                 "bg-gradient-to-b from-red-400 to-red-600 relative transition-all duration-500",
-                isStreamMode ? "w-12 h-16" : "w-8 h-10"
+                isStreamMode ? "w-10 h-12" : "w-8 h-10"
               )} style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}>
                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white/40 rounded-full blur-[1px]"></div>
               </div>
             </motion.div>
 
             {/* Wheel Outer Ring with Lights */}
-            <div className="relative w-full h-full rounded-full bg-slate-950 shadow-[0_0_100px_rgba(0,0,0,1)] p-3 md:p-6 ring-[10px] ring-slate-900 border-[2px] border-white/5">
+            <div className="relative w-full h-full rounded-full bg-slate-950 shadow-[0_0_100px_rgba(0,0,0,1)] p-3 md:p-6">
+              <div className="absolute -inset-[6px] rounded-full -z-10" style={{ background: 'conic-gradient(from 0deg, #C9A84C, #F0E68C, #C9A84C, #8B6914, #C9A84C)' }}></div>
+              
               {/* Lights */}
               {Array.from({ length: 48 }).map((_, i) => {
                 const angle = (i * 360) / 48;
@@ -539,12 +599,14 @@ export function Draw() {
                   const isSelected = selectedRaces.some(r => r.id === race.id);
                   const isEven = index % 2 === 0;
                   
-                  let bgColor = isEven ? '#1e293b' : '#0f172a'; // slate-800 / slate-950
+                  let bgColor = isEven ? '#1C1C1C' : '#0d0d0d'; // negro carbono / negro profundo
                   let textColor = isEven ? '#f8fafc' : '#ef4444'; // slate-50 / red-500
+                  let containerOpacity = 1;
                   
                   if (isSelected) {
                     bgColor = '#064e3b'; // emerald-900
                     textColor = '#10b981'; // emerald-500
+                    containerOpacity = 0.6;
                   }
 
                   // Calculate clip path for the slice
@@ -561,7 +623,8 @@ export function Draw() {
                         transform: `rotate(${rotationAngle}deg)`,
                         clipPath: clipPath,
                         backgroundColor: bgColor,
-                        transition: 'background-color 0.5s ease'
+                        opacity: containerOpacity,
+                        transition: 'background-color 0.5s ease, opacity 0.5s ease'
                       }}
                     >
                       {/* Text Container */}
@@ -613,7 +676,7 @@ export function Draw() {
                       className="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
                       style={{ transform: `rotate(${rotationAngle}deg)` }}
                     >
-                      <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 md:w-3 md:h-3 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.8)] border border-slate-500" />
+                      <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 md:w-2 md:h-2 bg-gradient-to-b from-slate-200 to-slate-400 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.8)] border border-slate-500" />
                     </div>
                   );
                 })}
@@ -621,13 +684,15 @@ export function Draw() {
             </div>
 
             {/* Center Hub */}
-            <button
+            <motion.button
               onClick={spinWheel}
               disabled={isSpinning || isComplete}
+              animate={(!isSpinning && !isComplete) ? { scale: [1, 1.03, 1] } : { scale: isSpinning ? 0.95 : 1 }}
+              transition={(!isSpinning && !isComplete) ? { duration: 2, repeat: Infinity } : { duration: 0.5 }}
+              style={{ x: "-50%", y: "-50%" }}
               className={cn(
-                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-slate-800 to-slate-950 rounded-full border-[8px] border-slate-950 z-10 flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-500 group overflow-hidden cursor-pointer disabled:cursor-not-allowed",
-                isStreamMode ? "w-32 h-32 md:w-48 md:h-48" : "w-24 h-24 md:w-32 md:h-32",
-                isSpinning ? "scale-95" : "hover:scale-105"
+                "absolute top-1/2 left-1/2 bg-gradient-to-br from-slate-800 to-slate-950 rounded-full border-[8px] border-slate-950 z-10 flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-500 group overflow-hidden cursor-pointer disabled:cursor-not-allowed",
+                isStreamMode ? "w-32 h-32 md:w-48 md:h-48" : "w-24 h-24 md:w-32 md:h-32 2xl:w-44 2xl:h-44"
               )}
             >
               {/* Inner metallic ring */}
@@ -635,19 +700,19 @@ export function Draw() {
                 <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(255,255,255,0.1),transparent)] group-hover:animate-[spin_2s_linear_infinite] transition-all"></div>
                 <div className={cn(
                   "rounded-full transition-all duration-300 z-10 flex flex-col items-center justify-center",
-                  isStreamMode ? "w-20 h-20 md:w-28 md:h-28" : "w-16 h-16 md:w-20 md:h-20",
+                  isStreamMode ? "w-20 h-20 md:w-28 md:h-28" : "w-16 h-16 md:w-20 md:h-20 2xl:w-32 2xl:h-32",
                   isSpinning ? "bg-red-500 shadow-[0_0_25px_rgba(239,68,68,0.8)]" : "bg-red-600 group-hover:bg-red-500 shadow-inner group-hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
                 )}>
                   <span className={cn(
-                    "text-white font-black italic tracking-wider uppercase",
-                    isStreamMode ? "text-lg md:text-2xl" : "text-sm md:text-base",
+                    "text-white flex items-center justify-center transition-all",
+                    (isStreamMode || isFullscreen) ? "scale-150 2xl:scale-[2.2]" : "scale-125",
                     isSpinning ? "animate-pulse" : ""
                   )}>
-                    {isSpinning ? "..." : "Girar"}
+                    {isSpinning ? <span className="font-black italic uppercase tracking-widest">...</span> : <Play fill="currentColor" className="ml-1" />}
                   </span>
                 </div>
               </div>
-            </button>
+            </motion.button>
             </div>
           </div>
 
@@ -683,19 +748,22 @@ export function Draw() {
                     {/* Passport Stamp */}
                     <motion.div
                       initial={{ scale: 5, opacity: 0, rotate: -45 }}
-                      animate={{ scale: 1, opacity: 1, rotate: -15 }}
-                      transition={{ 
-                        type: "spring", 
-                        damping: 12, 
-                        stiffness: 200, 
-                        delay: 0.8 
-                      }}
-                      className="absolute -bottom-2 -right-2 md:-bottom-4 md:-right-4 z-10 pointer-events-none drop-shadow-[0_8px_8px_rgba(0,0,0,0.8)]"
+                      animate={{ scale: 1, opacity: 1, rotate: -12 }}
+                      transition={{ type: "spring", damping: 10, stiffness: 180, delay: 0.9 }}
+                      className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 z-20 pointer-events-none animate-stamp-land"
                     >
-                      <div className="relative flex flex-col items-center justify-center px-3 py-1.5 md:px-5 md:py-2.5 rounded-lg border-[3px] md:border-[4px] border-white text-white bg-black/40 backdrop-blur-sm transform -rotate-6">
-                        <div className="absolute inset-0.5 md:inset-1 rounded border-[1.5px] md:border-[2px] border-white border-dashed opacity-80"></div>
-                        <span className="font-black uppercase tracking-widest text-lg md:text-2xl leading-none mt-1">APPROVED</span>
-                        <span className="font-mono text-[8px] md:text-[10px] font-bold tracking-[0.2em] mt-0.5 opacity-90">SEASON 2026</span>
+                      <div className="relative flex items-center justify-center w-28 h-28 md:w-36 md:h-36 2xl:w-48 2xl:h-48 rounded-full border-[4px] md:border-[8px] border-[#C9A84C] shadow-[0_15px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(201,168,76,0.3)] bg-black/60 backdrop-blur-[6px]">
+                        <div className="absolute inset-2 md:inset-3 rounded-full border-2 border-[#C9A84C]/30 border-dashed"></div>
+                        <div className="absolute inset-0 opacity-40 rounded-full bg-[url('https://www.transparenttextures.com/patterns/noise.png')]" />
+                        <div className="flex flex-col items-center justify-center transform -rotate-12 relative z-10">
+                          <div className="px-3 py-0.5 bg-[#C9A84C] text-black font-black uppercase tracking-[0.3em] text-[8px] md:text-[10px] 2xl:text-xs mb-2 rounded-sm shadow-lg">OFFICIAL</div>
+                          <span className="font-black uppercase tracking-widest text-[#F0E68C] text-2xl md:text-4xl 2xl:text-5xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">APPROVED</span>
+                          <div className="mt-3 flex items-center gap-3">
+                            <div className="h-[2px] w-6 bg-[#C9A84C]/40"></div>
+                            <span className="font-mono text-[#C9A84C] text-xs md:text-lg 2xl:text-xl font-black tracking-[0.4em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">2026</span>
+                            <div className="h-[2px] w-6 bg-[#C9A84C]/40"></div>
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
                   </motion.div>
@@ -706,8 +774,11 @@ export function Draw() {
                     transition={{ delay: 0.2 }}
                     className="flex flex-col items-start"
                   >
-                    <span className="text-red-200 font-mono text-xs md:text-sm uppercase tracking-[0.5em] mb-2">¡NUEVO GP CONFIRMADO!</span>
-                    <h3 className="text-white font-black italic text-4xl md:text-8xl uppercase tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+                    <span className="text-red-200 font-mono text-sm md:text-base font-bold uppercase tracking-[0.5em] mb-2">¡NUEVO GP CONFIRMADO!</span>
+                    <h3 className={cn(
+                      "text-white font-black italic uppercase tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transition-all",
+                      isFullscreen ? "text-5xl md:text-8xl 2xl:text-9xl" : "text-4xl md:text-8xl"
+                    )}>
                       {winningRace.name}
                     </h3>
                   </motion.div>
@@ -746,15 +817,18 @@ export function Draw() {
               )}
             </div>
             
-            <div className="flex items-center gap-6 px-6 py-3 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5">
+            <div className={cn(
+              "flex items-center gap-6 px-6 py-3 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5 transition-all",
+              isFullscreen && "2xl:px-10 2xl:py-5 2xl:gap-10"
+            )}>
               <div className="flex flex-col items-center">
-                <span className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-0.5">Seleccionadas</span>
-                <span className="text-xl font-black italic text-white">{selectedRaces.length} / {TARGET_RACES_COUNT}</span>
+                <span className={cn("text-slate-500 uppercase font-black tracking-widest mb-0.5", isFullscreen ? "text-[10px] 2xl:text-xs" : "text-[9px]")}>Seleccionadas</span>
+                <span className={cn("font-black italic text-white transition-all", isFullscreen ? "text-2xl 2xl:text-4xl" : "text-xl")}>{selectedRaces.length} / {TARGET_RACES_COUNT}</span>
               </div>
               <div className="w-[1px] h-6 bg-white/10"></div>
               <div className="flex flex-col items-center">
-                <span className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-0.5">Restantes</span>
-                <span className="text-xl font-black italic text-red-500">{RACES.length - selectedRaces.length}</span>
+                <span className={cn("text-slate-500 uppercase font-black tracking-widest mb-0.5", isFullscreen ? "text-[10px] 2xl:text-xs" : "text-[9px]")}>Restantes</span>
+                <span className={cn("font-black italic text-red-500 transition-all", isFullscreen ? "text-2xl 2xl:text-4xl" : "text-xl")}>{RACES.length - selectedRaces.length}</span>
               </div>
             </div>
           </div>
@@ -790,10 +864,10 @@ export function Draw() {
                     )}
                   >
                     <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center font-black italic text-sm shrink-0",
+                      "w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0",
                       race ? "bg-red-600 text-white shadow-lg" : "bg-slate-900 text-slate-700"
                     )}>
-                      <span className="leading-none">{i + 1}</span>
+                      <span className="leading-none translate-y-[1px]">{i + 1}</span>
                     </div>
                     
                     <div className="flex-1 min-w-0 flex items-center gap-2.5">
@@ -809,13 +883,9 @@ export function Draw() {
                           </span>
                         </>
                       ) : (
-                        <span className="font-mono text-[9px] text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <span className="animate-pulse">Pendiente</span>
-                          <span className="flex gap-[2px]">
-                            <span className="w-1 h-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-1 h-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-1 h-1 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                          </span>
+                        <span className="font-bold text-[11px] text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-pulse shrink-0" />
+                          <span>Pendiente</span>
                         </span>
                       )}
                     </div>
@@ -840,6 +910,47 @@ export function Draw() {
           </div>
         </div>
       </div>
+
+      {/* Save Modal for Admins */}
+      <AnimatePresence>
+        {showSaveModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-slate-900 border border-white/10 p-6 md:p-8 rounded-2xl max-w-md w-full text-center shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+                <CalendarIcon className="text-red-500" size={32} />
+              </div>
+              <h3 className="text-2xl font-black italic text-white mb-3 uppercase tracking-tighter">¡Sorteo Completado!</h3>
+              <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                Como administrador, ¿quieres guardar este nuevo calendario en la base de datos? Las fechas quedarán pendientes de configurar manualmente.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={handleSaveCalendar} 
+                  className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold uppercase tracking-widest transition-colors shadow-lg shadow-red-900/20"
+                >
+                  Guardar Calendario
+                </button>
+                <button 
+                  onClick={() => setShowSaveModal(false)} 
+                  className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase tracking-widest transition-colors"
+                >
+                  Cancelar (Solo Prueba)
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

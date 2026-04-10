@@ -242,7 +242,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                 ) : (
                   <>
                     <td className="p-4 text-slate-300 text-sm">
-                      {new Date(race.date).toLocaleDateString()}
+                      {race.date ? new Date(race.date).toLocaleDateString() : <span className="text-slate-500 italic">Por definir</span>}
                     </td>
                     <td className="p-4 font-bold text-white">{race.name}</td>
                     <td className="p-4 text-slate-400 text-sm">{race.circuit}</td>

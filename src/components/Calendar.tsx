@@ -326,7 +326,7 @@ export function Calendar() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <span className={cn("text-sm font-mono uppercase tracking-widest", isHistorical ? "text-amber-400" : "text-red-400")}>
-                        {formatDate(race.date)}
+                        {race.date ? formatDate(race.date) : "POR DEFINIR"}
                       </span>
                     </div>
                     <h3 className={cn(
@@ -441,8 +441,9 @@ export function Calendar() {
                      <div className={cn(
                         viewMode === 'grid' ? "mt-auto pt-4" : ""
                      )}>
-                        <div className="inline-block px-4 py-2 rounded-full bg-slate-800/50 border border-white/5 text-xs font-mono text-slate-400 uppercase backdrop-blur-sm group-hover:bg-slate-700/50 transition-colors">
-                            Pendiente
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/60 border border-white/10 text-sm font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+                          En espera
                         </div>
                      </div>
                   )}
