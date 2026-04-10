@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useChampionship } from '../context/ChampionshipContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle } from 'lucide-react';
+import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle, Zap, ZapOff } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Driver, Race } from '../types';
+import { Driver, Race, Constructor } from '../types';
 import { F1CarAnimation } from './dashboard/F1CarAnimation';
 
 // --- Custom Components ---
@@ -42,16 +42,19 @@ function DriverDropdown({
   value, 
   onChange, 
   drivers, 
-  disabledId, 
+  constructors,
+  disabledId,
   align = 'left' 
 }: { 
   value: string, 
   onChange: (id: string) => void, 
   drivers: Driver[], 
+  constructors: Constructor[],
   disabledId?: string,
   align?: 'left' | 'right' 
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [sortMode, setSortMode] = useState<'alpha' | 'team'>('alpha');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selected = drivers.find(d => d.id === value);
 
@@ -64,6 +67,16 @@ function DriverDropdown({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const sortedDrivers = useMemo(() => {
+    return [...drivers].sort((a, b) => {
+      if (sortMode === 'team') {
+        const teamCompare = a.team.localeCompare(b.team);
+        if (teamCompare !== 0) return teamCompare;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [drivers, sortMode]);
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
@@ -92,29 +105,54 @@ function DriverDropdown({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto"
+            className="absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col"
           >
-            {drivers.map(d => (
-              <button
-                key={d.id}
-                disabled={d.id === disabledId}
-                onClick={() => { onChange(d.id); setIsOpen(false); }}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 transition-colors text-left",
-                  d.id === disabledId ? "opacity-30 cursor-not-allowed" : "hover:bg-white/10"
-                )}
-                style={{
-                  background: d.id === value ? `${d.teamColor}30` : undefined,
-                  borderLeft: align === 'left' ? `4px solid ${d.teamColor}` : undefined,
-                  borderRight: align === 'right' ? `4px solid ${d.teamColor}` : undefined,
-                }}
+            <div className="p-2 border-b border-white/10 flex gap-2 bg-slate-950/50 shrink-0">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSortMode('alpha'); }}
+                className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'alpha' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
               >
-                <div className="flex flex-col w-full">
-                  <span className="font-bold text-white">{d.name}</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">{d.team}</span>
-                </div>
+                A-Z
               </button>
-            ))}
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSortMode('team'); }}
+                className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'team' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
+              >
+                Escudería
+              </button>
+            </div>
+            <div className="max-h-60 overflow-y-auto">
+              {sortedDrivers.map(d => {
+                const teamLogo = constructors.find(c => c.name === d.team)?.logoUrl;
+                return (
+                <button
+                  key={d.id}
+                  disabled={d.id === disabledId}
+                  onClick={() => { onChange(d.id); setIsOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center gap-3 p-3 transition-colors text-left",
+                    d.id === disabledId ? "opacity-30 cursor-not-allowed" : "hover:bg-white/10"
+                  )}
+                  style={{
+                    background: d.id === value ? `${d.teamColor}30` : undefined,
+                    borderLeft: align === 'left' ? `4px solid ${d.teamColor}` : undefined,
+                    borderRight: align === 'right' ? `4px solid ${d.teamColor}` : undefined,
+                  }}
+                >
+                  <div className={cn("flex items-center gap-3 w-full", align === 'right' ? "flex-row-reverse" : "")}>
+                    {teamLogo ? (
+                      <img src={teamLogo} alt={d.team} className="w-6 h-6 object-contain drop-shadow-md shrink-0" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full shrink-0" style={{ backgroundColor: d.teamColor }}></div>
+                    )}
+                    <div className={cn("flex flex-col w-full", align === 'right' ? "text-right" : "text-left")}>
+                      <span className="font-bold text-white">{d.name}</span>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider">{d.team}</span>
+                    </div>
+                  </div>
+                </button>
+              )})}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -216,6 +254,50 @@ export function HeadToHead() {
   const [startRaceId, setStartRaceId] = useState<string>('');
   const [endRaceId, setEndRaceId] = useState<string>('');
 
+  const [showFightAnim, setShowFightAnim] = useState(false);
+  const [enableFightAnim, setEnableFightAnim] = useState(() => {
+    const saved = localStorage.getItem('f1-h2h-anim');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const prevD1 = useRef(driver1Id);
+  const prevD2 = useRef(driver2Id);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('f1-h2h-anim', enableFightAnim.toString());
+  }, [enableFightAnim]);
+
+  useEffect(() => {
+    if (driver1Id && driver2Id && enableFightAnim) {
+      if (driver1Id !== prevD1.current || driver2Id !== prevD2.current) {
+        setShowFightAnim(true);
+        const timer = setTimeout(() => {
+          setShowFightAnim(false);
+          // Auto scroll to stats after animation
+          setTimeout(() => {
+            if (statsRef.current) {
+              // Generic and precise calculation:
+              // We want to align the top of the stats section with the top of the viewport,
+              // but adding a small padding (yOffset) so it's not glued to the edge.
+              const yOffset = 20; 
+              const elementPosition = statsRef.current.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - yOffset;
+              
+              window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+              });
+            }
+          }, 100);
+        }, 3500); // Increased duration to 3.5s for better readability
+        return () => clearTimeout(timer);
+      }
+    }
+    prevD1.current = driver1Id;
+    prevD2.current = driver2Id;
+  }, [driver1Id, driver2Id, enableFightAnim]);
+
   const drivers = useMemo(() => {
     return [...data.drivers].sort((a, b) => a.name.localeCompare(b.name));
   }, [data.drivers]);
@@ -224,17 +306,13 @@ export function HeadToHead() {
     return data.races.filter(r => r.status === 'completed');
   }, [data.races]);
 
-  // Set default drivers and races if none selected
+  // Set default races if none selected
   useMemo(() => {
-    if (drivers.length >= 2 && !driver1Id && !driver2Id) {
-      setDriver1Id(drivers[0].id);
-      setDriver2Id(drivers[1].id);
-    }
     if (completedRaces.length > 0 && !startRaceId && !endRaceId) {
       setStartRaceId(completedRaces[0].id);
       setEndRaceId(completedRaces[completedRaces.length - 1].id);
     }
-  }, [drivers, driver1Id, driver2Id, completedRaces, startRaceId, endRaceId]);
+  }, [completedRaces, startRaceId, endRaceId]);
 
   const driver1 = drivers.find(d => d.id === driver1Id);
   const driver2 = drivers.find(d => d.id === driver2Id);
@@ -397,12 +475,285 @@ export function HeadToHead() {
 
   return (
     <div className="space-y-12 pb-20">
-      <div className="flex flex-col items-center text-center space-y-4 relative py-8">
+      {/* Floating Animation Toggle */}
+      <div className="fixed bottom-8 right-8 z-[60]">
+        <button 
+          onClick={() => setEnableFightAnim(!enableFightAnim)}
+          className={cn(
+            "flex items-center gap-3 px-5 py-3.5 rounded-full border backdrop-blur-xl transition-all duration-500 shadow-2xl group overflow-hidden",
+            enableFightAnim 
+              ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30" 
+              : "bg-slate-900/80 border-white/10 text-slate-400 hover:bg-slate-900 hover:text-white"
+          )}
+          title={enableFightAnim ? "Desactivar intro cinemática" : "Activar intro cinemática"}
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          {enableFightAnim ? (
+            <>
+              <Zap size={20} className="fill-current animate-pulse relative z-10" />
+              <div className="flex flex-col items-start leading-none relative z-10">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Cinemática</span>
+                <span className="text-xs font-black uppercase tracking-widest">Activada</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <ZapOff size={20} className="relative z-10" />
+              <div className="flex flex-col items-start leading-none relative z-10">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Cinemática</span>
+                <span className="text-xs font-black uppercase tracking-widest">Desactivada</span>
+              </div>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Fight Animation Overlay */}
+      <AnimatePresence>
+        {showFightAnim && driver1 && driver2 && (
+          <motion.div 
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950 w-screen h-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 1, ease: "easeInOut" } }}
+          >
+            {/* Split Background with Diagonal Cut */}
+            <div className="absolute inset-0 flex overflow-hidden">
+              <motion.div 
+                className="absolute inset-0 w-full h-full origin-left" 
+                style={{ 
+                  backgroundColor: driver1.teamColor,
+                  clipPath: 'polygon(0 0, 60% 0, 40% 100%, 0% 100%)'
+                }}
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
+                
+                {/* Fire/Energy Particles Left */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {[...Array(10)].map((_, i) => (
+                    <motion.div
+                      key={`p1-${i}`}
+                      className="absolute w-1 h-20 bg-white/20 blur-sm"
+                      style={{ 
+                        left: `${Math.random() * 60}%`, 
+                        top: `${Math.random() * 100}%`,
+                        rotate: '11deg'
+                      }}
+                      animate={{ 
+                        y: [-100, 1000],
+                        opacity: [0, 1, 0]
+                      }}
+                      transition={{ 
+                        duration: 1 + Math.random() * 2, 
+                        repeat: Infinity, 
+                        delay: Math.random() * 2 
+                      }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                className="absolute inset-0 w-full h-full origin-right" 
+                style={{ 
+                  backgroundColor: driver2.teamColor,
+                  clipPath: 'polygon(60% 0, 100% 0, 100% 100%, 40% 100%)'
+                }}
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                <div className="absolute inset-0 bg-gradient-to-l from-black/90 via-black/40 to-transparent"></div>
+
+                {/* Fire/Energy Particles Right */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {[...Array(10)].map((_, i) => (
+                    <motion.div
+                      key={`p2-${i}`}
+                      className="absolute w-1 h-20 bg-white/20 blur-sm"
+                      style={{ 
+                        left: `${40 + Math.random() * 60}%`, 
+                        top: `${Math.random() * 100}%`,
+                        rotate: '11deg'
+                      }}
+                      animate={{ 
+                        y: [-100, 1000],
+                        opacity: [0, 1, 0]
+                      }}
+                      transition={{ 
+                        duration: 1 + Math.random() * 2, 
+                        repeat: Infinity, 
+                        delay: Math.random() * 2 
+                      }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Dynamic Slash Line - SVG to match clipPath exactly */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" preserveAspectRatio="none">
+              <motion.line 
+                x1="60%" y1="0" x2="40%" y2="100%" 
+                stroke="white" 
+                strokeWidth="6"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 0.8 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.8))' }}
+              />
+              <motion.line 
+                x1="60%" y1="0" x2="40%" y2="100%" 
+                stroke="white" 
+                strokeWidth="2"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.3 }}
+              />
+            </svg>
+
+            {/* Flash Effect */}
+            <motion.div 
+              className="absolute inset-0 bg-white mix-blend-screen z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ delay: 0.7, duration: 0.4 }}
+            />
+
+            {/* Content Container */}
+            <div className="relative z-30 w-full h-full flex items-center justify-center px-4 md:px-20">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-8 md:gap-24 w-full max-w-7xl">
+                
+                {/* Driver 1 */}
+                <motion.div
+                  initial={{ x: -300, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
+                  className="flex flex-col items-center md:items-end"
+                >
+                  <div className="relative group">
+                    <motion.div 
+                      className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <img 
+                      src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`}
+                      className="w-48 h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
+                      alt={driver1.name}
+                    />
+                    {/* Team Logo Overlay */}
+                    {team1Logo && (
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0, rotate: -45 }}
+                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                        transition={{ delay: 1, type: "spring" }}
+                        className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 z-20 w-20 h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
+                      >
+                        {/* Neutral glass background for logos of any color */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
+                        <img src={team1Logo} alt={driver1.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="mt-10 text-right"
+                  >
+                    <div className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-none">
+                      {driver1.name}
+                    </div>
+                    <div className="text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-r-4" style={{ borderColor: driver1.teamColor }}>
+                      {driver1.team}
+                    </div>
+                  </motion.div>
+                </motion.div>
+                
+                {/* VS Center */}
+                <div className="flex flex-col items-center justify-center">
+                  <motion.div 
+                    className="relative"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.7, duration: 1, type: "spring", bounce: 0.4 }}
+                  >
+                    <div className="absolute inset-0 bg-white blur-[100px] opacity-40 animate-pulse"></div>
+                    <div className="relative z-20 font-black text-8xl md:text-[14rem] text-white italic tracking-tighter drop-shadow-[0_0_60px_rgba(255,255,255,0.8)]">
+                      VS
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Driver 2 */}
+                <motion.div
+                  initial={{ x: 300, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
+                  className="flex flex-col items-center md:items-start"
+                >
+                  <div className="relative group">
+                    <motion.div 
+                      className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <img 
+                      src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`}
+                      className="w-48 h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
+                      alt={driver2.name}
+                    />
+                    {/* Team Logo Overlay */}
+                    {team2Logo && (
+                      <motion.div 
+                        initial={{ scale: 0, opacity: 0, rotate: 45 }}
+                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                        transition={{ delay: 1, type: "spring" }}
+                        className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 z-20 w-20 h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
+                      >
+                        {/* Neutral glass background for logos of any color */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
+                        <img src={team2Logo} alt={driver2.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="mt-10 text-left"
+                  >
+                    <div className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-none">
+                      {driver2.name}
+                    </div>
+                    <div className="text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-l-4" style={{ borderColor: driver2.teamColor }}>
+                      {driver2.team}
+                    </div>
+                  </motion.div>
+                </motion.div>
+
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col items-center text-center space-y-4 relative py-8 overflow-hidden">
         {/* Combat Background Effect */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex items-center justify-center opacity-80">
           <div className="absolute w-[150%] h-[120px] -rotate-12 blur-3xl transition-colors duration-1000" style={{ background: `linear-gradient(90deg, transparent, ${driver1?.teamColor || '#3b82f6'}60, transparent)` }}></div>
           <div className="absolute w-[150%] h-[120px] rotate-12 blur-3xl transition-colors duration-1000" style={{ background: `linear-gradient(90deg, transparent, ${driver2?.teamColor || '#ef4444'}60, transparent)` }}></div>
           <div className="absolute w-full max-w-lg h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent shadow-[0_0_30px_rgba(255,255,255,1)]"></div>
+          
+          {/* Side Fades to prevent sharp horizontal edges */}
+          <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-slate-950 to-transparent z-10"></div>
+          <div className="absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-slate-950 to-transparent z-10"></div>
           
           {/* Sparkles / Energy */}
           <div className="absolute w-32 h-32 bg-white/10 rounded-full blur-2xl mix-blend-screen animate-pulse"></div>
@@ -421,8 +772,8 @@ export function HeadToHead() {
       </div>
 
       {/* Period Selector */}
-      {completedRaces.length > 0 && (
-        <div className="max-w-4xl mx-auto z-30 px-4 w-full">
+      {completedRaces.length > 0 && driver1 && driver2 && (
+        <div className="max-w-4xl mx-auto relative z-40 px-4 w-full">
           <div className="relative group w-full">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-pink-500/30 rounded-3xl blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
             <div className="absolute inset-0 rounded-3xl border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] transition-shadow duration-500 pointer-events-none"></div>
@@ -470,37 +821,52 @@ export function HeadToHead() {
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center max-w-5xl mx-auto relative z-20">
         {/* Driver 1 Selector */}
-        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: `0 10px 40px -10px ${driver1?.teamColor || '#000'}40` }}>
+        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver1 ? `0 10px 40px -10px ${driver1.teamColor}40` : undefined }}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none"></div>
-          <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top left, ${driver1?.teamColor || 'transparent'}, transparent 70%)` }}></div>
+          {driver1 && <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top left, ${driver1.teamColor}, transparent 70%)` }}></div>}
           
           {/* Avatar */}
           <motion.div 
-            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105" 
+            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
             animate={{ borderColor: driver1?.teamColor || '#333' }}
             transition={{ duration: 0.5 }}
           >
             <AnimatePresence mode="wait">
-              <motion.img 
-                key={driver1?.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                src={driver1?.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1?.id || '1')}&backgroundColor=slate800`} 
-                alt={driver1?.name} 
-                className="w-full h-full object-cover absolute inset-0" 
-              />
+              {driver1 ? (
+                <motion.img 
+                  key={driver1.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`} 
+                  alt={driver1.name} 
+                  className="w-full h-full object-cover absolute inset-0" 
+                />
+              ) : (
+                <motion.div
+                  key="empty1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full h-full flex items-center justify-center text-slate-600"
+                >
+                  <Users size={48} />
+                </motion.div>
+              )}
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
           </motion.div>
 
-          <div className="w-full relative z-50">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Piloto 1</label>
+          <div className="w-full relative z-50 flex flex-col items-center md:items-start">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
+              Contendiente 1
+            </div>
             <DriverDropdown 
               value={driver1Id} 
               onChange={setDriver1Id} 
               drivers={drivers} 
+              constructors={data.constructors}
               disabledId={driver2Id} 
               align="left" 
             />
@@ -537,44 +903,72 @@ export function HeadToHead() {
         </div>
 
         {/* VS Badge */}
-        <div className="flex justify-center py-4 md:py-0">
-          <div className={cn("w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black italic text-white border-4 border-slate-950 shadow-2xl z-10", bgAccent)}>
-            VS
+        <div className="flex justify-center py-8 md:py-0 relative z-30">
+          <div className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 group">
+            {/* Aggressive glowing background */}
+            <div className={cn("absolute inset-0 rounded-xl rotate-45 blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-pulse", bgAccent)}></div>
+            <div className={cn("absolute inset-2 rounded-xl rotate-45 border-2 z-10 bg-slate-950 shadow-2xl", isHistorical ? "border-amber-500" : "border-red-500")}></div>
+            
+            {/* Glitch Text Effect */}
+            <motion.div 
+              className="relative z-20 font-black text-4xl md:text-5xl tracking-tighter flex items-center justify-center"
+              animate={{ x: [-1, 1, -2, 2, 0], y: [1, -1, 2, -2, 0] }}
+              transition={{ repeat: Infinity, duration: 0.2, repeatDelay: 3, ease: "linear" }}
+            >
+              <span className="absolute top-0 left-[3px] text-red-500 mix-blend-screen opacity-80">VS</span>
+              <span className="absolute top-0 -left-[3px] text-cyan-500 mix-blend-screen opacity-80">VS</span>
+              <span className="relative text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">VS</span>
+            </motion.div>
           </div>
         </div>
 
         {/* Driver 2 Selector */}
-        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: `0 10px 40px -10px ${driver2?.teamColor || '#000'}40` }}>
+        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver2 ? `0 10px 40px -10px ${driver2.teamColor}40` : undefined }}>
           <div className="absolute inset-0 bg-gradient-to-bl from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none"></div>
-          <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top right, ${driver2?.teamColor || 'transparent'}, transparent 70%)` }}></div>
+          {driver2 && <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top right, ${driver2.teamColor}, transparent 70%)` }}></div>}
           
           {/* Avatar */}
           <motion.div 
-            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105" 
+            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
             animate={{ borderColor: driver2?.teamColor || '#333' }}
             transition={{ duration: 0.5 }}
           >
             <AnimatePresence mode="wait">
-              <motion.img 
-                key={driver2?.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                src={driver2?.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2?.id || '2')}&backgroundColor=slate800`} 
-                alt={driver2?.name} 
-                className="w-full h-full object-cover absolute inset-0" 
-              />
+              {driver2 ? (
+                <motion.img 
+                  key={driver2.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`} 
+                  alt={driver2.name} 
+                  className="w-full h-full object-cover absolute inset-0" 
+                />
+              ) : (
+                <motion.div
+                  key="empty2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full h-full flex items-center justify-center text-slate-600"
+                >
+                  <Users size={48} />
+                </motion.div>
+              )}
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
           </motion.div>
 
-          <div className="w-full relative z-50">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Piloto 2</label>
+          <div className="w-full relative z-50 flex flex-col items-center md:items-end">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
+              Contendiente 2
+            </div>
             <DriverDropdown 
               value={driver2Id} 
               onChange={setDriver2Id} 
               drivers={drivers} 
+              constructors={data.constructors}
               disabledId={driver1Id} 
               align="right" 
             />
@@ -613,7 +1007,7 @@ export function HeadToHead() {
 
       {/* Stats Comparison */}
       {stats && driver1 && driver2 && (
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div ref={statsRef} className="max-w-4xl mx-auto space-y-4 relative z-10">
           <StatRow 
             label="Puntos Totales" 
             val1={stats.d1Points} 
@@ -776,7 +1170,7 @@ function StatRow({
 
   return (
     <div className={cn(
-      "bg-slate-900/40 border rounded-2xl p-4 md:p-6 relative overflow-hidden group transition-colors",
+      "bg-slate-900/40 border rounded-3xl p-4 md:p-6 relative overflow-hidden group transition-colors",
       isZeroTie ? "border-white/5 opacity-60 grayscale-[0.5]" : "border-white/5 hover:bg-slate-900/60"
     )}>
       {/* Dynamic Background Glow based on colors */}
