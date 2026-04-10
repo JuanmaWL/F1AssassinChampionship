@@ -47,7 +47,18 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
     }
 
     const updateTimer = () => {
+      if (!nextRace.date) {
+        setTimeLeft('FECHA POR CONFIRMAR');
+        return;
+      }
+
       const raceDate = new Date(nextRace.date);
+      // Check if date is valid
+      if (isNaN(raceDate.getTime())) {
+        setTimeLeft('FECHA POR CONFIRMAR');
+        return;
+      }
+
       const now = new Date();
       const diff = raceDate.getTime() - now.getTime();
 

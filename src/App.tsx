@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { IntroAnimation } from './components/IntroAnimation';
 import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
-import { BarChart2, Calendar as CalendarIcon, Trophy, Loader2, Dices, Shield } from 'lucide-react';
+import { BarChart2, Calendar as CalendarIcon, Trophy, Loader2, Dices, Shield, Swords } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
@@ -14,8 +14,9 @@ import { useVisitTracker } from './hooks/useVisitTracker';
 const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
 const AdminPanel = lazy(() => import('./components/AdminPanel').then(module => ({ default: module.AdminPanel })));
 const Draw = lazy(() => import('./components/Draw').then(module => ({ default: module.Draw })));
+const HeadToHead = lazy(() => import('./components/HeadToHead').then(module => ({ default: module.HeadToHead })));
 
-type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw';
+type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw' | 'h2h';
 
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
@@ -115,7 +116,7 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('dashboard')}
                 className={cn(
-                  "px-4 lg:px-8 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] relative group",
+                  "px-3 xl:px-8 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] relative group",
                   activeTab === 'dashboard' ? "text-white" : "text-slate-500 hover:text-slate-300"
                 )}
               >
@@ -127,7 +128,7 @@ function AppContent() {
                 )}
                 <div className="relative z-10 flex items-center gap-3">
                   <BarChart2 size={18} className={cn(activeTab === 'dashboard' ? (isHistorical ? "text-amber-500" : "text-red-500") : "text-slate-600")} />
-                  <span className="hidden lg:inline">Clasificación</span>
+                  <span className="hidden xl:inline whitespace-nowrap">Clasificación</span>
                 </div>
                 {activeTab === 'dashboard' && (
                   <motion.div 
@@ -140,7 +141,7 @@ function AppContent() {
               <button
                 onClick={() => setActiveTab('calendar')}
                 className={cn(
-                  "px-4 lg:px-8 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] relative group",
+                  "px-3 xl:px-8 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] relative group",
                   activeTab === 'calendar' ? "text-white" : "text-slate-500 hover:text-slate-300"
                 )}
               >
@@ -152,9 +153,34 @@ function AppContent() {
                 )}
                 <div className="relative z-10 flex items-center gap-3">
                   <CalendarIcon size={18} className={cn(activeTab === 'calendar' ? (isHistorical ? "text-amber-500" : "text-red-500") : "text-slate-600")} />
-                  <span className="hidden lg:inline">Calendario</span>
+                  <span className="hidden xl:inline whitespace-nowrap">Calendario</span>
                 </div>
                 {activeTab === 'calendar' && (
+                  <motion.div 
+                    layoutId="nav-indicator-line"
+                    className={cn("absolute bottom-0 left-6 right-6 h-0.5 rounded-full", isHistorical ? "bg-amber-500 shadow-[0_0_10px_#f59e0b]" : "bg-red-500 shadow-[0_0_10px_#ef4444]")} 
+                  />
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('h2h')}
+                className={cn(
+                  "px-3 xl:px-8 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 text-xs font-black uppercase tracking-[0.2em] relative group",
+                  activeTab === 'h2h' ? "text-white" : "text-slate-500 hover:text-slate-300"
+                )}
+              >
+                {activeTab === 'h2h' && (
+                  <motion.div 
+                    layoutId="nav-active-bg" 
+                    className={cn("absolute inset-0 rounded-xl z-0", isHistorical ? "bg-amber-500/5" : "bg-red-500/5")} 
+                  />
+                )}
+                <div className="relative z-10 flex items-center gap-3">
+                  <Swords size={18} className={cn(activeTab === 'h2h' ? (isHistorical ? "text-amber-500" : "text-red-500") : "text-slate-600")} />
+                  <span className="hidden xl:inline whitespace-nowrap">Cara a Cara</span>
+                </div>
+                {activeTab === 'h2h' && (
                   <motion.div 
                     layoutId="nav-indicator-line"
                     className={cn("absolute bottom-0 left-6 right-6 h-0.5 rounded-full", isHistorical ? "bg-amber-500 shadow-[0_0_10px_#f59e0b]" : "bg-red-500 shadow-[0_0_10px_#ef4444]")} 
@@ -254,6 +280,20 @@ function AppContent() {
           <span className="text-[8px] font-black uppercase tracking-tighter mt-0.5">Calend.</span>
         </button>
 
+        <button
+          onClick={() => setActiveTab('h2h')}
+          className={cn(
+            "flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all relative",
+            activeTab === 'h2h' ? "text-white" : "text-slate-500"
+          )}
+        >
+          {activeTab === 'h2h' && (
+            <motion.div layoutId="mobile-nav-bg" className={cn("absolute inset-0 rounded-xl", isHistorical ? "bg-amber-500/20" : "bg-red-500/20")} />
+          )}
+          <Swords size={20} className={cn(activeTab === 'h2h' ? (isHistorical ? "text-amber-500" : "text-red-500") : "")} />
+          <span className="text-[8px] font-black uppercase tracking-tighter mt-0.5">H2H</span>
+        </button>
+
         <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
 
         <div className="flex items-center gap-1">
@@ -303,6 +343,7 @@ function AppContent() {
                 <Suspense fallback={<LoadingSpinner />}>
                     {activeTab === 'dashboard' && <Dashboard />}
                     {activeTab === 'calendar' && <Calendar />}
+                    {activeTab === 'h2h' && <HeadToHead />}
                     {activeTab === 'draw' && <Draw />}
                     {activeTab === 'admin' && <AdminPanel />}
                 </Suspense>
