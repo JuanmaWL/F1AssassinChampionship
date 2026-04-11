@@ -381,7 +381,7 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
-      {activeTab !== 'draw' && <Footer />}
+      {activeTab !== 'draw' && activeTab !== 'admin' && <Footer />}
     </div>
   );
 }
