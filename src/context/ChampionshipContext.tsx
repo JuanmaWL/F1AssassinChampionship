@@ -19,7 +19,17 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
   const [activeSeason, setActiveSeason] = useState<SeasonId>('2026');
   const [data, setDataState] = useState<ChampionshipData>(mockData);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Cache para evitar peticiones innecesarias
   const seasonCache = useRef<Map<SeasonId, ChampionshipData>>(new Map());
+  
+  // Ref para rastrear la temporada activa real y evitar race conditions
+  const activeSeasonRef = useRef<SeasonId>(activeSeason);
+
+  // Sincronizamos el Ref cada vez que cambia la temporada
+  useEffect(() => {
+    activeSeasonRef.current = activeSeason;
+  }, [activeSeason]);
 
   const setData = useCallback((newData: ChampionshipData) => {
     seasonCache.current.set(activeSeason, newData);
@@ -27,20 +37,37 @@ export function ChampionshipProvider({ children }: { children: ReactNode }) {
   }, [activeSeason]);
 
   const loadData = useCallback(async (showGlobalLoading = true, bypassCache = false) => {
-    if (!bypassCache && seasonCache.current.has(activeSeason)) {
-      setDataState(seasonCache.current.get(activeSeason)!);
+    const seasonToLoad = activeSeason;
+
+    // 1. Verificar Cache
+    if (!bypassCache && seasonCache.current.has(seasonToLoad)) {
+      setDataState(seasonCache.current.get(seasonToLoad)!);
       if (showGlobalLoading) setIsLoading(false);
       return;
     }
+
     if (showGlobalLoading) setIsLoading(true);
+
     try {
-      const fetchedData = await dataService.getData(activeSeason);
-      seasonCache.current.set(activeSeason, fetchedData);
-      setDataState(fetchedData);
+      const fetchedData = await dataService.getData(seasonToLoad);
+      
+      // 2. VALIDACIÓN DE RACE CONDITION
+      // Solo actualizamos si la temporada que acabamos de cargar sigue siendo la activa
+      if (seasonToLoad === activeSeasonRef.current) {
+        seasonCache.current.set(seasonToLoad, fetchedData);
+        setDataState(fetchedData);
+      } else {
+        console.warn(`Carga de datos descartada para ${seasonToLoad}: el usuario ya cambió de temporada.`);
+      }
     } catch (error) {
-      console.error("Failed to load data:", error);
+      if (seasonToLoad === activeSeasonRef.current) {
+        console.error("Failed to load data:", error);
+      }
     } finally {
-      if (showGlobalLoading) setIsLoading(false);
+      // Solo quitamos el loading si seguimos en la misma temporada
+      if (seasonToLoad === activeSeasonRef.current && showGlobalLoading) {
+        setIsLoading(false);
+      }
     }
   }, [activeSeason]);
 
