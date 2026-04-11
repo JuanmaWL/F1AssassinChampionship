@@ -15,6 +15,10 @@ interface TeamsEditorProps {
 
 export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: TeamsEditorProps) {
   const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc'>('name_asc');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const {
     editingId,
     editForm,
@@ -49,10 +53,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
 
     // Warning for large files in Base64 mode
     if (file.size > 100 * 1024 && uploadMode === 'base64') {
-        if (!confirm(`La imagen pesa ${(file.size / 1024).toFixed(0)}KB. Guardarla en Base64 puede ralentizar la carga de datos. ¿Deseas continuar?`)) {
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
-        }
+        console.warn(`La imagen pesa ${(file.size / 1024).toFixed(0)}KB. Guardarla en Base64 puede ralentizar la carga de datos.`);
     }
 
     setIsUploading(true);
@@ -86,13 +87,12 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
             });
             
             setEditForm(prev => ({ ...prev, logoUrl: base64 }));
-            alert(`Nota: La subida a Storage falló (${error.message}). Se usó Base64 automáticamente.`);
+            console.info(`Nota: La subida a Storage falló (${error.message}). Se usó Base64 automáticamente.`);
           } catch (base64Error) {
             console.error("Error converting to base64:", base64Error);
-            alert(`Error crítico: No se pudo procesar la imagen.`);
           }
       } else {
-          alert(`Error al procesar imagen: ${error.message}`);
+          console.error(`Error al procesar imagen: ${error.message}`);
       }
     } finally {
       setIsUploading(false);
@@ -131,8 +131,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta escudería permanentemente?")) return;
-    
+    setDeletingId(null);
     await withSave(async () => {
       const updatedTeams = data.constructors.filter(t => t.id !== id);
       const updatedData = { ...data, constructors: updatedTeams };
@@ -144,6 +143,46 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
   const handleAddNew = () => {
     baseStartNew({ name: '', color: '#FFFFFF', logoUrl: '' });
     setIsUploading(false);
+    setSelectedIds([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    await withSave(async () => {
+      const updatedTeams = data.constructors.filter(t => !selectedIds.includes(t.id));
+      const updatedData = { ...data, constructors: updatedTeams };
+      await dataService.saveData(updatedData, activeSeason);
+      onUpdateData(updatedData);
+      setSelectedIds([]);
+      setShowBulkDeleteConfirm(false);
+    });
+  };
+
+  const handleDeleteAll = async () => {
+    if (data.constructors.length === 0) return;
+
+    await withSave(async () => {
+      const updatedData = { ...data, constructors: [] };
+      await dataService.saveData(updatedData, activeSeason);
+      onUpdateData(updatedData);
+      setSelectedIds([]);
+      setShowDeleteAllConfirm(false);
+    });
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === data.constructors.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.constructors.map(t => t.id));
+    }
   };
 
   const sortedTeams = useMemo(() => [...data.constructors].sort((a, b) => {
@@ -164,6 +203,80 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
               <option value="name_asc">Nombre (A-Z)</option>
               <option value="name_desc">Nombre (Z-A)</option>
             </select>
+            
+            <div className="h-6 w-px bg-white/10 mx-2" />
+
+            {selectedIds.length > 0 ? (
+              <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+                <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
+                  {selectedIds.length} Seleccionados
+                </span>
+                
+                {showBulkDeleteConfirm ? (
+                  <div className="flex items-center gap-1 bg-red-600 rounded-lg p-1 animate-in zoom-in-95 duration-200">
+                    <span className="text-[9px] font-black text-white uppercase px-2">¿Seguro?</span>
+                    <button 
+                      onClick={handleBulkDelete}
+                      className="p-1 bg-white text-red-600 rounded hover:bg-red-50 transition-colors"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button 
+                      onClick={() => setShowBulkDeleteConfirm(false)}
+                      className="p-1 bg-red-800 text-white rounded hover:bg-red-700 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded border border-red-500/30 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                  >
+                    <Trash2 size={12} /> Eliminar
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => {
+                    setSelectedIds([]);
+                    setShowBulkDeleteConfirm(false);
+                  }}
+                  className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded border border-white/10 transition-all text-[10px] font-bold uppercase"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                {showDeleteAllConfirm ? (
+                  <div className="flex items-center gap-1 bg-red-700 rounded-lg p-1 animate-in zoom-in-95 duration-200 border border-red-500">
+                    <span className="text-[9px] font-black text-white uppercase px-2">¿BORRAR TODO?</span>
+                    <button 
+                      onClick={handleDeleteAll}
+                      className="p-1 bg-white text-red-700 rounded hover:bg-red-50 transition-colors"
+                    >
+                      <Check size={12} />
+                    </button>
+                    <button 
+                      onClick={() => setShowDeleteAllConfirm(false)}
+                      className="p-1 bg-red-900 text-white rounded hover:bg-red-800 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDeleteAllConfirm(true)}
+                    disabled={data.constructors.length === 0 || editingId !== null}
+                    className="p-1.5 bg-red-950/30 hover:bg-red-600 text-red-500 hover:text-white rounded border border-red-500/20 transition-all flex items-center gap-2 text-[10px] font-bold uppercase disabled:opacity-30"
+                  >
+                    <Trash2 size={12} /> Borrar Todo
+                  </button>
+                )}
+              </div>
+            )}
+
             {saveMessage && (
                 <span className="text-green-400 text-sm font-bold animate-pulse flex items-center gap-2">
                     <Check size={14} /> {saveMessage}
@@ -186,6 +299,14 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
         <table className="w-full text-left">
           <thead className="bg-slate-950 text-slate-400 text-xs uppercase">
             <tr>
+              <th className="p-4 w-10">
+                <input 
+                  type="checkbox" 
+                  checked={data.constructors.length > 0 && selectedIds.length === data.constructors.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-red-600 focus:ring-red-600"
+                />
+              </th>
               <th className="p-4">
                   <div className="flex items-center gap-2">
                       Logo
@@ -221,6 +342,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
           <tbody className="divide-y divide-white/5">
             {editingId === 'new' && (
               <tr className="bg-slate-800/50">
+                <td className="p-4"></td>
                 <td className="p-4 w-1/4">
                   <div className="flex flex-col gap-2">
                       <div className="flex gap-2">
@@ -289,9 +411,13 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
               </tr>
             )}
             {sortedTeams.map(team => (
-              <tr key={team.id} className="hover:bg-white/5 transition-colors">
+              <tr key={team.id} className={cn(
+                "hover:bg-white/5 transition-colors",
+                selectedIds.includes(team.id) && "bg-red-500/5"
+              )}>
                 {editingId === team.id ? (
                   <>
+                    <td className="p-4"></td>
                     <td className="p-4 w-1/4">
                       <div className="flex flex-col gap-2">
                           <div className="flex gap-2">
@@ -352,6 +478,14 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                 ) : (
                   <>
                     <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(team.id)}
+                        onChange={() => toggleSelect(team.id)}
+                        className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-red-600 focus:ring-red-600"
+                      />
+                    </td>
+                    <td className="p-4">
                       <img src={team.logoUrl || undefined} alt={team.name} className="w-10 h-10 rounded object-cover bg-white/10" />
                     </td>
                     <td className="p-4 font-bold text-white">{team.name}</td>
@@ -360,17 +494,39 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => handleEdit(team)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30" title="Editar">
-                          <Edit2 size={16} />
-                        </button>
-                        <button 
-                            onClick={() => handleDelete(team.id)} 
-                            disabled={editingId !== null} 
-                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30"
-                            title="Eliminar Escudería"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {deletingId === team.id ? (
+                          <div className="flex items-center gap-2 bg-red-500/10 p-1 rounded-lg border border-red-500/20">
+                            <span className="text-[10px] text-red-400 font-bold uppercase px-2">¿Borrar?</span>
+                            <button 
+                              onClick={() => handleDelete(team.id)} 
+                              className="p-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                              title="Confirmar eliminación"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button 
+                              onClick={() => setDeletingId(null)} 
+                              className="p-1.5 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
+                              title="Cancelar"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button onClick={() => handleEdit(team)} disabled={editingId !== null || deletingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30" title="Editar">
+                              <Edit2 size={16} />
+                            </button>
+                            <button 
+                                onClick={() => setDeletingId(team.id)} 
+                                disabled={editingId !== null || deletingId !== null} 
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30"
+                                title="Eliminar Escudería"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </>

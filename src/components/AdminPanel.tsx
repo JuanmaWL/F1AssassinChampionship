@@ -16,11 +16,12 @@ type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'setti
 
 export function AdminPanel() {
   const { data, setData, activeSeason, isHistorical, refreshData } = useChampionship();
-  const { isAdmin: isAuthenticated, login } = useAuth();
+  const { isAdmin: isAuthenticated, login, logout } = useAuth();
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AdminTab>('teams');
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
@@ -152,33 +153,78 @@ export function AdminPanel() {
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-            <Settings className={cn("w-8 h-8", accentColor)} />
-            Panel de Administración
-            <span className={cn(
-                "text-sm px-3 py-1 rounded-full border bg-slate-900/50 ml-2",
-                isHistorical ? "border-amber-500/30 text-amber-500" : "border-red-500/30 text-red-500"
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+              <Settings className={cn("w-8 h-8", accentColor)} />
+              Panel de Control
+            </h2>
+            <div className={cn(
+                "flex items-center gap-2 px-4 py-1.5 rounded-xl border bg-slate-900/80 shadow-lg backdrop-blur-md",
+                isHistorical ? "border-amber-500/40 shadow-amber-900/20" : "border-red-500/40 shadow-red-900/20"
             )}>
-                {isHistorical ? "EDITANDO 2024" : "EDITANDO 2026"}
-            </span>
-          </h2>
-          <button
-            onClick={async () => {
-              setIsRefreshing(true);
-              await refreshData();
-              setIsRefreshing(false);
-            }}
-            disabled={isRefreshing}
-            className={cn(
-              "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors border shadow-sm disabled:opacity-50",
-              isHistorical 
-                ? "bg-amber-900/20 text-amber-400 border-amber-500/30 hover:bg-amber-900/40" 
-                : "bg-red-900/20 text-red-400 border-red-500/30 hover:bg-red-900/40"
-            )}
-          >
-            <RefreshCw size={14} className={cn(isRefreshing && "animate-spin")} />
-            {isRefreshing ? "Recargando..." : "Recargar Datos"}
-          </button>
+                <div className={cn("w-2 h-2 rounded-full animate-pulse", isHistorical ? "bg-amber-500" : "bg-red-500")}></div>
+                <span className={cn(
+                    "text-xs font-black uppercase tracking-[0.2em]",
+                    isHistorical ? "text-amber-400" : "text-red-400"
+                )}>
+                    Gestionando Temporada {activeSeason}
+                </span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                setIsRefreshing(true);
+                await refreshData();
+                setIsRefreshing(false);
+              }}
+              disabled={isRefreshing}
+              className={cn(
+                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors border shadow-sm disabled:opacity-50",
+                isHistorical 
+                  ? "bg-amber-900/20 text-amber-400 border-amber-500/30 hover:bg-amber-900/40" 
+                  : "bg-red-900/20 text-red-400 border-red-500/30 hover:bg-red-900/40"
+              )}
+            >
+              <RefreshCw size={14} className={cn(isRefreshing && "animate-spin")} />
+              {isRefreshing ? "Recargando..." : "Recargar Datos"}
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowLogoutConfirm(!showLogoutConfirm)}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all border",
+                  showLogoutConfirm 
+                    ? "bg-red-600 border-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]" 
+                    : "border-white/10 bg-slate-900/50 text-slate-400 hover:text-white hover:bg-red-600/20 hover:border-red-500/30"
+                )}
+              >
+                <Lock size={14} />
+                {showLogoutConfirm ? "¿Confirmar Salida?" : "Cerrar Sesión"}
+              </button>
+              
+              {showLogoutConfirm && (
+                <div className="absolute top-full right-0 mt-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="bg-slate-900 border border-red-500/30 rounded-xl p-2 shadow-2xl flex gap-1">
+                    <button 
+                      onClick={() => logout()}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-[10px] font-black uppercase rounded-lg transition-colors"
+                    >
+                      Sí, Salir
+                    </button>
+                    <button 
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-black uppercase rounded-lg transition-colors"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

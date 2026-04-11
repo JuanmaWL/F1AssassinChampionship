@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ChampionshipData, Race, SeasonId } from '../../types';
 import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -12,6 +13,10 @@ interface CalendarEditorProps {
 }
 
 export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical }: CalendarEditorProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const {
     editingId,
     editForm,
@@ -59,8 +64,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta carrera permanentemente? Esta acción no se puede deshacer.")) return;
-    
+    setDeletingId(null);
     await withSave(async () => {
       const updatedRaces = data.races.filter(r => r.id !== id);
       const updatedData = { ...data, races: updatedRaces };
@@ -71,12 +75,127 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
 
   const handleAddNew = () => {
     startNew({ name: '', circuit: '', date: '', flagCode: '' });
+    setSelectedIds([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    await withSave(async () => {
+      const updatedRaces = data.races.filter(r => !selectedIds.includes(r.id));
+      const updatedData = { ...data, races: updatedRaces };
+      await dataService.saveData(updatedData, activeSeason);
+      onUpdateData(updatedData);
+      setSelectedIds([]);
+      setShowBulkDeleteConfirm(false);
+    });
+  };
+
+  const handleDeleteAll = async () => {
+    if (data.races.length === 0) return;
+
+    await withSave(async () => {
+      const updatedData = { ...data, races: [] };
+      await dataService.saveData(updatedData, activeSeason);
+      onUpdateData(updatedData);
+      setSelectedIds([]);
+      setShowDeleteAllConfirm(false);
+    });
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === data.races.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.races.map(r => r.id));
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold text-white italic uppercase">Gestión del Calendario</h3>
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-bold text-white italic uppercase">Gestión del Calendario</h3>
+          
+          <div className="h-6 w-px bg-white/10 mx-2" />
+
+          {selectedIds.length > 0 ? (
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+              <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
+                {selectedIds.length} Seleccionados
+              </span>
+              
+              {showBulkDeleteConfirm ? (
+                <div className="flex items-center gap-1 bg-red-600 rounded-lg p-1 animate-in zoom-in-95 duration-200">
+                  <span className="text-[9px] font-black text-white uppercase px-2">¿Seguro?</span>
+                  <button 
+                    onClick={handleBulkDelete}
+                    className="p-1 bg-white text-red-600 rounded hover:bg-red-50 transition-colors"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button 
+                    onClick={() => setShowBulkDeleteConfirm(false)}
+                    className="p-1 bg-red-800 text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowBulkDeleteConfirm(true)}
+                  className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded border border-red-500/30 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                >
+                  <Trash2 size={12} /> Eliminar
+                </button>
+              )}
+              
+              <button
+                onClick={() => {
+                  setSelectedIds([]);
+                  setShowBulkDeleteConfirm(false);
+                }}
+                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded border border-white/10 transition-all text-[10px] font-bold uppercase"
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {showDeleteAllConfirm ? (
+                <div className="flex items-center gap-1 bg-red-700 rounded-lg p-1 animate-in zoom-in-95 duration-200 border border-red-500">
+                  <span className="text-[9px] font-black text-white uppercase px-2">¿BORRAR TODO?</span>
+                  <button 
+                    onClick={handleDeleteAll}
+                    className="p-1 bg-white text-red-700 rounded hover:bg-red-50 transition-colors"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button 
+                    onClick={() => setShowDeleteAllConfirm(false)}
+                    className="p-1 bg-red-900 text-white rounded hover:bg-red-800 transition-colors"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowDeleteAllConfirm(true)}
+                  disabled={data.races.length === 0 || editingId !== null}
+                  className="p-1.5 bg-red-950/30 hover:bg-red-600 text-red-500 hover:text-white rounded border border-red-500/20 transition-all flex items-center gap-2 text-[10px] font-bold uppercase disabled:opacity-30"
+                >
+                  <Trash2 size={12} /> Borrar Todo
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <button
           onClick={handleAddNew}
           disabled={editingId !== null}
@@ -105,6 +224,14 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
         <table className="w-full text-left">
           <thead className="bg-slate-950 text-slate-400 text-xs uppercase">
             <tr>
+              <th className="p-4 w-10">
+                <input 
+                  type="checkbox" 
+                  checked={data.races.length > 0 && selectedIds.length === data.races.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-red-600 focus:ring-red-600"
+                />
+              </th>
               <th className="p-4">Fecha</th>
               <th className="p-4">Gran Premio</th>
               <th className="p-4">Circuito</th>
@@ -115,6 +242,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
           <tbody className="divide-y divide-white/5">
             {editingId === 'new' && (
               <tr className="bg-slate-800/50">
+                <td className="p-4"></td>
                 <td className="p-4">
                   <input
                     type="datetime-local"
@@ -182,9 +310,13 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
               </tr>
             )}
             {data.races.map(race => (
-              <tr key={race.id} className="hover:bg-white/5 transition-colors">
+              <tr key={race.id} className={cn(
+                "hover:bg-white/5 transition-colors",
+                selectedIds.includes(race.id) && "bg-red-500/5"
+              )}>
                 {editingId === race.id ? (
                   <>
+                    <td className="p-4"></td>
                     <td className="p-4">
                       <input
                         type="datetime-local"
@@ -241,6 +373,14 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                   </>
                 ) : (
                   <>
+                    <td className="p-4">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.includes(race.id)}
+                        onChange={() => toggleSelect(race.id)}
+                        className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-red-600 focus:ring-red-600"
+                      />
+                    </td>
                     <td className="p-4 text-slate-300 text-sm">
                       {race.date ? new Date(race.date).toLocaleDateString() : <span className="text-slate-500 italic">Por definir</span>}
                     </td>
@@ -256,12 +396,34 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => startEditing(race.id, race)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
-                          <Edit2 size={16} />
-                        </button>
-                        <button onClick={() => handleDelete(race.id)} disabled={editingId !== null} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30">
-                          <Trash2 size={16} />
-                        </button>
+                        {deletingId === race.id ? (
+                          <div className="flex items-center gap-2 bg-red-500/10 p-1 rounded-lg border border-red-500/20">
+                            <span className="text-[10px] text-red-400 font-bold uppercase px-2">¿Borrar?</span>
+                            <button 
+                              onClick={() => handleDelete(race.id)} 
+                              className="p-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                              title="Confirmar eliminación"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button 
+                              onClick={() => setDeletingId(null)} 
+                              className="p-1.5 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
+                              title="Cancelar"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button onClick={() => startEditing(race.id, race)} disabled={editingId !== null || deletingId !== null} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-30">
+                              <Edit2 size={16} />
+                            </button>
+                            <button onClick={() => setDeletingId(race.id)} disabled={editingId !== null || deletingId !== null} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors disabled:opacity-30">
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </>
