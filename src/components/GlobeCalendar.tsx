@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
+import { 
+  select, 
+  selectAll, 
+  geoOrthographic, 
+  geoPath, 
+  json as d3Json, 
+  transition as d3Transition,
+  easeQuadIn,
+  easeQuadOut,
+  easeQuadInOut,
+  interpolateArray,
+  interpolate,
+  scaleLinear,
+  line as d3Line,
+  curveBasis
+} from 'd3';
 import * as topojson from 'topojson-client';
 import { Race } from '../types';
 
@@ -65,12 +80,11 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
     if (!containerRef.current) return;
 
     // Clear previous SVG
-    d3.select(containerRef.current).selectAll("*").remove();
+    select(containerRef.current).selectAll("*").remove();
 
     // Reduced size for better fit on 1080p without scrolling
     const size = 500;
-    const svg = d3
-      .select(containerRef.current)
+    const svg = select(containerRef.current)
       .append("svg")
       .attr("viewBox", `0 0 ${size} ${size}`)
       .attr("width", "100%")
@@ -109,7 +123,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
     (async () => {
       try {
-        const json: any = await d3.json(
+        const worldData: any = await d3Json(
           "https://unpkg.com/world-atlas@2.0.2/countries-110m.json"
         );
 
@@ -163,11 +177,11 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             .data(controls)
             .enter()
             .append("g")
-            .attr("transform", ({ x }) => `translate(${x} 0)`);
+            .attr("transform", ({ x }: any) => `translate(${x} 0)`);
 
           groupsControls
             .append("use")
-            .attr("href", ({ href }) => `#${href}`)
+            .attr("href", ({ href }: any) => `#${href}`)
             .attr("width", controlSize)
             .attr("height", controlSize)
             .style("color", hexColor)
@@ -183,9 +197,9 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
           const sphere = { type: "Sphere" as const };
 
-          const projection = d3.geoOrthographic().fitSize([size, size], sphere);
+          const projection = geoOrthographic().fitSize([size, size], sphere);
 
-          const path = d3.geoPath().projection(projection);
+          const path = geoPath().projection(projection);
           defs
             .append("clipPath")
             .attr("id", "clip-path-overlay")
@@ -201,7 +215,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
           groupCountries
             .selectAll("path")
-            .data((topojson.feature(json, json.objects.countries as any) as any).features as TopoFeature[])
+            .data((topojson.feature(worldData, worldData.objects.countries as any) as any).features as TopoFeature[])
             .enter()
             .append("path")
             .attr("d", path as unknown as D3GeoPath)
@@ -244,13 +258,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
           tooltipDiv.append("xhtml:div")
             .attr("class", `absolute top-0 left-0 w-full h-1 ${bgBadgeColor}`);
 
-          const line = d3
-            .line()
+          const lineGenerator = d3Line()
             .x(([x]) => x)
             .y(([, y]) => y)
-            .curve(d3.curveBasis);
+            .curve(curveBasis);
 
-          const lineDistanceScale = d3.scaleLinear().domain([0, size]).range([0, 100]);
+          const lineDistanceScale = scaleLinear().domain([0, size]).range([0, 100]);
 
           const updateTooltipContent = (datum: any, indexDatum: number) => {
             const dateObj = new Date(datum.date);
@@ -300,7 +313,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             foreignObject
               .transition("tooltip-out")
               .duration(200)
-              .ease(d3.easeQuadIn)
+              .ease(easeQuadIn)
               .style("opacity", "0");
 
             groupData
@@ -314,7 +327,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
               .transition("circle-out")
               .delay(550)
               .duration(150)
-              .ease(d3.easeQuadOut)
+              .ease(easeQuadOut)
               .attr("r", "0")
               .on("end", () => {
               const { coordinates: source } = from;
@@ -352,22 +365,22 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
               groupData
                 .select("path")
-                .attr("d", line(points))
+                .attr("d", lineGenerator(points))
                 .attr("pathLength", "1")
                 .attr("stroke-dasharray", "1")
                 .attr("stroke-dashoffset", "1");
 
               // Faster rotation
-              const transition = d3.transition("globe-focus").duration(450).ease(d3.easeQuadInOut);
+              const t = d3Transition("globe-focus").duration(450).ease(easeQuadInOut);
 
-              transition
+              t
                 .tween("focus", () => {
-                  const i = d3.interpolateArray(
+                  const i = interpolateArray(
                     [startAngle, 0, 0],
                     [long > 0 ? endAngle + 30 : endAngle - 30, 0, 0]
                   );
 
-                  const o = d3.interpolate(1, -1);
+                  const o = interpolate(1, -1);
 
                   return (t) => {
                     projection.rotate(i(t) as [number, number, number]);
@@ -400,7 +413,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                     groupData
                       .select("path")
-                      .attr("d", line(points))
+                      .attr("d", lineGenerator(points))
                       .attr("pathLength", "1")
                       .attr("stroke-dasharray", "1")
                       .attr("stroke-dashoffset", o(t));
@@ -439,7 +452,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                     .attr("r", "0")
                     .transition("circle-in")
                     .duration(150)
-                    .ease(d3.easeQuadIn)
+                    .ease(easeQuadIn)
                     .attr("r", "6");
 
                   groupData
@@ -449,13 +462,13 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                     .attr("stroke-dashoffset", "1")
                     .transition("path-in")
                     .duration(200)
-                    .ease(d3.easeQuadOut)
+                    .ease(easeQuadOut)
                     .attr("stroke-dashoffset", "0");
 
                   foreignObject
                     .transition("tooltip-in")
                     .duration(200)
-                    .ease(d3.easeQuadOut)
+                    .ease(easeQuadOut)
                     .style("opacity", "1")
                     .on("end", () => {
                     const { length } = data;
@@ -463,14 +476,14 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                     groupsControls
                       .style("cursor", "not-allowed")
                       .on("click", null)
-                      .filter(({ index }) => {
+                      .filter(({ index }: any) => {
                         const i = indexDatum + index;
                         return i >= 0 && i < length;
                       })
                       .style("cursor", "pointer")
                       .on(
                         "click",
-                        (e, { index }) => {
+                        (e: any, { index }: any) => {
                           handleUpdate(data[indexDatum + index], datum);
                         },
                         {
@@ -485,12 +498,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                     svg
                       .attr("tabindex", "0")
-                      .on("keydown", function (e) {
+                      .on("keydown", function (e: any) {
                         const controlKeyboard = controlsKeyboard.find(
                           ({ key }) => key === e.key
                         );
                         if (controlKeyboard) {
-                          d3.select(this).attr("aria-label", "").on("keydown", null);
+                          select(this).attr("aria-label", "").on("keydown", null);
 
                           const { index } = controlKeyboard;
                           handleUpdate(data[indexDatum + index], datum);
@@ -509,15 +522,14 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
             const [startAngle] = projection.rotate();
             const endAngle = long * -1 + 30;
 
-            const transition = d3
-              .transition("globe-intro")
+            const t = d3Transition("globe-intro")
               .duration(500) // Faster
               .delay(100)
-              .ease(d3.easeQuadInOut);
+              .ease(easeQuadInOut);
 
-            transition
+            t
               .tween("focus", () => {
-                const i = d3.interpolateArray([startAngle, 0, 0], [endAngle, 0, 0]);
+                const i = interpolateArray([startAngle, 0, 0], [endAngle, 0, 0]);
 
                 return (t) => {
                   projection.rotate(i(t) as [number, number, number]);
@@ -554,7 +566,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   .attr("r", "0")
                   .transition("circle-in")
                   .duration(150)
-                  .ease(d3.easeQuadIn)
+                  .ease(easeQuadIn)
                   .attr("r", "6");
 
                 groupData
@@ -565,14 +577,14 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                   .transition("path-in")
                   .delay(150)
                   .duration(250)
-                  .ease(d3.easeQuadInOut)
+                  .ease(easeQuadInOut)
                   .attr("stroke-dashoffset", "0");
 
                 foreignObject
                   .transition("tooltip-in")
                   .delay(400)
                   .duration(150)
-                  .ease(d3.easeQuadOut)
+                  .ease(easeQuadOut)
                   .style("opacity", "1")
                   .on("end", () => {
                   groupControls
@@ -584,14 +596,14 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                       groupsControls
                         .style("cursor", "not-allowed")
                         .on("click", null)
-                        .filter(({ index }) => {
+                        .filter(({ index }: any) => {
                           const i = indexDatum + index;
                           return i >= 0 && i < length;
                         })
                         .style("cursor", "pointer")
                         .on(
                           "click",
-                          (e, { index }) => {
+                          (e: any, { index }: any) => {
                             handleUpdate(data[indexDatum + index], datum);
                           },
                           {
@@ -606,12 +618,12 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
                       svg
                         .attr("tabindex", "0")
-                        .on("keydown", function (e) {
+                        .on("keydown", function (e: any) {
                           const controlKeyboard = controlsKeyboard.find(
                             ({ key }) => key === e.key
                           );
                           if (controlKeyboard) {
-                            d3.select(this).attr("aria-label", "").on("keydown", null);
+                            select(this).attr("aria-label", "").on("keydown", null);
 
                             const { index } = controlKeyboard;
                             handleUpdate(data[indexDatum + index], datum);
