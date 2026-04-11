@@ -130,7 +130,6 @@ export function Draw() {
   const [showWinner, setShowWinner] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [hasPromptedSave, setHasPromptedSave] = useState(false);
-  const [isStreamMode, setIsStreamMode] = useState(false);
 
   const [pointerDeg, setPointerDeg] = useState(0);
   const pointerIsKicking = useRef(false);
@@ -140,6 +139,7 @@ export function Draw() {
   // Stores target rotation so the effect closure always has the latest value
   const targetRotationRef = useRef(0);
   const [showInfo, setShowInfo] = useState(true);
+  const [lastSelectedRace, setLastSelectedRace] = useState<string | null>(null);
   const [poolViewMode, setPoolViewMode] = useState<'list' | 'grid'>('grid');
 
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
@@ -264,6 +264,7 @@ export function Draw() {
     }
 
     const winner = unselected[Math.floor(Math.random() * unselected.length)];
+    setLastSelectedRace(winner.id);
     const winnerIndex = RACES.findIndex(r => r.id === winner.id);
 
     const sliceAngle = 360 / RACES.length;
@@ -313,10 +314,7 @@ export function Draw() {
   const isComplete = selectedRaces.length >= TARGET_RACES_COUNT;
 
   useEffect(() => {
-    if (isComplete && isAdmin && !hasPromptedSave) {
-      setShowSaveModal(true);
-      setHasPromptedSave(true);
-    }
+    // Removed automatic save prompt
   }, [isComplete, isAdmin, hasPromptedSave]);
 
   const handleSaveCalendar = async () => {
@@ -341,6 +339,10 @@ export function Draw() {
       await dataService.saveData(newData, activeSeason);
       setData(newData);
       setShowSaveModal(false);
+      
+      // Redirect to calendar tab to start configuring dates
+      // We need to trigger this in the parent App component
+      window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'calendar' }));
     } catch (err) {
       console.error("Failed to save drawn races", err);
     }
@@ -348,7 +350,9 @@ export function Draw() {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      if (isFs) setShowInfo(false);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -359,15 +363,19 @@ export function Draw() {
     <div 
       ref={containerRef} 
       className={cn(
-        "relative min-h-screen overflow-y-auto overflow-x-hidden bg-slate-950",
-        isFullscreen ? "rounded-none m-0" : "rounded-3xl -mx-4 md:mx-0"
+        "relative min-h-screen overflow-hidden bg-slate-950 flex flex-col",
+        isFullscreen ? "fixed inset-0 z-[200] rounded-none m-0 w-screen h-screen" : "rounded-3xl -mx-4 md:mx-0 min-h-[calc(100vh-12rem)]"
       )}
     >
       <canvas 
         ref={confettiCanvasRef}
         className="fixed inset-0 pointer-events-none z-[150] w-full h-full"
       />
-      <ParticlesCanvas />
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <ParticlesCanvas />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-transparent to-slate-950/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/20 via-transparent to-slate-950/20" />
+      </div>
       
       {/* Top Bar Controls */}
       <div className="fixed bottom-4 right-4 z-50 flex gap-2">
@@ -384,31 +392,24 @@ export function Draw() {
         >
           {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
         </button>
-        <button
-          onClick={() => setIsStreamMode(!isStreamMode)}
-          className="bg-slate-900/80 backdrop-blur-md border border-white/10 text-white p-3 rounded-full hover:bg-slate-800 transition-colors flex items-center justify-center shadow-xl"
-          title={isStreamMode ? "Vista Normal" : "Modo Stream"}
-        >
-          {isStreamMode ? <LayoutDashboard size={20} /> : <MonitorPlay size={20} />}
-        </button>
       </div>
 
       <div className={cn(
-        "relative z-10 flex flex-col gap-4 p-2 md:p-6 w-full mx-auto min-h-full transition-all duration-500",
-        isStreamMode ? "items-center max-w-[1600px] pt-16" : "lg:grid lg:grid-cols-[280px_1fr_320px] max-w-[2400px]"
+        "relative z-10 flex flex-col gap-4 p-2 md:p-6 w-full mx-auto h-full transition-all duration-500",
+        isFullscreen 
+          ? "lg:grid lg:grid-cols-[350px_1fr_350px] 2xl:grid-cols-[450px_1fr_450px] lg:gap-8" 
+          : "lg:grid lg:grid-cols-[auto_1fr_auto] gap-4",
+        isFullscreen && "max-h-screen overflow-hidden pt-4 pb-12"
       )}>
         
         {/* Left Side: Instructions & Full List */}
         <div className={cn(
-          "gap-4 transition-all duration-500",
-          isStreamMode ? "order-2 w-full max-w-4xl flex flex-col md:flex-row mt-8 items-start" : "flex flex-col order-2 lg:order-1 h-full max-h-[calc(100vh-8rem)]"
+          "gap-4 transition-all duration-500 flex flex-col order-2 lg:order-1 h-full max-h-[calc(100vh-8rem)]",
+          isFullscreen ? "w-full" : "lg:w-[280px]"
         )}>
           {/* Compact Instructions */}
           {showInfo ? (
-            <div className={cn(
-              "bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl shrink-0 flex flex-col gap-3 h-fit relative transition-all duration-500",
-              isStreamMode ? "w-full md:w-1/2" : "w-full"
-            )}>
+            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl shrink-0 flex flex-col gap-3 h-fit relative transition-all duration-500 w-full">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(220,38,38,0.4)]">
@@ -443,23 +444,27 @@ export function Draw() {
           ) : (
             <button 
               onClick={() => setShowInfo(true)} 
-              className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full w-12 h-12 flex items-center justify-center shadow-2xl shrink-0 text-red-500 hover:bg-slate-800 transition-colors"
+              className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full w-12 h-12 flex items-center justify-center shadow-2xl shrink-0 text-red-500 hover:bg-slate-800 transition-colors relative"
               title="Ver Información"
             >
               <Info size={24} />
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 rounded-full border-2 border-red-500"
+              />
             </button>
           )}
 
           <div className={cn(
-            "bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col min-h-0 transition-all duration-500",
-            isStreamMode ? "h-[300px] flex-1 w-full" : "flex-1 overflow-hidden w-full",
+            "bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col min-h-0 transition-all duration-500 flex-1 overflow-hidden w-full",
             isFullscreen && "2xl:p-8"
           )}>
             <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className={cn(
                 "font-black italic uppercase tracking-wider text-white transition-all",
                 isFullscreen ? "text-xl 2xl:text-2xl" : "text-lg"
-              )}>Circuitos</h3>
+              )}>Circuitos (24)</h3>
               <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
                 <button 
                   onClick={() => setPoolViewMode('list')}
@@ -484,7 +489,7 @@ export function Draw() {
             <div className="relative flex-1 min-h-0 group/scroll">
               <div className={cn(
                 "grid gap-2 overflow-y-auto pr-2 h-full custom-scrollbar scroll-smooth",
-                poolViewMode === 'grid' || isStreamMode ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2" : "grid-cols-1"
+                poolViewMode === 'grid' ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2" : "grid-cols-1"
               )}>
                 {RACES.map(race => {
                   const isSelected = selectedRaces.some(r => r.id === race.id);
@@ -504,7 +509,7 @@ export function Draw() {
                         alt={race.short}
                         className={cn(
                           "h-auto rounded-xs grayscale-[0.5] transition-all",
-                          isFullscreen ? "w-7 2xl:w-9" : "w-4"
+                          isFullscreen ? "w-7 2xl:w-10" : "w-4"
                         )}
                       />
                       <span className="truncate">{race.short}</span>
@@ -513,8 +518,8 @@ export function Draw() {
                   );
                 })}
               </div>
-              {/* Scroll Indicator Gradient & Hint */}
-              <div className="absolute bottom-0 left-0 right-2 h-12 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none rounded-b-xl flex items-end justify-center pb-1 opacity-0 group-hover/scroll:opacity-100 transition-opacity">
+              {/* Scroll Indicator Gradient & Hint - Only show if content overflows */}
+              <div className="absolute bottom-0 left-0 right-2 h-12 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent pointer-events-none rounded-b-xl flex items-end justify-center pb-1 opacity-0 group-hover/scroll:opacity-100 transition-opacity overflow-hidden">
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Scroll</span>
                   <ChevronUp className="text-slate-500 rotate-180" size={10} />
@@ -525,22 +530,23 @@ export function Draw() {
         </div>
 
         {/* Center: The Big Wheel */}
-        <div className={cn(
-          "flex flex-col items-center justify-center relative px-4 transition-all duration-500",
-          isStreamMode ? "order-1 w-full max-w-5xl" : "order-1 lg:order-2"
-        )}>
+        <div className="flex flex-col items-center justify-center relative px-4 transition-all duration-500 order-1 lg:order-2">
           <div className="text-center mb-4 relative">
             <h2 className={cn(
               "font-black italic uppercase tracking-tighter text-white leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] transition-all duration-500",
-              isStreamMode ? "text-5xl md:text-7xl lg:text-8xl" : "text-4xl md:text-6xl lg:text-7xl"
+              isFullscreen ? "text-4xl md:text-6xl lg:text-7xl 2xl:text-8xl" : "text-4xl md:text-6xl lg:text-7xl"
             )}>
-              <span className="block text-[11px] font-black tracking-[0.5em] text-red-500/80 uppercase mb-1">F1 WORLD TOUR 2026</span>
+              <span className={cn(
+                "block font-black tracking-[0.5em] text-red-500/80 uppercase mb-1 transition-all",
+                isFullscreen ? "text-xs 2xl:text-base" : "text-[11px]"
+              )}>F1 WORLD TOUR 2026</span>
               <span className="block font-black italic uppercase tracking-tighter text-white leading-none">LA RULETA</span>
             </h2>
           </div>
 
           <div className={cn(
-            "relative w-full aspect-square flex items-center justify-center transition-all duration-500 max-w-[min(850px,75vh)]"
+            "relative w-full aspect-square flex items-center justify-center transition-all duration-500",
+            isFullscreen ? "max-w-[min(780px,68vh)]" : "max-w-[min(850px,75vh)]"
           )}>
             {/* Glowing backdrop */}
             <div className={cn(
@@ -556,16 +562,10 @@ export function Draw() {
                 rotate: { type: 'spring', stiffness: 800, damping: 18, mass: 0.4 },
                 filter: { duration: 0.3, repeat: Infinity }
               }}
-              className={cn(
-                "absolute top-0 left-1/2 -translate-x-1/2 z-20 transition-all duration-500",
-                isStreamMode ? "-translate-y-6" : "-translate-y-2"
-              )}
+              className="absolute top-0 left-1/2 -translate-x-1/2 z-20 transition-all duration-500 -translate-y-2"
             >
               <div className="absolute inset-0 bg-white opacity-30 transform scale-110" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}></div>
-              <div className={cn(
-                "bg-gradient-to-b from-red-400 to-red-600 relative transition-all duration-500",
-                isStreamMode ? "w-10 h-12" : "w-8 h-10"
-              )} style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}>
+              <div className="bg-gradient-to-b from-red-400 to-red-600 relative transition-all duration-500 w-8 h-10" style={{ clipPath: 'polygon(50% 100%, 0 0, 100% 0)' }}>
                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white/40 rounded-full blur-[1px]"></div>
               </div>
             </motion.div>
@@ -649,7 +649,7 @@ export function Draw() {
                           alt={race.short}
                           className={cn(
                             "h-auto rounded-sm shadow-md transition-all duration-500",
-                            isStreamMode ? "w-12" : "w-8",
+                            isFullscreen ? "w-12 2xl:w-16" : "w-8",
                             isSelected && "grayscale opacity-30"
                           )}
                           referrerPolicy="no-referrer"
@@ -657,7 +657,7 @@ export function Draw() {
                         <span 
                           className={cn(
                             "font-black italic uppercase tracking-tighter transition-all duration-500",
-                            isStreamMode ? "text-[16px] md:text-[20px]" : "text-[12px] md:text-[15px]"
+                            isFullscreen ? "text-[14px] md:text-[18px] 2xl:text-[22px]" : "text-[11px] md:text-[14px]"
                           )}
                           style={{ 
                             color: textColor,
@@ -704,7 +704,7 @@ export function Draw() {
               style={{ x: "-50%", y: "-50%" }}
               className={cn(
                 "absolute top-1/2 left-1/2 bg-gradient-to-br from-slate-800 to-slate-950 rounded-full border-[8px] border-slate-950 z-10 flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.9)] transition-all duration-500 group overflow-hidden cursor-pointer disabled:cursor-not-allowed",
-                isStreamMode ? "w-32 h-32 md:w-48 md:h-48" : "w-24 h-24 md:w-32 md:h-32 2xl:w-44 2xl:h-44"
+                "w-24 h-24 md:w-32 md:h-32 2xl:w-44 2xl:h-44"
               )}
             >
               {/* Inner metallic ring */}
@@ -712,12 +712,12 @@ export function Draw() {
                 <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent,rgba(255,255,255,0.1),transparent)] group-hover:animate-[spin_2s_linear_infinite] transition-all"></div>
                 <div className={cn(
                   "rounded-full transition-all duration-300 z-10 flex flex-col items-center justify-center",
-                  isStreamMode ? "w-20 h-20 md:w-28 md:h-28" : "w-16 h-16 md:w-20 md:h-20 2xl:w-32 2xl:h-32",
+                  "w-16 h-16 md:w-20 md:h-20 2xl:w-32 2xl:h-32",
                   isSpinning ? "bg-red-500 shadow-[0_0_25px_rgba(239,68,68,0.8)]" : "bg-red-600 group-hover:bg-red-500 shadow-inner group-hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
                 )}>
                   <span className={cn(
                     "text-white flex items-center justify-center transition-all",
-                    (isStreamMode || isFullscreen) ? "scale-150 2xl:scale-[2.2]" : "scale-125",
+                    isFullscreen ? "scale-150 2xl:scale-[2.2]" : "scale-125",
                     isSpinning ? "animate-pulse" : ""
                   )}>
                     {isSpinning ? <span className="font-black italic uppercase tracking-widest">...</span> : <Play fill="currentColor" className="ml-1" />}
@@ -737,12 +737,15 @@ export function Draw() {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl"
               >
-                <motion.div 
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "100%", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  className="bg-gradient-to-r from-red-600 via-red-700 to-red-900 h-40 md:h-56 border-y-4 border-white/20 shadow-[0_0_100px_rgba(220,38,38,0.8)] flex items-center justify-center gap-6 md:gap-16 px-6 md:px-20 relative overflow-hidden transform -skew-x-6"
-                >
+                  <motion.div 
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "100%", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    className={cn(
+                      "bg-gradient-to-r from-red-600 via-red-700 to-red-900 border-y-4 border-white/20 shadow-[0_0_100px_rgba(220,38,38,0.8)] flex items-center justify-center gap-6 md:gap-16 px-6 md:px-20 relative overflow-hidden",
+                      isFullscreen ? "h-56 md:h-72 2xl:h-[380px]" : "h-40 md:h-56"
+                    )}
+                  >
                   <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_infinite]"></div>
                   
                   <motion.div
@@ -754,7 +757,10 @@ export function Draw() {
                     <img 
                       src={`https://flagcdn.com/w320/${winningRace.flagCode}.png`}
                       alt={winningRace.short}
-                      className="h-16 md:h-32 w-auto rounded-lg shadow-2xl border-2 border-white/30"
+                      className={cn(
+                        "w-auto rounded-lg shadow-2xl border-2 border-white/30",
+                        isFullscreen ? "h-32 md:h-48 2xl:h-64" : "h-16 md:h-32"
+                      )}
                     />
                     
                     {/* Passport Stamp */}
@@ -762,18 +768,32 @@ export function Draw() {
                       initial={{ scale: 5, opacity: 0, rotate: -45 }}
                       animate={{ scale: 1, opacity: 1, rotate: -12 }}
                       transition={{ type: "spring", damping: 10, stiffness: 180, delay: 0.9 }}
-                      className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 z-20 pointer-events-none animate-stamp-land"
+                      className={cn(
+                        "absolute z-20 pointer-events-none animate-stamp-land",
+                        isFullscreen 
+                          ? "-bottom-6 -right-6 md:-bottom-8 md:-right-8" 
+                          : "-bottom-4 -right-4 md:-bottom-6 md:-right-6"
+                      )}
                     >
-                      <div className="relative flex items-center justify-center w-28 h-28 md:w-36 md:h-36 2xl:w-48 2xl:h-48 rounded-full border-[4px] md:border-[8px] border-[#C9A84C] shadow-[0_15px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(201,168,76,0.3)] bg-black/60 backdrop-blur-[6px]">
-                        <div className="absolute inset-2 md:inset-3 rounded-full border-2 border-[#C9A84C]/30 border-dashed"></div>
-                        <div className="absolute inset-0 opacity-40 rounded-full bg-[url('https://www.transparenttextures.com/patterns/noise.png')]" />
-                        <div className="flex flex-col items-center justify-center transform -rotate-12 relative z-10">
-                          <div className="px-3 py-0.5 bg-[#C9A84C] text-black font-black uppercase tracking-[0.3em] text-[8px] md:text-[10px] 2xl:text-xs mb-2 rounded-sm shadow-lg">OFFICIAL</div>
-                          <span className="font-black uppercase tracking-widest text-[#F0E68C] text-2xl md:text-4xl 2xl:text-5xl leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">APPROVED</span>
-                          <div className="mt-3 flex items-center gap-3">
-                            <div className="h-[2px] w-6 bg-[#C9A84C]/40"></div>
-                            <span className="font-mono text-[#C9A84C] text-xs md:text-lg 2xl:text-xl font-black tracking-[0.4em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">2026</span>
-                            <div className="h-[2px] w-6 bg-[#C9A84C]/40"></div>
+                        <div className={cn(
+                          "relative flex items-center justify-center rounded-full border-[4px] md:border-[8px] border-[#C9A84C] shadow-[0_15px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(201,168,76,0.3)] bg-black/60 backdrop-blur-[6px]",
+                          isFullscreen ? "w-24 h-24 md:w-36 md:h-36 2xl:w-48 2xl:h-48" : "w-28 h-28 md:w-36 md:h-36 2xl:w-48 2xl:h-48"
+                        )}>
+                          <div className="absolute inset-2 md:inset-3 rounded-full border-2 border-[#C9A84C]/30 border-dashed"></div>
+                          <div className="absolute inset-0 opacity-40 rounded-full bg-[url('https://www.transparenttextures.com/patterns/noise.png')]" />
+                          <div className="flex flex-col items-center justify-center transform -rotate-12 relative z-10">
+                            <div className="px-3 py-0.5 bg-[#C9A84C] text-black font-black uppercase tracking-[0.3em] text-[6px] md:text-[8px] 2xl:text-[10px] mb-1 rounded-sm shadow-lg">F1 WORLD TOUR</div>
+                            <span className={cn(
+                              "font-black uppercase tracking-widest text-[#F0E68C] leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]",
+                              isFullscreen ? "text-2xl md:text-5xl 2xl:text-6xl" : "text-2xl md:text-4xl 2xl:text-5xl"
+                            )}>APPROVED</span>
+                            <div className="mt-1 flex items-center gap-2">
+                              <div className="h-[2px] w-3 md:w-4 bg-[#C9A84C]/40"></div>
+                              <span className={cn(
+                                "font-mono text-[#C9A84C] font-black tracking-[0.4em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]",
+                                isFullscreen ? "text-[14px] md:text-xl 2xl:text-2xl" : "text-xs md:text-lg 2xl:text-xl"
+                              )}>2026</span>
+                            <div className="h-[2px] w-3 md:w-4 bg-[#C9A84C]/40"></div>
                           </div>
                         </div>
                       </div>
@@ -789,7 +809,7 @@ export function Draw() {
                     <span className="text-red-200 font-mono text-sm md:text-base font-bold uppercase tracking-[0.5em] mb-2">¡NUEVO GP CONFIRMADO!</span>
                     <h3 className={cn(
                       "text-white font-black italic uppercase tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transition-all",
-                      isFullscreen ? "text-5xl md:text-8xl 2xl:text-9xl" : "text-4xl md:text-8xl"
+                      isFullscreen ? "text-6xl md:text-9xl 2xl:text-[10rem]" : "text-4xl md:text-8xl"
                     )}>
                       {winningRace.name}
                     </h3>
@@ -808,31 +828,27 @@ export function Draw() {
           </AnimatePresence>
 
           <div className={cn(
-            "flex flex-col items-center gap-4 w-full transition-all duration-500",
-            isStreamMode ? "mt-16" : "mt-8"
+            "flex flex-col items-center gap-2 w-full transition-all duration-500",
+            isFullscreen ? "mt-6" : "mt-8"
           )}>
-            <div className="flex gap-3">
-              {selectedRaces.length > 0 && (
-                <button
-                  onClick={resetDraw}
-                  disabled={isSpinning}
-                  className={cn(
-                    "rounded-xl font-bold uppercase tracking-widest transition-all transform -skew-x-12 bg-slate-800/80 backdrop-blur-sm text-slate-300 hover:bg-slate-700 hover:text-white flex items-center gap-2 disabled:opacity-50 border border-white/5 hover:border-white/20",
-                    isStreamMode ? "px-10 py-6 text-base" : "px-8 py-4 text-sm"
-                  )}
-                >
-                  <span className="transform skew-x-12 flex items-center gap-2">
-                    <RotateCcw size={18} />
-                    Reiniciar
-                  </span>
-                </button>
-              )}
-            </div>
-            
             <div className={cn(
-              "flex items-center gap-6 px-6 py-3 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5 transition-all",
-              isFullscreen && "2xl:px-10 2xl:py-5 2xl:gap-10"
+              "flex items-center gap-6 px-6 py-2 bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/5 transition-all relative",
+              isFullscreen && "scale-75 2xl:scale-90 origin-center"
             )}>
+              {/* Repositioned Reset Button - Absolute to not shift layout */}
+              {selectedRaces.length > 0 && (
+                <div className="absolute -left-20 md:-left-32 top-1/2 -translate-y-1/2">
+                  <button
+                    onClick={resetDraw}
+                    disabled={isSpinning}
+                    className="p-3 rounded-xl bg-slate-800/80 backdrop-blur-sm text-slate-400 hover:bg-red-600 hover:text-white transition-all border border-white/5 shadow-xl disabled:opacity-50"
+                    title="Reiniciar Sorteo"
+                  >
+                    <RotateCcw size={20} />
+                  </button>
+                </div>
+              )}
+              
               <div className="flex flex-col items-center">
                 <span className={cn("text-slate-500 uppercase font-black tracking-widest mb-0.5", isFullscreen ? "text-[10px] 2xl:text-xs" : "text-[9px]")}>Seleccionadas</span>
                 <span className={cn("font-black italic text-white transition-all", isFullscreen ? "text-2xl 2xl:text-4xl" : "text-xl")}>{selectedRaces.length} / {TARGET_RACES_COUNT}</span>
@@ -848,76 +864,99 @@ export function Draw() {
 
         {/* Right Side: Selected Races Grid (Smaller) */}
         <div className={cn(
-          "flex flex-col gap-4 transition-all duration-500",
-          isStreamMode ? "order-3 w-full max-w-4xl mt-8" : "order-4 lg:order-3 h-full max-h-[calc(100vh-8rem)]"
+          "flex flex-col gap-4 transition-all duration-500 order-4 lg:order-3 h-full max-h-[calc(100vh-8rem)]",
+          isFullscreen ? "w-full" : "lg:w-[320px]"
         )}>
           <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col h-full min-h-0">
-            <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-3 shrink-0">
-              <CalendarIcon className="text-red-500" size={18} />
-              <h3 className="text-lg font-black italic uppercase tracking-wider text-white">Calendario 2026</h3>
+            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <CalendarIcon className="text-red-500" size={18} />
+                <h3 className={cn(
+                  "font-black italic uppercase tracking-wider text-white transition-all",
+                  isFullscreen ? "text-2xl 2xl:text-3xl" : "text-lg"
+                )}>Calendario 2026</h3>
+              </div>
             </div>
 
             <div className={cn(
-              "grid gap-1.5 overflow-y-auto pr-2 custom-scrollbar flex-1",
-              isStreamMode ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1"
+              "grid gap-2 overflow-y-auto pr-2 custom-scrollbar flex-1",
+              "grid-cols-1"
             )}>
               {Array.from({ length: TARGET_RACES_COUNT }).map((_, i) => {
                 const race = selectedRaces[i];
                 return (
                   <motion.div 
                     key={i}
-                    initial={race ? { opacity: 0, x: 10 } : false}
-                    animate={race ? { opacity: 1, x: 0 } : false}
+                    initial={race ? { opacity: 0, scale: 0.9 } : false}
+                    animate={race ? { 
+                      opacity: 1, 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, -1, 1, 0],
+                    } : false}
+                    transition={{ 
+                      scale: { type: "tween", duration: 0.4, ease: "easeInOut" },
+                      rotate: { type: "tween", duration: 0.3, ease: "easeInOut" },
+                    }}
                     className={cn(
-                      "flex items-center gap-2.5 p-2.5 rounded-xl border transition-all h-[56px] relative overflow-hidden group shrink-0",
+                      "relative border rounded-xl p-2 flex items-center gap-3 transition-all duration-300 overflow-hidden",
                       race 
-                        ? "bg-gradient-to-r from-slate-800 to-slate-800/40 border-slate-600 shadow-md" 
-                        : "bg-slate-950/30 border-white/5 border-dashed"
+                        ? "bg-slate-900/80 border-red-600/50 shadow-lg" 
+                        : "bg-slate-950/30 border-white/5"
                     )}
                   >
-                    <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0",
-                      race ? "bg-red-600 text-white shadow-lg" : "bg-slate-900 text-slate-700"
-                    )}>
-                      <span className="leading-none translate-y-[1px]">{i + 1}</span>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 flex items-center gap-2.5">
-                      {race ? (
-                        <>
-                          <img 
-                            src={`https://flagcdn.com/w20/${race.flagCode}.png`}
-                            alt={race.short}
-                            className="w-5 h-auto rounded-xs shadow-sm"
-                          />
-                          <span className="font-bold text-slate-100 uppercase tracking-tight truncate text-[13px]">
+                    {race ? (
+                      <>
+                        <div className={cn(
+                          "font-black italic text-white flex items-center justify-center shrink-0",
+                          isFullscreen ? "text-xl w-8" : "text-lg w-6"
+                        )}>
+                          #{i + 1}
+                        </div>
+                        <img 
+                          src={`https://flagcdn.com/w40/${race.flagCode}.png`}
+                          alt={race.short}
+                          className={cn("rounded shadow-sm", isFullscreen ? "w-8 h-6" : "w-7 h-5")}
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className={cn("font-black italic uppercase tracking-tight text-white truncate", isFullscreen ? "text-sm" : "text-xs")}>
                             {race.short}
                           </span>
-                        </>
-                      ) : (
-                        <span className="font-bold text-[11px] text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-pulse shrink-0" />
-                          <span>Pendiente</span>
-                        </span>
-                      )}
-                    </div>
-                    {race && <Check className="text-emerald-500 shrink-0" size={12} />}
+                          <span className="text-[8px] text-red-500 font-bold uppercase tracking-widest">Confirmado</span>
+                        </div>
+                        <Check className="ml-auto text-emerald-500 shrink-0" size={12} />
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-3 w-full opacity-40">
+                        <div className={cn(
+                          "font-black text-slate-700 flex items-center justify-center shrink-0",
+                          isFullscreen ? "text-xl w-8" : "text-lg w-6"
+                        )}>
+                          #{i + 1}
+                        </div>
+                        <div className="w-7 h-5 bg-slate-800 rounded" />
+                        <span className="text-slate-700 font-black uppercase tracking-wider text-[10px]">Pendiente</span>
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
             </div>
 
             {isComplete && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center shrink-0"
-              >
-                <p className="text-emerald-400 font-black italic uppercase tracking-widest text-[9px] flex items-center justify-center gap-2">
-                  <Trophy size={12} />
-                  ¡Calendario Listo!
-                </p>
-              </motion.div>
+              <div className="mt-6 pt-6 border-t border-white/10 flex flex-col gap-3">
+                <button 
+                  onClick={() => setShowSaveModal(true)}
+                  className="w-full py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black italic uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)]"
+                >
+                  GUARDAR CALENDARIO 2026
+                </button>
+                <button 
+                  onClick={resetDraw}
+                  className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold uppercase tracking-widest transition-all"
+                >
+                  Reiniciar Sorteo
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -943,7 +982,9 @@ export function Draw() {
               </div>
               <h3 className="text-2xl font-black italic text-white mb-3 uppercase tracking-tighter">¡Sorteo Completado!</h3>
               <p className="text-slate-400 mb-8 text-sm leading-relaxed">
-                Como administrador, ¿quieres guardar este nuevo calendario en la base de datos? Las fechas quedarán pendientes de configurar manualmente.
+                Como administrador, puedes <strong>persistir</strong> este nuevo calendario en la base de datos. 
+                <br /><br />
+                <span className="text-red-400 font-bold">Nota:</span> Una vez guardado, deberás ir a la sección de <strong>Administración de Circuitos</strong> para asignar las fechas correctas en el orden establecido.
               </p>
               <div className="flex flex-col gap-3">
                 <button 

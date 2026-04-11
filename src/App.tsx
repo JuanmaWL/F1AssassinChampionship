@@ -65,6 +65,16 @@ function AppContent() {
     }
   }, [activeTab, data.isDrawActive, isLoading]);
 
+  // Listen for custom tab switch events (e.g. from Draw component after saving)
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) setActiveTab(detail as Tab);
+    };
+    window.addEventListener('switch-tab', handleSwitchTab);
+    return () => window.removeEventListener('switch-tab', handleSwitchTab);
+  }, []);
+
   return (
     <div className={cn(
         "min-h-screen font-sans selection:bg-red-500/30 flex flex-col transition-colors duration-500 bg-slate-950",
@@ -195,12 +205,20 @@ function AppContent() {
             {/* Season Toggle - Minimalist - Moved to Right */}
             <div className="hidden md:flex items-center">
               <div className="relative bg-slate-900/60 rounded-full p-1 border border-white/5 flex items-center h-10 w-36 overflow-hidden">
-                <motion.div 
-                  className={cn("absolute top-1 bottom-1 rounded-full shadow-lg z-0", activeSeason === '2024' ? "bg-amber-600" : "bg-red-600")}
-                  initial={false}
-                  animate={{ left: activeSeason === '2024' ? '4px' : '50%', width: 'calc(50% - 4px)' }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
+                <AnimatePresence mode="wait">
+                  <motion.div 
+                    key={activeSeason}
+                    className={cn("absolute top-1 bottom-1 rounded-full shadow-lg z-0", activeSeason === '2024' ? "bg-amber-600" : "bg-red-600")}
+                    initial={false}
+                    animate={{ 
+                      left: activeSeason === '2024' ? '4px' : '50%', 
+                      width: 'calc(50% - 4px)',
+                      opacity: 1
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                </AnimatePresence>
                 {SEASONS.map(season => (
                   <button
                     key={season}
@@ -217,18 +235,29 @@ function AppContent() {
             </div>
 
             <div className="flex items-center gap-1 md:gap-2 bg-slate-900/40 p-1 rounded-xl border border-white/5">
-              {data.isDrawActive && (
-                <button
-                    onClick={() => setActiveTab('draw')}
-                    className={cn(
-                        "p-2.5 rounded-lg transition-all group relative",
-                        activeTab === 'draw' ? "bg-white/10 text-white shadow-lg" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-                    )}
-                    title="Sorteo de Pilotos"
-                >
-                    <Dices size={18} className={cn(activeTab === 'draw' ? (isHistorical ? "text-amber-500" : "text-red-500") : "")} />
-                </button>
-              )}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {data.isDrawActive && (
+                  <motion.div
+                    key="draw-button-container"
+                    initial={{ opacity: 0, scale: 0.8, width: 0 }}
+                    animate={{ opacity: 1, scale: 1, width: 'auto' }}
+                    exit={{ opacity: 0, scale: 0.8, width: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25, opacity: { duration: 0.2 } }}
+                    className="overflow-hidden"
+                  >
+                    <button
+                        onClick={() => setActiveTab('draw')}
+                        className={cn(
+                            "p-2.5 rounded-lg transition-all group relative",
+                            activeTab === 'draw' ? "bg-white/10 text-white shadow-lg" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                        )}
+                        title="Sorteo de Pilotos"
+                    >
+                        <Dices size={18} className={cn(activeTab === 'draw' ? (isHistorical ? "text-amber-500" : "text-red-500") : "")} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               <button
                 onClick={() => setActiveTab('admin')}
@@ -352,7 +381,7 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
-      <Footer />
+      {activeTab !== 'draw' && <Footer />}
     </div>
   );
 }
