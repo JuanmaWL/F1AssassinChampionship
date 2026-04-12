@@ -4,14 +4,30 @@ import { dataService } from '../services/dataService';
 export function useVisitTracker() {
   useEffect(() => {
     const trackVisit = async () => {
-      // Check if already tracked in this session
-      if (sessionStorage.getItem('visit_tracked')) {
+      // 1. Check if it's a bot
+      if (navigator.webdriver === true) {
         return;
       }
 
+      // 2. Safe sessionStorage check
       try {
-        // Get IP
-        const response = await fetch('https://api.ipify.org?format=json');
+        if (sessionStorage.getItem('visit_tracked')) {
+          return;
+        }
+      } catch (e) {
+        // Ignore storage errors (e.g., blocked cookies/storage)
+      }
+
+      try {
+        // 3. Fetch IP with 5-second timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch('https://api.ipify.org?format=json', {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
         const data = await response.json();
         const ip = data.ip;
 
@@ -35,7 +51,12 @@ export function useVisitTracker() {
           timestamp: Date.now()
         });
 
-        sessionStorage.setItem('visit_tracked', 'true');
+        // Safe sessionStorage set
+        try {
+          sessionStorage.setItem('visit_tracked', 'true');
+        } catch (e) {
+          // Ignore storage errors
+        }
       } catch (error) {
         console.error('Error tracking visit:', error);
       }

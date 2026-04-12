@@ -112,8 +112,60 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
       const rawResults = JSON.parse(cleanJson);
 
+      // Simple Levenshtein distance function
+      const levenshtein = (a: string, b: string) => {
+        const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+        for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+        for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+          for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+              matrix[i - 1][j] + 1,
+              matrix[i][j - 1] + 1,
+              matrix[i - 1][j - 1] + cost
+            );
+          }
+        }
+        return matrix[a.length][b.length];
+      };
+
       const mappedResults: RaceResult[] = rawResults.map((r: any) => {
-        const driver = data.drivers.find(d => d.name.toLowerCase().includes(r.driverName.toLowerCase().split(' ').pop()));
+        let bestMatch = null;
+        let highestScore = 0;
+
+        const targetName = (r.driverName || '').toLowerCase();
+
+        data.drivers.forEach(d => {
+          const driverName = d.name.toLowerCase();
+          const driverLastName = driverName.split(' ').pop() || '';
+          
+          // Exact match check
+          if (driverName === targetName || driverLastName === targetName) {
+            bestMatch = d;
+            highestScore = 1;
+            return;
+          }
+
+          // Levenshtein check for full name
+          const distFull = levenshtein(driverName, targetName);
+          const scoreFull = 1 - (distFull / Math.max(driverName.length, targetName.length));
+
+          // Levenshtein check for last name
+          const distLast = levenshtein(driverLastName, targetName);
+          const scoreLast = 1 - (distLast / Math.max(driverLastName.length, targetName.length));
+
+          const maxScore = Math.max(scoreFull, scoreLast);
+
+          if (maxScore > highestScore) {
+            highestScore = maxScore;
+            bestMatch = d;
+          }
+        });
+
+        // Minimum 60% confidence score
+        const driver = highestScore >= 0.60 ? bestMatch : null;
+
         return {
           driverId: driver ? driver.id : 'unknown',
           position: r.position,
