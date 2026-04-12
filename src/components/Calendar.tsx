@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { GlobeCalendar } from './GlobeCalendar';
+import { CircuitTrack } from './CircuitTrack';
 import { useChampionship } from '../context/ChampionshipContext';
+import { findCircuitInfo, CircuitData } from '../data/circuits';
 
 const SortIcon = ({ columnKey, sortConfig }: { columnKey: string; sortConfig: { key: string; direction: 'asc' | 'desc' } | null }) => {
   if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="opacity-30" />;
@@ -284,11 +286,18 @@ export function Calendar() {
                             isHistorical && "sepia"
                         )}
                         style={{
-                            backgroundImage: `url(https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400)`,
+                            backgroundImage: `url(${findCircuitInfo(race.circuit)?.photoUrl || `https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400`})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center'
                         }}
                     />
+
+                    {/* SVG Track Overlay - Grid View */}
+                    {viewMode === 'grid' && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-32 h-32 opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none flex items-center justify-center">
+                            <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+                        </div>
+                    )}
 
                     {/* Grid View Number - Inside */}
                     {viewMode === 'grid' && (
@@ -323,6 +332,13 @@ export function Calendar() {
                     "flex justify-between gap-4 pl-4 h-full relative z-10",
                     viewMode === 'list' ? "flex-col md:flex-row md:items-center" : "flex-col"
                 )}>
+                  {/* SVG Track Overlay - List View */}
+                  {viewMode === 'list' && (
+                      <div className="w-16 h-16 md:w-20 md:h-20 opacity-60 group-hover:opacity-90 transition-opacity duration-300 flex-shrink-0 mr-2">
+                          <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+                      </div>
+                  )}
+                  
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <span className={cn("text-sm font-mono uppercase tracking-widest", isHistorical ? "text-amber-400" : "text-red-400")}>
@@ -461,14 +477,14 @@ export function Calendar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 pt-24 pb-6 md:pb-8 bg-black/80 backdrop-blur-sm"
             onClick={() => setSelectedRace(null)}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-slate-900 border border-white/10 w-full max-w-6xl max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl"
+              className="bg-slate-900 border border-white/10 w-full max-w-6xl max-h-full overflow-y-auto rounded-2xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Enhanced Header with Background - Fixed on scroll */}
@@ -477,12 +493,17 @@ export function Calendar() {
                   <div 
                       className="absolute inset-0 z-0 opacity-40 grayscale"
                       style={{
-                          backgroundImage: `url(https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400)`,
+                          backgroundImage: `url(${findCircuitInfo(selectedRace.circuit)?.photoUrl || `https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400`})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center'
                       }}
                   />
                   <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
+                  
+                  {/* SVG Track Overlay in Modal */}
+                  <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 h-48 opacity-20 pointer-events-none flex items-center justify-center">
+                      <CircuitTrack circuitInfo={findCircuitInfo(selectedRace.circuit)} className="w-full h-full text-white" />
+                  </div>
                   
                   <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
                     <div>

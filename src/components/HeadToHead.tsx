@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useChampionship } from '../context/ChampionshipContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle, Zap, ZapOff } from 'lucide-react';
+import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle, Zap, ZapOff, X, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Driver, Race, Constructor } from '../types';
 import { F1CarAnimation } from './dashboard/F1CarAnimation';
@@ -102,10 +102,10 @@ function DriverDropdown({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute z-50 w-full bottom-full mb-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="p-2 border-b border-white/10 flex gap-2 bg-slate-950/50 shrink-0">
               <button 
@@ -208,38 +208,40 @@ function PeriodDropdown({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 w-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute z-[300] w-full bottom-full mb-2 bg-slate-900 border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
           >
-            {races.map((r, idx) => {
-              const disabled = isOptionDisabled ? isOptionDisabled(r.id, idx) : false;
-              return (
-              <button
-                key={r.id}
-                disabled={disabled}
-                onClick={() => { onChange(r.id); setIsOpen(false); }}
-                className={cn(
-                  "w-full flex items-center justify-between p-3 transition-colors text-left border-b border-white/5 last:border-0",
-                  r.id === value ? "bg-white/10" : "hover:bg-white/5",
-                  disabled && "opacity-30 cursor-not-allowed hover:bg-transparent"
-                )}
-                style={{
-                  background: r.id === value ? 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%)' : undefined,
-                  borderLeft: r.id === value ? '3px solid white' : '3px solid transparent'
-                }}
-              >
-                <div className="flex flex-col overflow-hidden">
-                  <span className={cn("font-bold text-sm truncate", r.id === value ? "text-white" : "text-slate-300")}>{r.name}</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">Carrera {idx + 1}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-slate-400 bg-slate-950/50 px-2 py-1 rounded-md shrink-0 ml-2 border border-white/5">
-                  <Calendar size={10} />
-                  <span className="text-xs font-mono">{formatDate(r.date)}</span>
-                </div>
-              </button>
-            )})}
+            <div className="max-h-64 overflow-y-auto custom-scrollbar">
+              {races.map((r, idx) => {
+                const disabled = isOptionDisabled ? isOptionDisabled(r.id, idx) : false;
+                return (
+                <button
+                  key={r.id}
+                  disabled={disabled}
+                  onClick={() => { onChange(r.id); setIsOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center justify-between p-3 transition-colors text-left border-b border-white/5 last:border-0",
+                    r.id === value ? "bg-white/10" : "hover:bg-white/5",
+                    disabled && "opacity-30 cursor-not-allowed hover:bg-transparent"
+                  )}
+                  style={{
+                    background: r.id === value ? 'linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%)' : undefined,
+                    borderLeft: r.id === value ? '3px solid white' : '3px solid transparent'
+                  }}
+                >
+                  <div className="flex flex-col overflow-hidden">
+                    <span className={cn("font-bold text-sm truncate", r.id === value ? "text-white" : "text-slate-300")}>{r.name}</span>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">Carrera {idx + 1}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-400 bg-slate-950/50 px-2 py-1 rounded-md shrink-0 ml-2 border border-white/5">
+                    <Calendar size={10} />
+                    <span className="text-xs font-mono">{formatDate(r.date)}</span>
+                  </div>
+                </button>
+              )})}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -259,44 +261,56 @@ export function HeadToHead() {
     const saved = localStorage.getItem('f1-h2h-anim');
     return saved !== null ? saved === 'true' : true;
   });
+  const [isComparing, setIsComparing] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [showPeriodSelector, setShowPeriodSelector] = useState(false);
+  const [showFloatingControls, setShowFloatingControls] = useState(false);
 
   const prevD1 = useRef(driver1Id);
   const prevD2 = useRef(driver2Id);
   const statsRef = useRef<HTMLDivElement>(null);
 
+  // Reset comparison when drivers change
+  useEffect(() => {
+    setIsComparing(false);
+    setShowFloatingControls(false);
+    setShowPeriodSelector(false);
+  }, [driver1Id, driver2Id]);
+
   useEffect(() => {
     localStorage.setItem('f1-h2h-anim', enableFightAnim.toString());
   }, [enableFightAnim]);
 
+  const handleCompare = () => {
+    if (enableFightAnim) {
+      setShowFightAnim(true);
+      setTimeout(() => {
+        setIsComparing(true);
+        setIsMinimized(true);
+      }, 2000); // Show stats after cinematic starts
+      
+      setTimeout(() => {
+        setShowFightAnim(false);
+      }, 3500);
+
+      setTimeout(() => {
+        setShowFloatingControls(true);
+      }, 5500);
+    } else {
+      setIsComparing(true);
+      setIsMinimized(true);
+      setShowFloatingControls(true);
+    }
+  };
+
   useEffect(() => {
-    if (driver1Id && driver2Id && enableFightAnim) {
+    if (driver1Id && driver2Id) {
       if (driver1Id !== prevD1.current || driver2Id !== prevD2.current) {
-        setShowFightAnim(true);
-        const timer = setTimeout(() => {
-          setShowFightAnim(false);
-          // Auto scroll to stats after animation
-          setTimeout(() => {
-            if (statsRef.current) {
-              // Generic and precise calculation:
-              // We want to align the top of the stats section with the top of the viewport,
-              // but adding a small padding (yOffset) so it's not glued to the edge.
-              const yOffset = 20; 
-              const elementPosition = statsRef.current.getBoundingClientRect().top;
-              const offsetPosition = elementPosition + window.pageYOffset - yOffset;
-              
-              window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-              });
-            }
-          }, 100);
-        }, 3500); // Increased duration to 3.5s for better readability
-        return () => clearTimeout(timer);
+        prevD1.current = driver1Id;
+        prevD2.current = driver2Id;
       }
     }
-    prevD1.current = driver1Id;
-    prevD2.current = driver2Id;
-  }, [driver1Id, driver2Id, enableFightAnim]);
+  }, [driver1Id, driver2Id]);
 
   const drivers = useMemo(() => {
     return [...data.drivers].sort((a, b) => a.name.localeCompare(b.name));
@@ -474,40 +488,7 @@ export function HeadToHead() {
   const bgAccent = isHistorical ? "bg-amber-500" : "bg-red-500";
 
   return (
-    <div className="space-y-12 pb-20">
-      {/* Floating Animation Toggle */}
-      <div className="fixed bottom-8 right-8 z-[60]">
-        <button 
-          onClick={() => setEnableFightAnim(!enableFightAnim)}
-          className={cn(
-            "flex items-center gap-3 px-5 py-3.5 rounded-full border backdrop-blur-xl transition-all duration-500 shadow-2xl group overflow-hidden",
-            enableFightAnim 
-              ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30" 
-              : "bg-slate-900/80 border-white/10 text-slate-400 hover:bg-slate-900 hover:text-white"
-          )}
-          title={enableFightAnim ? "Desactivar intro cinemática" : "Activar intro cinemática"}
-        >
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          {enableFightAnim ? (
-            <>
-              <Zap size={20} className="fill-current animate-pulse relative z-10" />
-              <div className="flex flex-col items-start leading-none relative z-10">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Cinemática</span>
-                <span className="text-xs font-black uppercase tracking-widest">Activada</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <ZapOff size={20} className="relative z-10" />
-              <div className="flex flex-col items-start leading-none relative z-10">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Cinemática</span>
-                <span className="text-xs font-black uppercase tracking-widest">Desactivada</span>
-              </div>
-            </>
-          )}
-        </button>
-      </div>
-
+    <div className="space-y-12 pb-32">
       {/* Fight Animation Overlay */}
       <AnimatePresence>
         {showFightAnim && driver1 && driver2 && (
@@ -771,140 +752,236 @@ export function HeadToHead() {
         </p>
       </div>
 
-      {/* Period Selector */}
-      {completedRaces.length > 0 && driver1 && driver2 && (
-        <div className="max-w-4xl mx-auto relative z-40 px-4 w-full">
-          <div className="relative group w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-pink-500/30 rounded-3xl blur-2xl opacity-70 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="absolute inset-0 rounded-3xl border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_50px_rgba(255,255,255,0.2)] transition-shadow duration-500 pointer-events-none"></div>
-            <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-3xl p-6 md:p-8 flex flex-col items-center gap-6">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-              
-              <div className="flex items-center gap-3 text-white bg-white/5 px-6 py-2.5 rounded-full border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] w-full md:w-auto justify-center">
-                <Activity size={18} className="text-blue-400 animate-pulse" />
-                <span className="text-sm font-black uppercase tracking-widest whitespace-nowrap">Rango de Telemetría</span>
-              </div>
-              
-              <div className="flex flex-col md:flex-row items-center gap-4 w-full justify-center">
-                <div className="w-full md:w-72">
-                  <PeriodDropdown 
-                    value={startRaceId} 
-                    onChange={setStartRaceId} 
-                    races={completedRaces} 
-                    isOptionDisabled={(id, idx) => {
-                      const endIdx = completedRaces.findIndex(r => r.id === endRaceId);
-                      return endIdx !== -1 && idx > endIdx;
-                    }}
-                  />
+      {/* Period Selector Floating Toggle */}
+      <AnimatePresence>
+        {completedRaces.length > 0 && driver1 && driver2 && isComparing && showFloatingControls && (
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className="fixed right-6 bottom-24 z-[100] flex flex-col items-end gap-3"
+          >
+            {showPeriodSelector && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl w-80 md:w-96 mb-2 relative z-[110] overflow-visible"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 pointer-events-none rounded-3xl"></div>
+                <div className="relative z-10 space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-white">
+                      <Activity size={16} className="text-blue-400" />
+                      <span className="text-xs font-black uppercase tracking-widest">Rango de Telemetría</span>
+                    </div>
+                    <button onClick={() => setShowPeriodSelector(false)} className="text-slate-500 hover:text-white transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Desde</label>
+                      <PeriodDropdown 
+                        value={startRaceId} 
+                        onChange={setStartRaceId} 
+                        races={completedRaces} 
+                        isOptionDisabled={(id, idx) => {
+                          const endIdx = completedRaces.findIndex(r => r.id === endRaceId);
+                          return endIdx !== -1 && idx > endIdx;
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Hasta</label>
+                      <PeriodDropdown 
+                        value={endRaceId} 
+                        onChange={setEndRaceId} 
+                        races={completedRaces} 
+                        isOptionDisabled={(id, idx) => {
+                          const startIdx = completedRaces.findIndex(r => r.id === startRaceId);
+                          return startIdx !== -1 && idx < startIdx;
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="flex items-center justify-center px-4 py-2 rounded-lg bg-slate-950/50 border border-white/5 z-10 shrink-0 shadow-inner my-2 md:my-0 md:mx-2">
-                  <span className="text-slate-400 font-black text-xs uppercase tracking-widest">Hasta</span>
+              </motion.div>
+            )}
+
+            <button
+              onClick={() => setShowPeriodSelector(!showPeriodSelector)}
+              className={cn(
+                "w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 border group relative",
+                showPeriodSelector 
+                  ? "bg-white text-slate-950 border-white scale-110" 
+                  : "bg-slate-900 text-white border-white/10 hover:border-white/30 hover:scale-110"
+              )}
+            >
+              <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Calendar size={24} className={cn("relative z-10", showPeriodSelector ? "animate-none" : "group-hover:rotate-12")} />
+              {!showPeriodSelector && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-slate-950 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
                 </div>
-                
-                <div className="w-full md:w-72">
-                  <PeriodDropdown 
-                    value={endRaceId} 
-                    onChange={setEndRaceId} 
-                    races={completedRaces} 
-                    isOptionDisabled={(id, idx) => {
-                      const startIdx = completedRaces.findIndex(r => r.id === startRaceId);
-                      return startIdx !== -1 && idx < startIdx;
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              )}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-center max-w-5xl mx-auto relative z-20">
         {/* Driver 1 Selector */}
-        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver1 ? `0 10px 40px -10px ${driver1.teamColor}40` : undefined }}>
+        <motion.div layout className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver1 ? `0 10px 40px -10px ${driver1.teamColor}40` : undefined }}>
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none"></div>
           {driver1 && <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top left, ${driver1.teamColor}, transparent 70%)` }}></div>}
           
-          {/* Avatar */}
-          <motion.div 
-            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
-            animate={{ borderColor: driver1?.teamColor || '#333' }}
-            transition={{ duration: 0.5 }}
-          >
-            <AnimatePresence mode="wait">
-              {driver1 ? (
-                <motion.img 
-                  key={driver1.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`} 
-                  alt={driver1.name} 
-                  className="w-full h-full object-cover absolute inset-0" 
-                />
-              ) : (
-                <motion.div
-                  key="empty1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full h-full flex items-center justify-center text-slate-600"
-                >
-                  <Users size={48} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
-          </motion.div>
+          {isMinimized ? (
+            <button 
+              onClick={() => setIsMinimized(false)}
+              className="flex items-center justify-between w-full gap-4 group/min text-left relative overflow-hidden p-1 rounded-2xl transition-all duration-300"
+            >
+              {/* Glow effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover/min:translate-x-full transition-transform duration-1000"></div>
+              <div className="absolute inset-0 opacity-0 group-hover/min:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${driver1?.teamColor || '#333'}20, transparent 70%)` }}></div>
+              <div className="absolute inset-0 border-2 border-transparent group-hover/min:border-white/20 rounded-2xl transition-colors duration-300"></div>
 
-          <div className="w-full relative z-50 flex flex-col items-center md:items-start">
-            <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
-              Contendiente 1
-            </div>
-            <DriverDropdown 
-              value={driver1Id} 
-              onChange={setDriver1Id} 
-              drivers={drivers} 
-              constructors={data.constructors}
-              disabledId={driver2Id} 
-              align="left" 
-            />
-          </div>
-
-          {driver1 && (
-            <div className="mt-6 flex flex-col items-center gap-3 w-full relative z-10">
-              <div className="text-2xl font-black italic text-white text-center">{driver1.name}</div>
-              <div className="bg-slate-950/80 border border-white/10 rounded-2xl p-4 w-full flex flex-col items-center gap-3 relative overflow-hidden group-hover:border-white/20 transition-all shadow-lg">
-                <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: driver1.teamColor }}></div>
-                <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at center, ${driver1.teamColor}, transparent 70%)` }}></div>
-                
-                <div className="relative z-10 h-16 flex items-center justify-center">
-                  {team1Logo ? (
-                    <img src={team1Logo} alt={driver1.team} className="max-h-full max-w-full object-contain drop-shadow-xl" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-full border-2 overflow-hidden bg-slate-800 shrink-0 transition-transform duration-300 group-hover/min:scale-110" style={{ borderColor: driver1?.teamColor || '#333' }}>
+                  {driver1 ? (
+                    <img src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`} alt={driver1.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full shadow-lg border-2 border-white/10" style={{ backgroundColor: driver1.teamColor }}></div>
+                    <div className="w-full h-full flex items-center justify-center text-slate-600"><Users size={16} /></div>
                   )}
                 </div>
-                <div className="relative z-10 text-xs font-black text-slate-300 uppercase tracking-widest text-center">{driver1.team}</div>
+                <div className="text-left">
+                  <div className="text-sm font-black italic text-white uppercase truncate max-w-[100px] group-hover/min:text-blue-400 transition-colors">{driver1?.name || "Piloto 1"}</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{driver1?.team || "Sin elegir"}</div>
+                </div>
               </div>
-              
-              {/* Driver 1 Car */}
-              <div className="mt-4 w-full flex justify-center relative">
-                <SpeedLines color={driver1.teamColor} />
-                <F1CarAnimation 
-                  primaryColor={driver1.teamColor} 
-                  helmetColor="#ffffff" 
-                  className="w-full max-w-[180px] opacity-90 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 relative z-10"
+              <div 
+                className="p-2 bg-white/5 rounded-lg text-slate-400 group-hover/min:text-white group-hover/min:bg-white/10 transition-all relative z-10"
+                title="Maximizar"
+              >
+                <Maximize2 size={18} />
+              </div>
+            </button>
+          ) : (
+            <>
+              {/* Avatar */}
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
+                style={{ borderColor: driver1?.teamColor || '#333' }}
+              >
+                <AnimatePresence mode="wait">
+                  {driver1 ? (
+                    <motion.img 
+                      key={driver1.id}
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`} 
+                      alt={driver1.name} 
+                      className="w-full h-full object-cover absolute inset-0" 
+                    />
+                  ) : (
+                    <motion.div
+                      key="empty1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="w-full h-full flex items-center justify-center text-slate-600"
+                    >
+                      <Users size={48} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+              </motion.div>
+
+              {driver1 && (
+                <div className="absolute top-4 right-4 z-50 flex gap-2">
+                  <motion.button 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    onClick={() => setIsMinimized(true)}
+                    className="p-2 bg-white/5 hover:bg-white/20 rounded-full text-slate-400 hover:text-white transition-all border border-white/10"
+                    title="Minimizar"
+                  >
+                    <Minimize2 size={16} />
+                  </motion.button>
+                  <motion.button 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    onClick={() => setDriver1Id('')}
+                    className="p-2 bg-red-600/20 hover:bg-red-600 rounded-full text-red-500 hover:text-white transition-all border border-red-500/30"
+                    title="Eliminar"
+                  >
+                    <X size={16} />
+                  </motion.button>
+                </div>
+              )}
+
+              <div className="w-full relative z-50 flex flex-col items-center md:items-start">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
+                  Piloto 1
+                </div>
+                <DriverDropdown 
+                  value={driver1Id} 
+                  onChange={setDriver1Id} 
+                  drivers={drivers} 
+                  constructors={data.constructors}
+                  disabledId={driver2Id} 
+                  align="left" 
                 />
               </div>
-            </div>
-          )}
-        </div>
 
-        {/* VS Badge */}
-        <div className="flex justify-center py-8 md:py-0 relative z-30">
-          <div className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 group">
+              <AnimatePresence>
+                {driver1 && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-6 flex flex-col items-center gap-3 w-full relative z-10 overflow-hidden"
+                  >
+                    <div className="text-2xl font-black italic text-white text-center">{driver1.name}</div>
+                    <div className="bg-slate-950/80 border border-white/10 rounded-2xl p-4 w-full flex flex-col items-center gap-3 relative overflow-hidden group-hover:border-white/20 transition-all shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: driver1.teamColor }}></div>
+                      <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at center, ${driver1.teamColor}, transparent 70%)` }}></div>
+                      
+                      <div className="relative z-10 h-16 flex items-center justify-center">
+                        {team1Logo ? (
+                          <img src={team1Logo} alt={driver1.team} className="max-h-full max-w-full object-contain drop-shadow-xl" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full shadow-lg border-2 border-white/10" style={{ backgroundColor: driver1.teamColor }}></div>
+                        )}
+                      </div>
+                      <div className="relative z-10 text-xs font-black text-slate-300 uppercase tracking-widest text-center">{driver1.team}</div>
+                    </div>
+                    
+                    {/* Driver 1 Car */}
+                    <div className="mt-4 w-full flex justify-center relative">
+                      <SpeedLines color={driver1.teamColor} />
+                      <F1CarAnimation 
+                        primaryColor={driver1.teamColor} 
+                        helmetColor="#ffffff" 
+                        className="w-full max-w-[180px] opacity-90 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 relative z-10"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+        </motion.div>
+
+        {/* VS Badge & Compare Button */}
+        <div className="flex flex-col items-center justify-center py-8 md:py-0 relative z-30">
+          <div className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 group mb-6">
             {/* Aggressive glowing background */}
             <div className={cn("absolute inset-0 rounded-xl rotate-45 blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-pulse", bgAccent)}></div>
             <div className={cn("absolute inset-2 rounded-xl rotate-45 border-2 z-10 bg-slate-950 shadow-2xl", isHistorical ? "border-amber-500" : "border-red-500")}></div>
@@ -920,93 +997,207 @@ export function HeadToHead() {
               <span className="relative text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">VS</span>
             </motion.div>
           </div>
+
+          {/* Compare Action Area */}
+          <div className="flex flex-col items-center gap-4">
+            <button
+              onClick={handleCompare}
+              disabled={!driver1Id || !driver2Id || isComparing}
+              className={cn(
+                "relative overflow-hidden px-6 py-2.5 rounded-full font-black italic text-base uppercase tracking-[0.2em] transition-all duration-500 shadow-2xl group border-2 border-transparent hover:border-white/50 animate-pulse",
+                (!driver1Id || !driver2Id) ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500" :
+                isComparing ? "bg-slate-800 text-slate-400 cursor-default" :
+                isHistorical 
+                  ? "bg-amber-600 text-white hover:bg-amber-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(245,158,11,0.4)]" 
+                  : "bg-red-600 text-white hover:bg-red-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(239,68,68,0.4)]"
+              )}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+              
+              <span className="relative z-10 flex items-center gap-2">
+                <Swords size={16} className={cn(!isComparing && "group-hover:rotate-12 transition-transform duration-300")} />
+                {isComparing ? "Comparando..." : "Enfrentar"}
+              </span>
+            </button>
+
+            {/* Small Cinematic Toggle */}
+            <button 
+              onClick={() => setEnableFightAnim(!enableFightAnim)}
+              disabled={isComparing}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border backdrop-blur-sm transition-all duration-300 text-[10px] font-bold uppercase tracking-wider",
+                isComparing ? "opacity-50 cursor-not-allowed" : "hover:scale-105",
+                enableFightAnim 
+                  ? "bg-yellow-500/20 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30" 
+                  : "bg-slate-900/80 border-white/10 text-slate-400 hover:bg-slate-800 hover:text-white"
+              )}
+              title={enableFightAnim ? "Desactivar intro cinemática" : "Activar intro cinemática"}
+            >
+              {enableFightAnim ? (
+                <>
+                  <Zap size={12} className="fill-current animate-pulse" />
+                  <span>Cinemática ON</span>
+                </>
+              ) : (
+                <>
+                  <ZapOff size={12} className="opacity-70" />
+                  <span>Cinemática OFF</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Driver 2 Selector */}
-        <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver2 ? `0 10px 40px -10px ${driver2.teamColor}40` : undefined }}>
+        <motion.div layout className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 relative group flex flex-col items-center text-center transition-all duration-500" style={{ boxShadow: driver2 ? `0 10px 40px -10px ${driver2.teamColor}40` : undefined }}>
           <div className="absolute inset-0 bg-gradient-to-bl from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none"></div>
           {driver2 && <div className="absolute inset-0 rounded-3xl opacity-10 pointer-events-none transition-colors duration-500" style={{ background: `radial-gradient(circle at top right, ${driver2.teamColor}, transparent 70%)` }}></div>}
           
-          {/* Avatar */}
-          <motion.div 
-            className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
-            animate={{ borderColor: driver2?.teamColor || '#333' }}
-            transition={{ duration: 0.5 }}
-          >
-            <AnimatePresence mode="wait">
-              {driver2 ? (
-                <motion.img 
-                  key={driver2.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`} 
-                  alt={driver2.name} 
-                  className="w-full h-full object-cover absolute inset-0" 
-                />
-              ) : (
-                <motion.div
-                  key="empty2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full h-full flex items-center justify-center text-slate-600"
-                >
-                  <Users size={48} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
-          </motion.div>
+          {isMinimized ? (
+            <button 
+              onClick={() => setIsMinimized(false)}
+              className="flex items-center justify-between w-full gap-4 group/min text-left relative overflow-hidden p-1 rounded-2xl transition-all duration-300"
+            >
+              {/* Glow effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover/min:translate-x-full transition-transform duration-1000"></div>
+              <div className="absolute inset-0 opacity-0 group-hover/min:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at center, ${driver2?.teamColor || '#333'}20, transparent 70%)` }}></div>
+              <div className="absolute inset-0 border-2 border-transparent group-hover/min:border-white/20 rounded-2xl transition-colors duration-300"></div>
 
-          <div className="w-full relative z-50 flex flex-col items-center md:items-end">
-            <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
-              Contendiente 2
-            </div>
-            <DriverDropdown 
-              value={driver2Id} 
-              onChange={setDriver2Id} 
-              drivers={drivers} 
-              constructors={data.constructors}
-              disabledId={driver1Id} 
-              align="right" 
-            />
-          </div>
-
-          {driver2 && (
-            <div className="mt-6 flex flex-col items-center gap-3 w-full relative z-10">
-              <div className="text-2xl font-black italic text-white text-center">{driver2.name}</div>
-              <div className="bg-slate-950/80 border border-white/10 rounded-2xl p-4 w-full flex flex-col items-center gap-3 relative overflow-hidden group-hover:border-white/20 transition-all shadow-lg">
-                <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: driver2.teamColor }}></div>
-                <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at center, ${driver2.teamColor}, transparent 70%)` }}></div>
-                
-                <div className="relative z-10 h-16 flex items-center justify-center">
-                  {team2Logo ? (
-                    <img src={team2Logo} alt={driver2.team} className="max-h-full max-w-full object-contain drop-shadow-xl" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-full border-2 overflow-hidden bg-slate-800 shrink-0 transition-transform duration-300 group-hover/min:scale-110" style={{ borderColor: driver2?.teamColor || '#333' }}>
+                  {driver2 ? (
+                    <img src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`} alt={driver2.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full shadow-lg border-2 border-white/10" style={{ backgroundColor: driver2.teamColor }}></div>
+                    <div className="w-full h-full flex items-center justify-center text-slate-600"><Users size={16} /></div>
                   )}
                 </div>
-                <div className="relative z-10 text-xs font-black text-slate-300 uppercase tracking-widest text-center">{driver2.team}</div>
+                <div className="text-left">
+                  <div className="text-sm font-black italic text-white uppercase truncate max-w-[100px] group-hover/min:text-blue-400 transition-colors">{driver2?.name || "Piloto 2"}</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{driver2?.team || "Sin elegir"}</div>
+                </div>
               </div>
-              
-              {/* Driver 2 Car (Flipped to face center) */}
-              <div className="mt-4 w-full flex justify-center transform scale-x-[-1] relative">
-                <SpeedLines color={driver2.teamColor} />
-                <F1CarAnimation 
-                  primaryColor={driver2.teamColor} 
-                  helmetColor="#ffffff" 
-                  className="w-full max-w-[180px] opacity-90 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 relative z-10"
+              <div 
+                className="p-2 bg-white/5 rounded-lg text-slate-400 group-hover/min:text-white group-hover/min:bg-white/10 transition-all relative z-10"
+                title="Maximizar"
+              >
+                <Maximize2 size={18} />
+              </div>
+            </button>
+          ) : (
+            <>
+              {/* Avatar */}
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-2xl mb-6 z-10 group-hover:scale-105 bg-slate-800 flex items-center justify-center" 
+                style={{ borderColor: driver2?.teamColor || '#333' }}
+              >
+                <AnimatePresence mode="wait">
+                  {driver2 ? (
+                    <motion.img 
+                      key={driver2.id}
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`} 
+                      alt={driver2.name} 
+                      className="w-full h-full object-cover absolute inset-0" 
+                    />
+                  ) : (
+                    <motion.div
+                      key="empty2"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="w-full h-full flex items-center justify-center text-slate-600"
+                    >
+                      <Users size={48} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+              </motion.div>
+
+              {driver2 && (
+                <div className="absolute top-4 right-4 z-50 flex gap-2">
+                  <motion.button 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    onClick={() => setIsMinimized(true)}
+                    className="p-2 bg-white/5 hover:bg-white/20 rounded-full text-slate-400 hover:text-white transition-all border border-white/10"
+                    title="Minimizar"
+                  >
+                    <Minimize2 size={16} />
+                  </motion.button>
+                  <motion.button 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    onClick={() => setDriver2Id('')}
+                    className="p-2 bg-red-600/20 hover:bg-red-600 rounded-full text-red-500 hover:text-white transition-all border border-red-500/30"
+                    title="Eliminar"
+                  >
+                    <X size={16} />
+                  </motion.button>
+                </div>
+              )}
+
+              <div className="w-full relative z-50 flex flex-col items-center md:items-end">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-slate-950/80 border border-white/10 text-xs font-black text-slate-300 uppercase tracking-[0.2em] mb-4 shadow-inner">
+                  Piloto 2
+                </div>
+                <DriverDropdown 
+                  value={driver2Id} 
+                  onChange={setDriver2Id} 
+                  drivers={drivers} 
+                  constructors={data.constructors}
+                  disabledId={driver1Id} 
+                  align="right" 
                 />
               </div>
-            </div>
+
+              <AnimatePresence>
+                {driver2 && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-6 flex flex-col items-center gap-3 w-full relative z-10 overflow-hidden"
+                  >
+                    <div className="text-2xl font-black italic text-white text-center">{driver2.name}</div>
+                    <div className="bg-slate-950/80 border border-white/10 rounded-2xl p-4 w-full flex flex-col items-center gap-3 relative overflow-hidden group-hover:border-white/20 transition-all shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1.5" style={{ backgroundColor: driver2.teamColor }}></div>
+                      <div className="absolute inset-0 opacity-10" style={{ background: `radial-gradient(circle at center, ${driver2.teamColor}, transparent 70%)` }}></div>
+                      
+                      <div className="relative z-10 h-16 flex items-center justify-center">
+                        {team2Logo ? (
+                          <img src={team2Logo} alt={driver2.team} className="max-h-full max-w-full object-contain drop-shadow-xl" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full shadow-lg border-2 border-white/10" style={{ backgroundColor: driver2.teamColor }}></div>
+                        )}
+                      </div>
+                      <div className="relative z-10 text-xs font-black text-slate-300 uppercase tracking-widest text-center">{driver2.team}</div>
+                    </div>
+                    
+                    {/* Driver 2 Car */}
+                    <div className="mt-4 w-full flex justify-center relative">
+                      <SpeedLines color={driver2.teamColor} flip />
+                      <F1CarAnimation 
+                        primaryColor={driver2.teamColor} 
+                        helmetColor="#ffffff" 
+                        className="w-full max-w-[180px] opacity-90 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 relative z-10 scale-x-[-1]"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Stats Comparison */}
-      {stats && driver1 && driver2 && (
+      {stats && driver1 && driver2 && isComparing && (
         <div ref={statsRef} className="max-w-4xl mx-auto space-y-4 relative z-10">
           <StatRow 
             label="Puntos Totales" 

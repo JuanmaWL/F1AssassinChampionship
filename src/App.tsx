@@ -352,9 +352,9 @@ function AppContent() {
           {isLoading ? (
               <motion.div
                 key="loading"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <DashboardSkeleton />
@@ -364,9 +364,9 @@ function AppContent() {
           ) : (
               <motion.div
                 key={activeSeason + activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <Suspense fallback={<LoadingSpinner />}>

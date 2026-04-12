@@ -51,35 +51,39 @@ export function Dashboard() {
             isHistorical ? "from-slate-900 via-amber-900/20 to-slate-900" : "from-slate-900 via-slate-800 to-slate-900"
         )}></div>
         
-        {/* Season Wallpaper (Only for 2026) */}
-        {!isHistorical && (
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <motion.img 
-                    src={FOOTER_ASSETS.WALLPAPER} 
-                    alt="Season Background" 
-                    className="w-full h-full object-cover object-[center_15%] opacity-40 mix-blend-luminosity"
-                    referrerPolicy="no-referrer"
-                    animate={{
-                        scale: [1.05, 1.12, 1.05],
-                        x: ['-1%', '1%', '-1%'],
-                        y: ['0%', '1.5%', '0%']
-                    }}
-                    transition={{
-                        duration: 30,
-                        ease: "easeInOut",
-                        repeat: Infinity
-                    }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50"></div>
-            </div>
-        )}
+        {/* Season Wallpaper */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+            <motion.img 
+                src={FOOTER_ASSETS.WALLPAPER} 
+                alt="Season Background" 
+                className={cn(
+                    "w-full h-full object-cover object-[center_15%] mix-blend-luminosity",
+                    isHistorical ? "opacity-60 sepia-[0.4] grayscale-[0.8] brightness-50" : "opacity-40"
+                )}
+                referrerPolicy="no-referrer"
+                animate={{
+                    scale: [1.05, 1.12, 1.05],
+                    x: ['-1%', '1%', '-1%'],
+                    y: ['0%', '1.5%', '0%']
+                }}
+                transition={{
+                    duration: 30,
+                    ease: "easeInOut",
+                    repeat: Infinity
+                }}
+            />
+            <div className={cn(
+                "absolute inset-0 bg-gradient-to-t",
+                isHistorical ? "from-slate-950 via-slate-950/80 to-slate-950/40" : "from-slate-950 via-transparent to-slate-950/50"
+            )}></div>
+        </div>
         
         {/* Carbon Fiber Texture */}
         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay"></div>
         
         {/* Historical Sepia/Dust Effect */}
         {isHistorical && (
-            <div className="absolute inset-0 pointer-events-none backdrop-sepia-[0.3] bg-[url('https://www.transparenttextures.com/patterns/dust.png')] opacity-20"></div>
+            <div className="absolute inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
         )}
 
         {/* Moving Light/Speed Lines */}
@@ -197,8 +201,14 @@ export function Dashboard() {
         
         {/* Historical Watermark */}
         {isHistorical && (
-            <div className="absolute top-4 right-4 border border-amber-500/30 px-3 py-1 rounded text-amber-500/50 font-mono text-xs uppercase tracking-widest rotate-[-5deg]">
-                Finalizado
+            <div className="absolute top-6 right-6 md:top-8 md:right-8 z-20">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-amber-500 blur-md opacity-20 rounded-lg"></div>
+                    <div className="border-2 border-amber-500/50 bg-slate-950/80 backdrop-blur-sm px-4 py-1.5 rounded-lg text-amber-500 font-black text-sm md:text-base uppercase tracking-[0.3em] rotate-[-5deg] shadow-xl flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                        Finalizado
+                    </div>
+                </div>
             </div>
         )}
       </div>

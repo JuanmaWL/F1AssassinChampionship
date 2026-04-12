@@ -7,12 +7,13 @@ import { ResultsEditor } from './admin/ResultsEditor';
 import { DriversEditor } from './admin/DriversEditor';
 import { TeamsEditor } from './admin/TeamsEditor';
 import { CalendarEditor } from './admin/CalendarEditor';
+import { CircuitsEditor } from './admin/CircuitsEditor';
 import { JsonImporter } from './admin/JsonImporter';
 import { MetricsViewer } from './admin/MetricsViewer';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
 
-type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings' | 'metrics';
+type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings' | 'metrics' | 'circuits';
 
 export function AdminPanel() {
   const { data, setData, activeSeason, isHistorical, refreshData } = useChampionship();
@@ -321,6 +322,23 @@ export function AdminPanel() {
             <div className={cn("h-px bg-white/5 my-4", isCollapsed ? "w-8" : "mx-4")}></div>
 
             <button
+                onClick={() => setActiveTab('circuits')}
+                className={cn(
+                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
+                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
+                activeTab === 'circuits' 
+                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                    : "text-slate-500 hover:text-white hover:bg-white/5"
+                )}
+                title={isCollapsed ? "Circuitos" : undefined}
+            >
+                <Compass size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'circuits' ? accentColor : "")} />
+                {!isCollapsed && <span className="truncate">Gestión de Circuitos</span>}
+            </button>
+
+            <div className={cn("h-px bg-white/5 my-4", isCollapsed ? "w-8" : "mx-4")}></div>
+
+            <button
                 onClick={() => setActiveTab('import')}
                 className={cn(
                 "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
@@ -427,6 +445,9 @@ export function AdminPanel() {
                 activeSeason={activeSeason} 
                 isHistorical={isHistorical} 
               />
+            )}
+            {activeTab === 'circuits' && (
+              <CircuitsEditor />
             )}
             {activeTab === 'results' && (
               <ResultsEditor 
