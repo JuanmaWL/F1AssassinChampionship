@@ -44,7 +44,7 @@ export function Footer() {
 
   return (
     <footer className={cn(
-      "relative mt-auto border-t transition-colors duration-500 overflow-hidden group",
+      "relative mt-auto border-t transition-colors duration-500 overflow-hidden group z-0",
       isHistorical ? "bg-slate-950 border-amber-900/30" : "bg-slate-950 border-white/5"
     )}>
       {/* Wallpaper Background with care */}

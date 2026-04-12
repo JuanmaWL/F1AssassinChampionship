@@ -14,15 +14,57 @@ const SortIcon = ({ columnKey, sortConfig }: { columnKey: string; sortConfig: { 
   return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-white" /> : <ArrowDown size={12} className="text-white" />;
 };
 
+// Optimized Image Component for Circuit Backgrounds
+const OptimizedCircuitImage = ({ src, alt, className, isHistorical }: { src: string; alt: string; className?: string; isHistorical?: boolean }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  return (
+    <div className={cn("relative overflow-hidden", className)}>
+      {/* Placeholder / Loading State */}
+      <div 
+        className={cn(
+          "absolute inset-0 transition-opacity duration-1000 z-10",
+          isLoaded ? "opacity-0 pointer-events-none" : "opacity-100",
+          isHistorical ? "bg-amber-950/20" : "bg-slate-900/40"
+        )}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent animate-pulse" />
+      </div>
+
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setError(true)}
+        referrerPolicy="no-referrer"
+        className={cn(
+          "w-full h-full object-cover transition-all duration-1000",
+          !isLoaded ? "scale-110 blur-sm" : "scale-100 blur-0",
+          error ? "opacity-0" : "opacity-100"
+        )}
+      />
+      
+      {/* Fallback if error */}
+      {error && (
+        <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
+          <MapPin className="text-slate-700 w-8 h-8" />
+        </div>
+      )}
+    </div>
+  );
+};
+
 export function Calendar() {
   const { data, activeSeason, isHistorical } = useChampionship();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
+  const [layoutCircuit, setLayoutCircuit] = useState<CircuitData | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
 
-  // Scroll lock when race details are open
+  // Scroll lock when race details or layout modal are open
   useEffect(() => {
-    if (selectedRace) {
+    if (selectedRace || layoutCircuit) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -30,7 +72,7 @@ export function Calendar() {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [selectedRace]);
+  }, [selectedRace, layoutCircuit]);
 
   const getDriverName = useCallback((id: string) => data.drivers.find((d) => d.id === id)?.name || id, [data.drivers]);
   const getTeamColor = useCallback((id: string) => data.drivers.find((d) => d.id === id)?.teamColor || '#fff', [data.drivers]);
@@ -279,29 +321,21 @@ export function Calendar() {
             >
                 {/* Background Container - Handles clipping for images/flags */}
                 <div className="absolute inset-0 overflow-hidden rounded-xl z-0">
-                    {/* Circuit Background Image (Fictional/Placeholder) */}
-                    <div 
+                    {/* Optimized Circuit Background Image */}
+                    <OptimizedCircuitImage 
+                        src={findCircuitInfo(race.circuit)?.photoUrl || `https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400`}
+                        alt={race.circuit}
+                        isHistorical={isHistorical}
                         className={cn(
-                            "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-500",
+                            "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-700",
                             isHistorical && "sepia"
                         )}
-                        style={{
-                            backgroundImage: `url(${findCircuitInfo(race.circuit)?.photoUrl || `https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400`})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                        }}
                     />
 
-                    {/* SVG Track Overlay - Grid View */}
-                    {viewMode === 'grid' && (
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-32 h-32 opacity-40 group-hover:opacity-70 transition-opacity duration-500 pointer-events-none flex items-center justify-center">
-                            <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
-                        </div>
-                    )}
 
                     {/* Grid View Number - Inside */}
                     {viewMode === 'grid' && (
-                        <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/5 group-hover:text-white/10 transition-colors select-none pointer-events-none z-0">
+                        <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/10 group-hover:text-white/20 transition-colors select-none pointer-events-none z-0 border-l-4 border-b-4 border-white/10 pl-4 pb-2 rounded-bl-3xl">
                             {index + 1}
                         </div>
                     )}
@@ -334,8 +368,18 @@ export function Calendar() {
                 )}>
                   {/* SVG Track Overlay - List View */}
                   {viewMode === 'list' && (
-                      <div className="w-16 h-16 md:w-20 md:h-20 opacity-60 group-hover:opacity-90 transition-opacity duration-300 flex-shrink-0 mr-2">
-                          <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
+                      <div 
+                        className="w-16 h-16 md:w-20 md:h-20 opacity-60 hover:opacity-100 transition-all duration-1000 ease-out flex-shrink-0 mr-2 p-2 cursor-zoom-in hover:scale-110 z-20 group/track relative"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            const info = findCircuitInfo(race.circuit);
+                            if (info) setLayoutCircuit(info);
+                        }}
+                        title="Ver trazado detallado"
+                      >
+                          {/* Circular Hover Effect - Optimized for ultra-smooth transition using opacity */}
+                          <div className="absolute inset-[-6px] rounded-full border-2 border-white/20 bg-white/5 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.1)] opacity-0 group-hover/track:opacity-100 scale-90 group-hover/track:scale-100 transition-all duration-1000 ease-out pointer-events-none z-0" />
+                          <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] relative z-10" />
                       </div>
                   )}
                   
@@ -370,68 +414,87 @@ export function Calendar() {
                         "flex items-center gap-4",
                         viewMode === 'grid' ? "mt-auto pt-4 border-t border-white/5 justify-between" : ""
                     )}>
-                      <div className="flex -space-x-2 items-end translate-y-1">
+                      <div className="flex -space-x-1 items-end translate-y-1">
                         {race.results.slice(0, 3).map((result, i) => (
                           <div key={result.driverId} className="group/tooltip relative z-10 hover:z-[100] transition-all">
                               <div
                                 className={cn(
-                                  "relative flex items-center justify-center font-black italic text-white shadow-lg transition-transform group-hover/tooltip:scale-110 group-hover/tooltip:-translate-y-2",
-                                  i === 0 ? "w-16 h-16 z-20 bg-gradient-to-br from-yellow-300 to-yellow-600 border-2 border-yellow-200 rounded-xl rotate-3 shadow-[0_0_20px_rgba(234,179,8,0.4)]" : 
-                                  i === 1 ? "w-12 h-12 bg-gradient-to-br from-slate-200 to-slate-400 border border-slate-100 rounded-lg -rotate-3 shadow-[0_0_15px_rgba(148,163,184,0.3)]" :
-                                  "w-9 h-9 bg-gradient-to-br from-orange-400 to-orange-700 border border-orange-300 rounded-lg rotate-6 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
+                                  "relative flex items-center justify-center font-black italic text-white transition-all duration-300 group-hover/tooltip:scale-110 group-hover/tooltip:-translate-y-1",
+                                  "transform -skew-x-12 border-r-2 shadow-xl", // Modern slanted F1 style
+                                  i === 0 ? "w-14 h-14 z-20 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 border-yellow-300 shadow-yellow-500/20" : 
+                                  i === 1 ? "w-11 h-11 z-10 bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500 border-slate-200 shadow-slate-400/20" :
+                                  "w-9 h-9 z-0 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 border-orange-400 shadow-orange-600/20"
                                 )}
                               >
-                                <span className="drop-shadow-md text-lg">{i === 0 ? '1' : i === 1 ? '2' : '3'}</span>
-                                {i === 0 && <Trophy size={18} className="absolute -top-6 text-yellow-300 drop-shadow-[0_0_5px_rgba(253,224,71,0.8)]" />}
+                                {/* Inner Gloss Effect */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-30" />
+                                
+                                <span className={cn(
+                                    "transform skew-x-12 drop-shadow-lg leading-none",
+                                    i === 0 ? "text-2xl" : i === 1 ? "text-lg" : "text-sm"
+                                )}>
+                                    {i === 0 ? '1' : i === 1 ? '2' : '3'}
+                                </span>
+                                
+                                {i === 0 && (
+                                    <Trophy 
+                                        size={16} 
+                                        className="absolute -top-5 left-1/2 -translate-x-1/2 text-yellow-300 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] animate-bounce" 
+                                        style={{ animationDuration: '3s' }}
+                                    />
+                                )}
                               </div>
                               
                               {/* Custom Tooltip - F1 Podium Style */}
-                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-[100] transform translate-y-2 group-hover/tooltip:translate-y-0">
+                              <div className={cn(
+                                  "absolute left-1/2 -translate-x-1/2 w-max opacity-0 group-hover/tooltip:opacity-100 transition-all duration-300 pointer-events-none z-[200]",
+                                  index < 2 ? "top-full mt-4 translate-y-4 group-hover/tooltip:translate-y-0" : "bottom-full mb-4 translate-y-4 group-hover/tooltip:translate-y-0"
+                              )}>
                                   <div className={cn(
-                                      "rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden min-w-[180px] border-2",
-                                      i === 0 ? "border-yellow-400 bg-slate-900" : 
-                                      i === 1 ? "border-slate-300 bg-slate-900" : 
-                                      "border-orange-500 bg-slate-900"
+                                      "rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-hidden min-w-[200px] border-2 backdrop-blur-xl",
+                                      i === 0 ? "border-yellow-400/50 bg-slate-900/95 shadow-yellow-500/10" : 
+                                      i === 1 ? "border-slate-300/50 bg-slate-900/95 shadow-slate-400/10" : 
+                                      "border-orange-500/50 bg-slate-900/95 shadow-orange-600/10"
                                   )}>
                                       {/* Podium Header */}
                                       <div className={cn(
-                                          "px-4 py-2 text-xs font-black uppercase tracking-widest text-center flex items-center justify-center gap-2",
-                                          i === 0 ? "bg-yellow-400 text-black" : 
-                                          i === 1 ? "bg-slate-300 text-black" : 
-                                          "bg-orange-500 text-white"
+                                          "px-4 py-2.5 text-[10px] font-black italic uppercase tracking-[0.2em] text-center flex items-center justify-center gap-2",
+                                          i === 0 ? "bg-gradient-to-r from-yellow-400 to-yellow-600 text-black" : 
+                                          i === 1 ? "bg-gradient-to-r from-slate-300 to-slate-500 text-black" : 
+                                          "bg-gradient-to-r from-orange-500 to-orange-700 text-white"
                                       )}>
-                                          {i === 0 && <Trophy size={14} className="fill-current" />}
+                                          {i === 0 && <Trophy size={12} className="fill-current" />}
                                           {i === 0 ? 'GANADOR' : i === 1 ? '2º LUGAR' : '3º LUGAR'}
                                       </div>
                                       
-                                      <div className="p-4 flex flex-col items-center gap-3 bg-slate-900 relative">
+                                      <div className="p-5 flex flex-col items-center gap-4 bg-slate-950/40 relative">
                                         {/* Podium Glow Effect */}
                                         <div className={cn(
-                                            "absolute top-0 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full blur-[40px] opacity-20 pointer-events-none",
+                                            "absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full blur-[45px] opacity-30 pointer-events-none",
                                             i === 0 ? "bg-yellow-500" : i === 1 ? "bg-slate-400" : "bg-orange-500"
                                         )} />
 
                                         {/* Team Logo */}
                                         {getTeamLogo(result.driverId) ? (
-                                            <div className="w-16 h-16 flex items-center justify-center filter drop-shadow-2xl relative z-10">
+                                            <div className="w-20 h-20 flex items-center justify-center filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] relative z-10">
                                                 <img src={getTeamLogo(result.driverId)} alt="Team" className="w-full h-full object-contain" />
                                             </div>
                                         ) : (
-                                            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center relative z-10">
-                                                <span className="font-bold text-lg text-slate-500">?</span>
+                                            <div className="w-14 h-14 rounded-full bg-slate-800/50 border-2 border-slate-700 flex items-center justify-center relative z-10">
+                                                <span className="font-black italic text-xl text-slate-500">?</span>
                                             </div>
                                         )}
                                         
-                                        <div className="text-center relative z-10">
-                                            <div className="font-black italic text-lg tracking-tighter leading-none mb-1.5 text-white">
+                                        <div className="text-center relative z-10 w-full">
+                                            <div className="font-black italic text-xl tracking-tighter leading-none mb-2 text-white uppercase">
                                                 {getDriverName(result.driverId)}
                                             </div>
-                                            <div className="flex items-center justify-center gap-1.5 bg-white/5 rounded-full px-3 py-1 border border-white/10">
+                                            <div className="flex items-center justify-center gap-2 bg-white/5 rounded-lg py-1.5 px-3 border border-white/10 backdrop-blur-md">
                                                 <div 
-                                                    className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]"
+                                                    className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]"
                                                     style={{ backgroundColor: getTeamColor(result.driverId), color: getTeamColor(result.driverId) }}
                                                 />
-                                                <span className="text-[10px] uppercase tracking-wider text-slate-300 font-bold">
+                                                <span className="text-[11px] uppercase tracking-widest text-slate-200 font-black italic">
                                                     {getTeamName(result.driverId)}
                                                 </span>
                                             </div>
@@ -440,10 +503,11 @@ export function Calendar() {
                                   </div>
                                   {/* Tooltip Arrow */}
                                   <div className={cn(
-                                      "w-4 h-4 transform rotate-45 absolute left-1/2 -translate-x-1/2 -bottom-2 border-r border-b border-white/10",
-                                      i === 0 ? "bg-slate-900 border-yellow-400" : 
-                                      i === 1 ? "bg-slate-900 border-slate-300" : 
-                                      "bg-slate-900 border-orange-500"
+                                      "w-4 h-4 transform rotate-45 absolute left-1/2 -translate-x-1/2 border-white/10",
+                                      index < 2 ? "-top-2 border-l border-t" : "-bottom-2 border-r border-b",
+                                      i === 0 ? "bg-slate-950 border-yellow-400/50" : 
+                                      i === 1 ? "bg-slate-950 border-slate-300/50" : 
+                                      "bg-slate-950 border-orange-500/50"
                                   )}></div>
                               </div>
                           </div>
@@ -489,20 +553,18 @@ export function Calendar() {
             >
               {/* Enhanced Header with Background - Fixed on scroll */}
               <div className="sticky top-0 z-20 overflow-hidden border-b border-white/10 bg-slate-900 shadow-xl">
-                  {/* Background Image with Overlay */}
-                  <div 
+                  {/* Optimized Modal Background Image */}
+                  <OptimizedCircuitImage 
+                      src={findCircuitInfo(selectedRace.circuit)?.photoUrl || `https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400`}
+                      alt={selectedRace.circuit}
+                      isHistorical={isHistorical}
                       className="absolute inset-0 z-0 opacity-40 grayscale"
-                      style={{
-                          backgroundImage: `url(${findCircuitInfo(selectedRace.circuit)?.photoUrl || `https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400`})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                      }}
                   />
                   <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-transparent" />
                   
-                  {/* SVG Track Overlay in Modal */}
-                  <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 h-48 opacity-20 pointer-events-none flex items-center justify-center">
-                      <CircuitTrack circuitInfo={findCircuitInfo(selectedRace.circuit)} className="w-full h-full text-white" />
+                  {/* SVG Track Overlay in Modal - Reduced size and increased padding to prevent cutting */}
+                  <div className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 w-40 h-40 md:w-56 md:h-56 opacity-20 pointer-events-none flex items-center justify-center p-10">
+                      <CircuitTrack circuitInfo={findCircuitInfo(selectedRace.circuit)} className="w-full h-full text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" />
                   </div>
                   
                   <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
@@ -724,6 +786,80 @@ export function Calendar() {
                     </div>
                 )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Circuit Layout Modal */}
+        {layoutCircuit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 pt-24 bg-black/90 backdrop-blur-md"
+            onClick={() => setLayoutCircuit(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full relative shadow-[0_0_50px_rgba(255,255,255,0.1)] mb-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+                <div className="absolute top-4 right-4 z-10">
+                    <button
+                        onClick={() => setLayoutCircuit(null)}
+                        className="p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors text-black"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                
+                <div className="p-6 md:p-8 flex flex-col items-center">
+                    <div className="flex items-center gap-4 mb-6 self-start">
+                        <div className="text-3xl">{layoutCircuit.flag}</div>
+                        <div>
+                            <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter leading-none">
+                                {layoutCircuit.name}
+                            </h3>
+                            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">
+                                {layoutCircuit.country}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="w-full aspect-video relative flex items-center justify-center bg-white">
+                        <img 
+                            src={layoutCircuit.layoutSvgUrl} 
+                            alt={`Layout de ${layoutCircuit.name}`}
+                            className="w-full h-full object-contain"
+                            referrerPolicy="no-referrer"
+                        />
+                    </div>
+                    
+                    <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4 w-full border-t border-slate-100 pt-6">
+                        <div className="text-center">
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Longitud</span>
+                            <span className="text-lg font-black italic text-slate-900">{layoutCircuit.lengthKm} km</span>
+                        </div>
+                        <div className="text-center">
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Zonas DRS</span>
+                            <span className="text-lg font-black italic text-slate-900">{layoutCircuit.drsZones}</span>
+                        </div>
+                        <div className="text-center">
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Dificultad</span>
+                            <span className="text-lg font-black italic text-slate-900 uppercase">{layoutCircuit.difficulty}</span>
+                        </div>
+                        <div className="text-center">
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Record Vuelta</span>
+                            <span className="text-lg font-black italic text-slate-900">{layoutCircuit.lapRecord} ({layoutCircuit.lapRecordYear})</span>
+                        </div>
+                        <div className="text-center">
+                            <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Vueltas</span>
+                            <span className="text-lg font-black italic text-slate-900">{layoutCircuit.numLaps}</span>
+                        </div>
+                    </div>
+                </div>
             </motion.div>
           </motion.div>
         )}
