@@ -3,6 +3,7 @@ import { StatsOverview } from './dashboard/StatsOverview';
 import { Podium } from './dashboard/Podium';
 import { DriversTable } from './dashboard/DriversTable';
 import { ConstructorsTable } from './dashboard/ConstructorsTable';
+import { TeammateBattles } from './dashboard/TeammateBattles';
 import { EvolutionChart } from './dashboard/EvolutionChart';
 import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -206,6 +207,7 @@ export function Dashboard() {
       {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
       <DriversTable drivers={sortedDrivers} constructors={data.constructors} races={data.races} />
       <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} races={data.races} drivers={data.drivers} />
+      {hasCompletedRaces && <TeammateBattles drivers={data.drivers} constructors={data.constructors} races={data.races} />}
       {hasCompletedRaces && <EvolutionChart data={data} />}
     </div>
   );

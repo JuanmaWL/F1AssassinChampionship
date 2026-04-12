@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity, X, Medal, Users, Calendar, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity, X, Medal, Users, Calendar, MapPin, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Driver, Constructor, Race, RaceResult } from '../../types';
 import { cn } from '../../lib/utils';
@@ -15,6 +15,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [activeFastestLapDriver, setActiveFastestLapDriver] = useState<string | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(drivers.length / itemsPerPage);
@@ -56,6 +57,63 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
       bestPosition: bestPosition === 999 ? '-' : bestPosition,
       avgPosition: avgPosition ? avgPosition.toFixed(1) : '-'
     };
+  }, [races]);
+
+  const calculateRatings = useCallback((driverId: string) => {
+    const completedRaces = races.filter(r => r.status === 'completed' && r.results);
+    const totalCompletedRaces = completedRaces.length;
+    const results = completedRaces.map(r => r.results!.find(res => res.driverId === driverId)).filter(Boolean) as RaceResult[];
+    
+    if (results.length === 0) return { rit: 75, cns: 75, sup: 80, exp: 50, med: 76 };
+
+    const racesEntered = results.length;
+    const participationRate = totalCompletedRaces > 0 ? racesEntered / totalCompletedRaces : 0;
+    
+    const dnfs = results.filter(r => r.dnf || r.isDisqualified).length;
+    const finishes = results.filter(r => !r.dnf && !r.isDisqualified);
+    
+    // Pace (Ritmo)
+    const fastestLaps = results.filter(r => r.fastestLap).length;
+    const avgPos = finishes.length > 0 ? finishes.reduce((acc, r) => acc + r.position, 0) / finishes.length : 20;
+    let rit = 98 - (avgPos * 2.5) + (fastestLaps * 2);
+    if (racesEntered < 3) rit -= 10; // Unproven pace penalty
+    
+    // Consistency (Constancia)
+    let cns = 85;
+    if (finishes.length > 1) {
+      const mean = avgPos;
+      const variance = finishes.reduce((acc, r) => acc + Math.pow(r.position - mean, 2), 0) / finishes.length;
+      const stdDev = Math.sqrt(variance);
+      cns = 95 - (stdDev * 4) - (dnfs * 5);
+    } else {
+      cns = 60; // Cannot be consistent with 1 or 0 finishes
+    }
+
+    // Survival (Supervivencia)
+    const dnfRate = racesEntered > 0 ? dnfs / racesEntered : 0;
+    let sup = 99 - (dnfRate * 60);
+
+    // Experience (Experiencia)
+    let exp = Math.min(99, 50 + (racesEntered * 2));
+
+    // Clamp values
+    rit = Math.max(40, Math.min(99, Math.round(rit)));
+    cns = Math.max(40, Math.min(99, Math.round(cns)));
+    sup = Math.max(40, Math.min(99, Math.round(sup)));
+    exp = Math.max(40, Math.min(99, Math.round(exp)));
+
+    let med = Math.round((rit * 0.45) + (cns * 0.25) + (sup * 0.15) + (exp * 0.15));
+
+    // Global Participation Penalty
+    if (participationRate < 0.25) {
+        med -= 15;
+    } else if (participationRate < 0.5) {
+        med -= 8;
+    }
+
+    med = Math.max(40, Math.min(99, med));
+
+    return { rit, cns, sup, exp, med };
   }, [races]);
 
   return (
@@ -131,7 +189,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                       return (
                           <motion.tr 
                               key={driver.id}
-                              onClick={() => setSelectedDriver(driver)}
+                              onClick={() => { setSelectedDriver(driver); setShowLegend(false); }}
                               initial={{ opacity: 0, x: -10, borderBottomColor: 'rgba(255,255,255,0.05)' }}
                               animate={{ 
                                   opacity: 1, 
@@ -333,7 +391,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.9, y: 20 }}
-                className="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative"
+                className="bg-slate-900 border border-white/10 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden relative"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header with Team Color */}
@@ -346,29 +404,12 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                   <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
                   <button
                     onClick={() => setSelectedDriver(null)}
-                    className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10 z-10"
+                    className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10 z-50"
                   >
                     <X size={20} />
                   </button>
                   
-                  <div className="absolute -bottom-12 left-8 flex items-end gap-6">
-                    <div 
-                      className="w-24 h-24 rounded-2xl bg-slate-800 border-4 border-slate-900 flex items-center justify-center shadow-xl overflow-hidden"
-                      style={{ borderColor: selectedDriver.teamColor }}
-                    >
-                      {(() => {
-                        const fallbackUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(selectedDriver.id)}&backgroundColor=slate800`;
-                        const avatarSrc = selectedDriver.avatarUrl || fallbackUrl;
-                        return (
-                          <img
-                            src={avatarSrc}
-                            alt={selectedDriver.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.currentTarget.src = fallbackUrl; }}
-                          />
-                        );
-                      })()}
-                    </div>
+                  <div className="absolute bottom-6 left-8 flex items-end gap-6">
                     <div className="mb-2">
                       <h3 className="text-3xl font-black italic text-white uppercase tracking-tighter drop-shadow-lg">
                         {selectedDriver.name}
@@ -385,9 +426,178 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                   </div>
                 </div>
 
-                <div className="pt-16 p-8">
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Left Column: EA Sports Style Rating Card */}
+                  <div className="flex flex-col items-center">
+                    {(() => {
+                      const ratings = calculateRatings(selectedDriver.id);
+                      
+                      // Determine card color based on MED (OVR)
+                      let cardBg = "bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border-slate-500 text-slate-200"; // Bronze/Default
+                      let glow = "";
+                      let divider = "bg-white/20";
+                      let statLabel = "opacity-70";
+                      let pattern = "bg-[repeating-linear-gradient(-45deg,transparent,transparent_6px,rgba(0,0,0,0.3)_6px,rgba(0,0,0,0.3)_12px)]";
+                      
+                      if (ratings.med >= 90) {
+                        cardBg = "bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 border-yellow-200 text-yellow-950";
+                        glow = "shadow-[0_0_40px_rgba(234,179,8,0.5)]";
+                        divider = "bg-yellow-900/20";
+                        statLabel = "text-yellow-900/70";
+                        pattern = "bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.15)_10px,rgba(255,255,255,0.15)_20px)]";
+                      } else if (ratings.med >= 80) {
+                        cardBg = "bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 border-white text-slate-900";
+                        glow = "shadow-[0_0_30px_rgba(203,213,225,0.4)]";
+                        divider = "bg-slate-900/20";
+                        statLabel = "text-slate-900/70";
+                        pattern = "bg-[radial-gradient(rgba(255,255,255,0.2)_2px,transparent_2px)] [background-size:12px_12px]";
+                      } else {
+                        cardBg = "bg-gradient-to-br from-orange-800 via-orange-900 to-slate-900 border-orange-700 text-orange-100";
+                        glow = "shadow-[0_0_20px_rgba(194,65,12,0.4)]";
+                      }
+
+                      const fallbackUrl = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(selectedDriver.id)}&backgroundColor=slate800`;
+                      const avatarSrc = selectedDriver.avatarUrl || fallbackUrl;
+
+                      return (
+                        <div 
+                          className="relative w-full max-w-[240px] aspect-[2/3] group cursor-pointer [perspective:1000px]"
+                          onClick={() => setShowLegend(!showLegend)}
+                        >
+                          <motion.div
+                            className="w-full h-full relative [transform-style:preserve-3d] transition-all duration-500"
+                            animate={{ rotateY: showLegend ? 180 : 0 }}
+                          >
+                            {/* FRONT OF CARD */}
+                            <div className={cn(
+                              "absolute inset-0 [backface-visibility:hidden] rounded-2xl border-2 flex flex-col p-4 z-20 overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-2",
+                              cardBg, glow
+                            )}>
+                              {/* Inner texture */}
+                              <div className={cn("absolute inset-0 mix-blend-overlay", pattern)}></div>
+                              
+                              {/* Animated Shine Effect */}
+                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-30 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.6),transparent_60%)]" />
+                              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 z-30 pointer-events-none" />
+
+                              {/* Info Icon */}
+                              <div className="absolute top-3 right-3 opacity-50 group-hover:opacity-100 transition-opacity z-40">
+                                 <Info size={16} />
+                              </div>
+                              
+                              {/* Top Row: Rating & Logos */}
+                              <div className="relative z-10 flex justify-between items-start">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-5xl font-black leading-none tracking-tighter drop-shadow-sm">{ratings.med}</span>
+                                  <span className="text-xs font-bold uppercase tracking-widest opacity-90">MED</span>
+                                </div>
+                                <div className="flex flex-col items-end gap-2 pr-6">
+                                  {constructors.find(c => c.name === selectedDriver.team)?.logoUrl && (
+                                    <img src={constructors.find(c => c.name === selectedDriver.team)!.logoUrl} alt="Team" className="w-8 h-8 object-contain drop-shadow-md" />
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Center: Avatar */}
+                              <div className="relative z-10 flex-grow flex items-center justify-center mt-2 mb-2">
+                                <img 
+                                  src={avatarSrc} 
+                                  alt={selectedDriver.name}
+                                  className="w-28 h-28 object-cover rounded-full border-4 shadow-xl bg-slate-800" 
+                                  style={{borderColor: selectedDriver.teamColor}} 
+                                  onError={(e) => { e.currentTarget.src = fallbackUrl; }}
+                                />
+                              </div>
+                              
+                              <div className={cn("relative z-10 w-full h-[2px] my-2 rounded-full", divider)} />
+                              
+                              {/* Stats Grid */}
+                              <div className="relative z-10 w-full grid grid-cols-2 gap-x-4 gap-y-1 text-sm font-bold uppercase tracking-wider">
+                                <div className="flex justify-between items-center">
+                                  <span className={statLabel}>RIT</span>
+                                  <span className="drop-shadow-sm">{ratings.rit}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className={statLabel}>CNS</span>
+                                  <span className="drop-shadow-sm">{ratings.cns}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className={statLabel}>SUP</span>
+                                  <span className="drop-shadow-sm">{ratings.sup}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className={statLabel}>EXP</span>
+                                  <span className="drop-shadow-sm">{ratings.exp}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* BACK OF CARD (LEGEND) */}
+                            <div 
+                              className={cn(
+                                "absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border-2 flex flex-col z-20 overflow-hidden shadow-2xl transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-2",
+                                "bg-slate-950 border-slate-700"
+                              )}
+                            >
+                              {/* Punchy Background */}
+                              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.4),transparent_70%)]"></div>
+                              <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(255,255,255,0.05)_2px,rgba(255,255,255,0.05)_4px)]"></div>
+                              
+                              <div className="relative z-10 flex flex-col h-full p-5">
+                                <div className="flex items-center justify-center gap-2 mb-4 pb-3 border-b border-white/10">
+                                  <Activity className="text-blue-400" size={18} />
+                                  <h4 className="font-black text-white uppercase tracking-widest text-sm">Atributos</h4>
+                                </div>
+                                
+                                <div className="flex-grow flex flex-col justify-center space-y-3 text-xs">
+                                  <div className="flex items-start gap-3">
+                                    <span className="font-black text-blue-400 w-8 text-right">MED</span>
+                                    <span className="text-slate-300 leading-tight">Valoración global del piloto.</span>
+                                  </div>
+                                  <div className="flex items-start gap-3">
+                                    <span className="font-black text-white w-8 text-right">RIT</span>
+                                    <span className="text-slate-300 leading-tight">Ritmo y velocidad pura.</span>
+                                  </div>
+                                  <div className="flex items-start gap-3">
+                                    <span className="font-black text-white w-8 text-right">CNS</span>
+                                    <span className="text-slate-300 leading-tight">Constancia en resultados.</span>
+                                  </div>
+                                  <div className="flex items-start gap-3">
+                                    <span className="font-black text-white w-8 text-right">SUP</span>
+                                    <span className="text-slate-300 leading-tight">Capacidad de evitar DNF.</span>
+                                  </div>
+                                  <div className="flex items-start gap-3">
+                                    <span className="font-black text-white w-8 text-right">EXP</span>
+                                    <span className="text-slate-300 leading-tight">Experiencia en carreras.</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-auto pt-4 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
+                                  <div className="flex flex-col items-center p-1.5 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+                                    <span className="text-[9px] font-black text-yellow-500 uppercase tracking-wider">Oro</span>
+                                    <span className="text-[11px] font-bold text-white">≥ 90</span>
+                                  </div>
+                                  <div className="flex flex-col items-center p-1.5 bg-slate-400/10 rounded-lg border border-slate-400/30">
+                                    <span className="text-[9px] font-black text-slate-300 uppercase tracking-wider">Plata</span>
+                                    <span className="text-[11px] font-bold text-white">80-89</span>
+                                  </div>
+                                  <div className="flex flex-col items-center p-1.5 bg-orange-700/10 rounded-lg border border-orange-700/30">
+                                    <span className="text-[9px] font-black text-orange-500 uppercase tracking-wider">Bronce</span>
+                                    <span className="text-[11px] font-bold text-white">&lt; 80</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Right Column: Stats & Form */}
+                  <div className="md:col-span-2 space-y-8">
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-4">
                     {(() => {
                       const stats = getDriverStats(selectedDriver.id);
                       return (
@@ -417,67 +627,68 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                     })()}
                   </div>
                 
-                {/* Recent Form (Last 5 races) */}
-                <div className="mt-8">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Activity size={16} />
-                    Estado de Forma (Últimas 5)
-                  </h4>
-                  <div className="flex gap-2">
-                    {(() => {
-                      const completedRaces = races.filter(r => r.status === 'completed' && r.results).slice(-5);
-                      if (completedRaces.length === 0) return <span className="text-slate-500 text-sm italic">Sin datos de carreras</span>;
-                      
-                      return completedRaces.map(race => {
-                        const res = race.results!.find(r => r.driverId === selectedDriver.id);
-                        let bgColor = "bg-slate-800";
-                        let textColor = "text-slate-300";
-                        let text = "-";
-                        
-                        if (res) {
-                          if (res.dnf || res.isDisqualified) {
-                            bgColor = "bg-red-500/20";
-                            textColor = "text-red-400";
-                            text = "DNF";
-                          } else if (res.position === 1) {
-                            bgColor = "bg-yellow-500/20";
-                            textColor = "text-yellow-400";
-                            text = "1º";
-                          } else if (res.position <= 3) {
-                            bgColor = "bg-slate-300/20";
-                            textColor = "text-slate-200";
-                            text = `${res.position}º`;
-                          } else if (res.points > 0) {
-                            bgColor = "bg-green-500/20";
-                            textColor = "text-green-400";
-                            text = `${res.position}º`;
-                          } else {
-                            text = `${res.position}º`;
-                          }
-                        }
-                        
-                        return (
-                          <div key={race.id} className="flex-1 flex flex-col items-center gap-2 group/race relative">
-                            <div className={cn("w-full py-2 rounded-lg border border-white/5 flex justify-center items-center font-mono font-bold text-sm transition-colors", bgColor, textColor)}>
-                              {text}
-                            </div>
-                            {race.flagCode && (
-                              <img src={`https://flagcdn.com/w20/${race.flagCode}.png`} alt={race.name} className="w-5 h-3.5 rounded-sm object-cover opacity-50 group-hover/race:opacity-100 transition-opacity" />
-                            )}
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full mb-2 opacity-0 group-hover/race:opacity-100 transition-opacity bg-slate-900 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap pointer-events-none z-10">
-                              {race.name}
-                            </div>
-                          </div>
-                        );
-                      });
-                    })()}
+                    {/* Recent Form (Last 5 races) */}
+                    <div className="mt-8">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Activity size={16} />
+                        Estado de Forma (Últimas 5)
+                      </h4>
+                      <div className="flex gap-2">
+                        {(() => {
+                          const completedRaces = races.filter(r => r.status === 'completed' && r.results).slice(-5);
+                          if (completedRaces.length === 0) return <span className="text-slate-500 text-sm italic">Sin datos de carreras</span>;
+                          
+                          return completedRaces.map(race => {
+                            const res = race.results!.find(r => r.driverId === selectedDriver.id);
+                            let bgColor = "bg-slate-800";
+                            let textColor = "text-slate-300";
+                            let text = "-";
+                            
+                            if (res) {
+                              if (res.dnf || res.isDisqualified) {
+                                bgColor = "bg-red-500/20";
+                                textColor = "text-red-400";
+                                text = "DNF";
+                              } else if (res.position === 1) {
+                                bgColor = "bg-yellow-500/20";
+                                textColor = "text-yellow-400";
+                                text = "1º";
+                              } else if (res.position <= 3) {
+                                bgColor = "bg-slate-300/20";
+                                textColor = "text-slate-200";
+                                text = `${res.position}º`;
+                              } else if (res.points > 0) {
+                                bgColor = "bg-green-500/20";
+                                textColor = "text-green-400";
+                                text = `${res.position}º`;
+                              } else {
+                                text = `${res.position}º`;
+                              }
+                            }
+                            
+                            return (
+                              <div key={race.id} className="flex-1 flex flex-col items-center gap-2 group/race relative">
+                                <div className={cn("w-full py-2 rounded-lg border border-white/5 flex justify-center items-center font-mono font-bold text-sm transition-colors", bgColor, textColor)}>
+                                  {text}
+                                </div>
+                                {race.flagCode && (
+                                  <img src={`https://flagcdn.com/w20/${race.flagCode}.png`} alt={race.name} className="w-5 h-3.5 rounded-sm object-cover opacity-50 group-hover/race:opacity-100 transition-opacity" />
+                                )}
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full mb-2 opacity-0 group-hover/race:opacity-100 transition-opacity bg-slate-900 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap pointer-events-none z-10">
+                                  {race.name}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
       </AnimatePresence>,
       document.body
     )}
