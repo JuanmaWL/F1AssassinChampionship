@@ -330,7 +330,7 @@ export function Calendar() {
                         alt={race.circuit}
                         isHistorical={isHistorical}
                         className={cn(
-                            "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-700",
+                            "absolute inset-0 opacity-10 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-1000",
                             isHistorical && "sepia"
                         )}
                     />
@@ -809,20 +809,20 @@ export function Calendar() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full relative shadow-[0_0_50px_rgba(255,255,255,0.1)] mb-8"
+              className="bg-white rounded-3xl overflow-hidden max-w-5xl w-[95vw] max-h-[90vh] relative shadow-[0_0_50px_rgba(255,255,255,0.1)] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-                <div className="absolute top-4 right-4 z-10">
+                <div className="absolute top-4 right-4 z-50">
                     <button
                         onClick={() => setLayoutCircuit(null)}
-                        className="p-2 bg-black/5 hover:bg-black/10 rounded-full transition-colors text-black"
+                        className="p-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors text-black backdrop-blur-sm"
                     >
-                        <X size={20} />
+                        <X size={24} />
                     </button>
                 </div>
                 
-                <div className="p-6 md:p-8 flex flex-col items-center">
-                    <div className="flex items-center gap-4 mb-6 self-start">
+                <div className="p-6 md:p-8 flex flex-col items-center overflow-y-auto">
+                    <div className="flex items-center gap-4 mb-6 self-start shrink-0">
                         <div className="text-3xl">{layoutCircuit.flag}</div>
                         <div>
                             <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter leading-none">
@@ -834,16 +834,23 @@ export function Calendar() {
                         </div>
                     </div>
                     
-                    <div className="w-full aspect-video relative flex items-center justify-center bg-white">
+                    <div className="w-full flex-grow flex items-center justify-center bg-white min-h-[200px] relative">
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+                        </div>
                         <img 
                             src={layoutCircuit.layoutSvgUrl} 
                             alt={`Layout de ${layoutCircuit.name}`}
-                            className="w-full h-full object-contain"
+                            className="max-w-full max-h-[50vh] object-contain relative z-10"
                             referrerPolicy="no-referrer"
+                            onLoad={(e) => {
+                                const loader = e.currentTarget.parentElement?.querySelector('.animate-spin');
+                                if (loader) loader.parentElement?.remove();
+                            }}
                         />
                     </div>
                     
-                    <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4 w-full border-t border-slate-100 pt-6">
+                    <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4 w-full border-t border-slate-100 pt-6 shrink-0">
                         <div className="text-center">
                             <span className="block text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Longitud</span>
                             <span className="text-lg font-black italic text-slate-900">{layoutCircuit.lengthKm} km</span>

@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { IntroAnimation } from './components/IntroAnimation';
-import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton';
 import { BarChart2, Calendar as CalendarIcon, Trophy, Loader2, Dices, Shield, Swords } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
@@ -22,6 +21,21 @@ const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
     <Loader2 className="w-10 h-10 animate-spin mb-4 text-red-500" />
     <p className="font-mono text-xs uppercase tracking-widest">Cargando módulo...</p>
+  </div>
+);
+
+const LoadingOverlay = () => (
+  <div className="space-y-8 animate-pulse">
+    <div className="h-64 md:h-96 bg-slate-900/50 rounded-2xl border border-white/5 relative overflow-hidden">
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="h-32 bg-slate-900/50 rounded-2xl border border-white/5 relative overflow-hidden">
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+        </div>
+      ))}
+    </div>
   </div>
 );
 
@@ -355,9 +369,9 @@ function AppContent() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
               >
-                <DashboardSkeleton />
+                <LoadingOverlay />
               </motion.div>
           ) : isChangingSeason ? (
               null
@@ -367,7 +381,7 @@ function AppContent() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
               >
                 <Suspense fallback={<LoadingSpinner />}>
                     {activeTab === 'dashboard' && <Dashboard />}

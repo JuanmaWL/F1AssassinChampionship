@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useChampionship } from '../context/ChampionshipContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle, Zap, ZapOff, X, Maximize2, Minimize2 } from 'lucide-react';
@@ -55,6 +56,7 @@ function DriverDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [sortMode, setSortMode] = useState<'alpha' | 'team'>('alpha');
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selected = drivers.find(d => d.id === value);
 
@@ -69,14 +71,18 @@ function DriverDropdown({
   }, []);
 
   const sortedDrivers = useMemo(() => {
-    return [...drivers].sort((a, b) => {
+    let filtered = drivers.filter(d => 
+      d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      d.team.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    return filtered.sort((a, b) => {
       if (sortMode === 'team') {
         const teamCompare = a.team.localeCompare(b.team);
         if (teamCompare !== 0) return teamCompare;
       }
       return a.name.localeCompare(b.name);
     });
-  }, [drivers, sortMode]);
+  }, [drivers, sortMode, searchTerm]);
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
@@ -107,19 +113,28 @@ function DriverDropdown({
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="absolute z-50 w-full bottom-full mb-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col"
           >
-            <div className="p-2 border-b border-white/10 flex gap-2 bg-slate-950/50 shrink-0">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setSortMode('alpha'); }}
-                className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'alpha' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
-              >
-                A-Z
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setSortMode('team'); }}
-                className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'team' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
-              >
-                Escudería
-              </button>
+            <div className="p-2 border-b border-white/10 space-y-2 bg-slate-950/50 shrink-0">
+              <input
+                type="text"
+                placeholder="Buscar piloto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-white/30"
+              />
+              <div className="flex gap-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setSortMode('alpha'); }}
+                  className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'alpha' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
+                >
+                  A-Z
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setSortMode('team'); }}
+                  className={cn("flex-1 text-[10px] uppercase tracking-widest py-1.5 rounded-md transition-colors", sortMode === 'team' ? "bg-white/20 text-white font-bold" : "text-slate-400 hover:bg-white/5")}
+                >
+                  Escudería
+                </button>
+              </div>
             </div>
             <div className="max-h-60 overflow-y-auto">
               {sortedDrivers.map(d => {
@@ -128,7 +143,7 @@ function DriverDropdown({
                 <button
                   key={d.id}
                   disabled={d.id === disabledId}
-                  onClick={() => { onChange(d.id); setIsOpen(false); }}
+                  onClick={() => { onChange(d.id); setIsOpen(false); setSearchTerm(''); }}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 transition-colors text-left",
                     d.id === disabledId ? "opacity-30 cursor-not-allowed" : "hover:bg-white/10"
@@ -276,6 +291,16 @@ export function HeadToHead() {
     setShowFloatingControls(false);
     setShowPeriodSelector(false);
   }, [driver1Id, driver2Id]);
+
+  // Lock scroll during fight animation
+  useEffect(() => {
+    if (showFightAnim) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [showFightAnim]);
 
   useEffect(() => {
     localStorage.setItem('f1-h2h-anim', enableFightAnim.toString());
@@ -490,240 +515,243 @@ export function HeadToHead() {
   return (
     <div className="space-y-12 pb-32">
       {/* Fight Animation Overlay */}
-      <AnimatePresence>
-        {showFightAnim && driver1 && driver2 && (
-          <motion.div 
-            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950 w-screen h-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 1, ease: "easeInOut" } }}
-          >
-            {/* Split Background with Diagonal Cut */}
-            <div className="absolute inset-0 flex overflow-hidden">
-              <motion.div 
-                className="absolute inset-0 w-full h-full origin-left" 
-                style={{ 
-                  backgroundColor: driver1.teamColor,
-                  clipPath: 'polygon(0 0, 60% 0, 40% 100%, 0% 100%)'
-                }}
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
-                
-                {/* Fire/Energy Particles Left */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(10)].map((_, i) => (
-                    <motion.div
-                      key={`p1-${i}`}
-                      className="absolute w-1 h-20 bg-white/20 blur-sm"
-                      style={{ 
-                        left: `${Math.random() * 60}%`, 
-                        top: `${Math.random() * 100}%`,
-                        rotate: '11deg'
-                      }}
-                      animate={{ 
-                        y: [-100, 1000],
-                        opacity: [0, 1, 0]
-                      }}
-                      transition={{ 
-                        duration: 1 + Math.random() * 2, 
-                        repeat: Infinity, 
-                        delay: Math.random() * 2 
-                      }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                className="absolute inset-0 w-full h-full origin-right" 
-                style={{ 
-                  backgroundColor: driver2.teamColor,
-                  clipPath: 'polygon(60% 0, 100% 0, 100% 100%, 40% 100%)'
-                }}
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
-                <div className="absolute inset-0 bg-gradient-to-l from-black/90 via-black/40 to-transparent"></div>
-
-                {/* Fire/Energy Particles Right */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(10)].map((_, i) => (
-                    <motion.div
-                      key={`p2-${i}`}
-                      className="absolute w-1 h-20 bg-white/20 blur-sm"
-                      style={{ 
-                        left: `${40 + Math.random() * 60}%`, 
-                        top: `${Math.random() * 100}%`,
-                        rotate: '11deg'
-                      }}
-                      animate={{ 
-                        y: [-100, 1000],
-                        opacity: [0, 1, 0]
-                      }}
-                      transition={{ 
-                        duration: 1 + Math.random() * 2, 
-                        repeat: Infinity, 
-                        delay: Math.random() * 2 
-                      }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Dynamic Slash Line - SVG to match clipPath exactly */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" preserveAspectRatio="none">
-              <motion.line 
-                x1="60%" y1="0" x2="40%" y2="100%" 
-                stroke="white" 
-                strokeWidth="6"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.8 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.8))' }}
-              />
-              <motion.line 
-                x1="60%" y1="0" x2="40%" y2="100%" 
-                stroke="white" 
-                strokeWidth="2"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.3 }}
-              />
-            </svg>
-
-            {/* Flash Effect */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showFightAnim && driver1 && driver2 && (
             <motion.div 
-              className="absolute inset-0 bg-white mix-blend-screen z-50"
+              className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950 w-screen h-screen"
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ delay: 0.7, duration: 0.4 }}
-            />
-
-            {/* Content Container */}
-            <div className="relative z-30 w-full h-full flex items-center justify-center px-4 md:px-20">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-8 md:gap-24 w-full max-w-7xl">
-                
-                {/* Driver 1 */}
-                <motion.div
-                  initial={{ x: -300, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
-                  className="flex flex-col items-center md:items-end"
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 1, ease: "easeInOut" } }}
+            >
+              {/* Split Background with Diagonal Cut */}
+              <div className="absolute inset-0 flex overflow-hidden">
+                <motion.div 
+                  className="absolute inset-0 w-full h-full origin-left" 
+                  style={{ 
+                    backgroundColor: driver1.teamColor,
+                    clipPath: 'polygon(0 0, 60% 0, 40% 100%, 0% 100%)'
+                  }}
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="relative group">
-                    <motion.div 
-                      className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <img 
-                      src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`}
-                      className="w-48 h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
-                      alt={driver1.name}
-                    />
-                    {/* Team Logo Overlay */}
-                    {team1Logo && (
-                      <motion.div 
-                        initial={{ scale: 0, opacity: 0, rotate: -45 }}
-                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                        transition={{ delay: 1, type: "spring" }}
-                        className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 z-20 w-20 h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
-                      >
-                        {/* Neutral glass background for logos of any color */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
-                        <img src={team1Logo} alt={driver1.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
-                      </motion.div>
-                    )}
+                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
+                  
+                  {/* Fire/Energy Particles Left */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(10)].map((_, i) => (
+                      <motion.div
+                        key={`p1-${i}`}
+                        className="absolute w-1 h-20 bg-white/20 blur-sm"
+                        style={{ 
+                          left: `${Math.random() * 60}%`, 
+                          top: `${Math.random() * 100}%`,
+                          rotate: '11deg'
+                        }}
+                        animate={{ 
+                          y: [-100, 1000],
+                          opacity: [0, 1, 0]
+                        }}
+                        transition={{ 
+                          duration: 1 + Math.random() * 2, 
+                          repeat: Infinity, 
+                          delay: Math.random() * 2 
+                        }}
+                      />
+                    ))}
                   </div>
-                  <motion.div 
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.9 }}
-                    className="mt-10 text-right"
-                  >
-                    <div className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-none">
-                      {driver1.name}
-                    </div>
-                    <div className="text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-r-4" style={{ borderColor: driver1.teamColor }}>
-                      {driver1.team}
-                    </div>
-                  </motion.div>
                 </motion.div>
                 
-                {/* VS Center */}
-                <div className="flex flex-col items-center justify-center">
-                  <motion.div 
-                    className="relative"
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ delay: 0.7, duration: 1, type: "spring", bounce: 0.4 }}
-                  >
-                    <div className="absolute inset-0 bg-white blur-[100px] opacity-40 animate-pulse"></div>
-                    <div className="relative z-20 font-black text-8xl md:text-[14rem] text-white italic tracking-tighter drop-shadow-[0_0_60px_rgba(255,255,255,0.8)]">
-                      VS
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Driver 2 */}
-                <motion.div
-                  initial={{ x: 300, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
-                  className="flex flex-col items-center md:items-start"
+                <motion.div 
+                  className="absolute inset-0 w-full h-full origin-right" 
+                  style={{ 
+                    backgroundColor: driver2.teamColor,
+                    clipPath: 'polygon(60% 0, 100% 0, 100% 100%, 40% 100%)'
+                  }}
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="relative group">
-                    <motion.div 
-                      className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <img 
-                      src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`}
-                      className="w-48 h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
-                      alt={driver2.name}
-                    />
-                    {/* Team Logo Overlay */}
-                    {team2Logo && (
-                      <motion.div 
-                        initial={{ scale: 0, opacity: 0, rotate: 45 }}
-                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                        transition={{ delay: 1, type: "spring" }}
-                        className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 z-20 w-20 h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
-                      >
-                        {/* Neutral glass background for logos of any color */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
-                        <img src={team2Logo} alt={driver2.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
-                      </motion.div>
-                    )}
+                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                  <div className="absolute inset-0 bg-gradient-to-l from-black/90 via-black/40 to-transparent"></div>
+  
+                  {/* Fire/Energy Particles Right */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    {[...Array(10)].map((_, i) => (
+                      <motion.div
+                        key={`p2-${i}`}
+                        className="absolute w-1 h-20 bg-white/20 blur-sm"
+                        style={{ 
+                          left: `${40 + Math.random() * 60}%`, 
+                          top: `${Math.random() * 100}%`,
+                          rotate: '11deg'
+                        }}
+                        animate={{ 
+                          y: [-100, 1000],
+                          opacity: [0, 1, 0]
+                        }}
+                        transition={{ 
+                          duration: 1 + Math.random() * 2, 
+                          repeat: Infinity, 
+                          delay: Math.random() * 2 
+                        }}
+                      />
+                    ))}
                   </div>
-                  <motion.div 
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.9 }}
-                    className="mt-10 text-left"
-                  >
-                    <div className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-none">
-                      {driver2.name}
-                    </div>
-                    <div className="text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-l-4" style={{ borderColor: driver2.teamColor }}>
-                      {driver2.team}
-                    </div>
-                  </motion.div>
                 </motion.div>
-
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  
+              {/* Dynamic Slash Line - SVG to match clipPath exactly */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" preserveAspectRatio="none">
+                <motion.line 
+                  x1="60%" y1="0" x2="40%" y2="100%" 
+                  stroke="white" 
+                  strokeWidth="6"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.8 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  style={{ filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.8))' }}
+                />
+                <motion.line 
+                  x1="60%" y1="0" x2="40%" y2="100%" 
+                  stroke="white" 
+                  strokeWidth="2"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                />
+              </svg>
+  
+              {/* Flash Effect */}
+              <motion.div 
+                className="absolute inset-0 bg-white mix-blend-screen z-50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ delay: 0.7, duration: 0.4 }}
+              />
+  
+              {/* Content Container */}
+              <div className="relative z-30 w-full h-full flex items-center justify-center px-4 md:px-20">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-8 md:gap-24 w-full max-w-7xl">
+                  
+                  {/* Driver 1 */}
+                  <motion.div
+                    initial={{ x: -300, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
+                    className="flex flex-col items-center md:items-end"
+                  >
+                    <div className="relative group">
+                      <motion.div 
+                        className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <img 
+                        src={driver1.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver1.id)}&backgroundColor=slate800`}
+                        className="w-48 h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
+                        alt={driver1.name}
+                      />
+                      {/* Team Logo Overlay */}
+                      {team1Logo && (
+                        <motion.div 
+                          initial={{ scale: 0, opacity: 0, rotate: -45 }}
+                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                          transition={{ delay: 1, type: "spring" }}
+                          className="absolute -bottom-4 -right-4 md:-bottom-6 md:-right-6 z-20 w-20 h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
+                        >
+                          {/* Neutral glass background for logos of any color */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
+                          <img src={team1Logo} alt={driver1.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                        </motion.div>
+                      )}
+                    </div>
+                    <motion.div 
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.9 }}
+                      className="mt-10 text-right w-full px-2"
+                    >
+                      <div className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-[0.9] break-words">
+                        {driver1.name.split(' ').map((part, i) => <div key={i}>{part}</div>)}
+                      </div>
+                      <div className="text-xl sm:text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-r-4 break-words max-w-full" style={{ borderColor: driver1.teamColor }}>
+                        {driver1.team}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                  
+                  {/* VS Center */}
+                  <div className="flex flex-col items-center justify-center">
+                    <motion.div 
+                      className="relative"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.7, duration: 1, type: "spring", bounce: 0.4 }}
+                    >
+                      <div className="absolute inset-0 bg-white blur-[100px] opacity-40 animate-pulse"></div>
+                      <div className="relative z-20 font-black text-6xl sm:text-8xl md:text-[10rem] lg:text-[14rem] text-white italic tracking-tighter drop-shadow-[0_0_60px_rgba(255,255,255,0.8)]">
+                        VS
+                      </div>
+                    </motion.div>
+                  </div>
+  
+                  {/* Driver 2 */}
+                  <motion.div
+                    initial={{ x: 300, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.8, type: "spring", bounce: 0.2 }}
+                    className="flex flex-col items-center md:items-start"
+                  >
+                    <div className="relative group">
+                      <motion.div 
+                        className="absolute -inset-12 bg-white/30 blur-3xl rounded-full"
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <img 
+                        src={driver2.avatarUrl || `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(driver2.id)}&backgroundColor=slate800`}
+                        className="w-40 h-40 sm:w-48 sm:h-48 md:w-80 md:h-80 rounded-full border-4 md:border-8 border-white shadow-[0_0_80px_rgba(0,0,0,0.9)] object-cover bg-slate-900 relative z-10"
+                        alt={driver2.name}
+                      />
+                      {/* Team Logo Overlay */}
+                      {team2Logo && (
+                        <motion.div 
+                          initial={{ scale: 0, opacity: 0, rotate: 45 }}
+                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                          transition={{ delay: 1, type: "spring" }}
+                          className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 z-20 w-16 h-16 sm:w-20 sm:h-20 md:w-32 md:h-32 bg-white/10 backdrop-blur-md rounded-3xl p-4 border-4 border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden"
+                        >
+                          {/* Neutral glass background for logos of any color */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-50"></div>
+                          <img src={team2Logo} alt={driver2.team} className="max-w-[85%] max-h-[85%] object-contain relative z-10 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
+                        </motion.div>
+                      )}
+                    </div>
+                    <motion.div 
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.9 }}
+                      className="mt-10 text-left w-full px-2"
+                    >
+                      <div className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] leading-[0.9] break-words">
+                        {driver2.name.split(' ').map((part, i) => <div key={i}>{part}</div>)}
+                      </div>
+                      <div className="text-xl sm:text-2xl md:text-3xl font-black italic text-white bg-black/40 backdrop-blur-sm px-4 py-1 rounded-lg uppercase tracking-[0.2em] mt-4 inline-block border-l-4 break-words max-w-full" style={{ borderColor: driver2.teamColor }}>
+                        {driver2.team}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+  
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <div className="flex flex-col items-center text-center space-y-4 relative py-8 overflow-hidden">
         {/* Combat Background Effect */}

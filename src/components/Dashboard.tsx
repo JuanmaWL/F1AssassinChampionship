@@ -9,6 +9,7 @@ import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useChampionship } from '../context/ChampionshipContext';
 import { FOOTER_ASSETS } from '../constants/assets';
+import { SectionReveal } from './ui/SectionReveal';
 
 export function Dashboard() {
   const { data, activeSeason, isHistorical } = useChampionship();
@@ -213,12 +214,30 @@ export function Dashboard() {
         )}
       </div>
 
-      <StatsOverview data={data} activeSeason={activeSeason} />
-      {hasCompletedRaces && <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />}
-      <DriversTable drivers={sortedDrivers} constructors={data.constructors} races={data.races} />
-      <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} races={data.races} drivers={data.drivers} />
-      {hasCompletedRaces && <TeammateBattles drivers={data.drivers} constructors={data.constructors} races={data.races} />}
-      {hasCompletedRaces && <EvolutionChart data={data} />}
+      <SectionReveal index={0}>
+        <StatsOverview data={data} activeSeason={activeSeason} />
+      </SectionReveal>
+      {hasCompletedRaces && (
+        <SectionReveal index={1}>
+          <Podium drivers={sortedDrivers} constructors={data.constructors} isSeasonFinished={isSeasonFinished} />
+        </SectionReveal>
+      )}
+      <SectionReveal index={2}>
+        <DriversTable drivers={sortedDrivers} constructors={data.constructors} races={data.races} />
+      </SectionReveal>
+      <SectionReveal index={3}>
+        <ConstructorsTable constructors={sortedConstructors} hasCompletedRaces={hasCompletedRaces} races={data.races} drivers={data.drivers} />
+      </SectionReveal>
+      {hasCompletedRaces && (
+        <SectionReveal index={4}>
+          <TeammateBattles drivers={data.drivers} constructors={data.constructors} races={data.races} />
+        </SectionReveal>
+      )}
+      {hasCompletedRaces && (
+        <SectionReveal index={5}>
+          <EvolutionChart data={data} />
+        </SectionReveal>
+      )}
     </div>
   );
 }
