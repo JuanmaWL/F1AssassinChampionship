@@ -284,13 +284,6 @@ export function Draw() {
       setIsSpinning(false);
 
       fireConfetti();
-
-      const tId2 = setTimeout(() => {
-        setSelectedRaces(prev => [...prev, winner]);
-        setShowWinner(false);
-      }, 4000);
-      timeoutRefs.current.push(tId2);
-
     }, 6000);
     timeoutRefs.current.push(tId1);
   };
@@ -572,21 +565,26 @@ export function Draw() {
             <div className="relative w-full h-full rounded-full bg-slate-950 shadow-[0_0_100px_rgba(0,0,0,1)] p-3 md:p-6">
               <div className="absolute -inset-[6px] rounded-full -z-10" style={{ background: 'conic-gradient(from 0deg, #C9A84C, #F0E68C, #C9A84C, #8B6914, #C9A84C)' }}></div>
               
-              {/* Lights */}
+              {/* Lights with Neon Effect */}
               {Array.from({ length: 48 }).map((_, i) => {
                 const angle = (i * 360) / 48;
                 return (
                   <div
                     key={i}
                     className={cn(
-                      "absolute w-1.5 h-1.5 md:w-3 md:h-3 rounded-full -ml-0.5 -mt-0.5 md:-ml-1.5 md:-mt-1.5 transition-colors duration-200",
+                      "absolute w-1.5 h-1.5 md:w-3 md:h-3 rounded-full -ml-0.5 -mt-0.5 md:-ml-1.5 md:-mt-1.5 transition-all duration-300",
                       isSpinning 
-                        ? (i % 3 === 0 ? "bg-yellow-400 shadow-[0_0_15px_#facc15]" : i % 3 === 1 ? "bg-red-500 shadow-[0_0_15px_#ef4444]" : "bg-white shadow-[0_0_15px_#ffffff]")
-                        : "bg-slate-800"
+                        ? (i % 3 === 0 
+                            ? "bg-yellow-400 shadow-[0_0_15px_#facc15,0_0_30px_#facc15]" 
+                            : i % 3 === 1 
+                              ? "bg-red-500 shadow-[0_0_15px_#ef4444,0_0_30px_#ef4444]" 
+                              : "bg-white shadow-[0_0_15px_#ffffff,0_0_30px_#ffffff]")
+                        : "bg-slate-800 shadow-none"
                     )}
                     style={{
                       top: `calc(50% + ${Math.sin(angle * Math.PI / 180) * 49}%)`,
                       left: `calc(50% + ${Math.cos(angle * Math.PI / 180) * 49}%)`,
+                      opacity: isSpinning ? (Math.random() > 0.3 ? 1 : 0.6) : 0.3
                     }}
                   />
                 );
@@ -739,7 +737,7 @@ export function Draw() {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
-                  className="relative w-full max-w-5xl flex flex-col items-center"
+                  className="relative w-full max-w-7xl flex flex-col md:flex-row items-center justify-center gap-8 p-4 md:p-12"
                 >
                   {/* Background Glow */}
                   <div className={cn(
@@ -747,120 +745,146 @@ export function Draw() {
                     isHistorical ? "bg-amber-500" : "bg-red-600"
                   )} />
 
-                  {/* Header: Country & Name */}
-                  <div className="text-center mb-8 md:mb-12 relative z-10">
+                  {/* Floating Particles */}
+                  {Array.from({ length: 20 }).map((_, i) => (
                     <motion.div
-                      initial={{ y: -20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="flex items-center justify-center gap-4 mb-2"
-                    >
-                      <img 
-                        src={`https://flagcdn.com/w80/${winningRace.flagCode}.png`}
-                        alt={winningRace.country}
-                        className="h-8 md:h-12 w-auto rounded shadow-lg border border-white/10"
-                      />
-                      <h2 className={cn(
-                        "font-black italic uppercase tracking-tighter text-white leading-none",
-                        isFullscreen ? "text-6xl md:text-8xl 2xl:text-9xl" : "text-5xl md:text-7xl"
-                      )}>
-                        {winningRace.country}
-                      </h2>
-                    </motion.div>
-                    <motion.p
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.5 }}
+                      key={i}
+                      className="absolute w-1 h-1 bg-white rounded-full z-0"
+                      initial={{ 
+                        x: Math.random() * 1000 - 500, 
+                        y: Math.random() * 1000 - 500,
+                        opacity: 0 
+                      }}
+                      animate={{ 
+                        y: [null, Math.random() * 200 - 100],
+                        opacity: [0, 0.5, 0]
+                      }}
+                      transition={{ 
+                        duration: Math.random() * 5 + 5, 
+                        repeat: Infinity, 
+                        ease: "linear" 
+                      }}
+                    />
+                  ))}
+
+                  <div className="flex flex-col items-center justify-center gap-6 w-full z-10">
+                    {/* Header: Country & Name */}
+                    <div className="text-center w-full px-4">
+                      <motion.div
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex items-center justify-center gap-4 md:gap-6 mb-2"
+                      >
+                        <img 
+                          src={`https://flagcdn.com/w160/${winningRace.flagCode}.png`}
+                          alt={winningRace.country}
+                          className="h-10 md:h-16 w-auto rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/20 shrink-0"
+                        />
+                        <h2 className={cn(
+                          "font-black italic uppercase tracking-tighter text-white leading-none",
+                          isFullscreen ? "text-5xl md:text-8xl" : "text-4xl md:text-6xl"
+                        )}>
+                          {winningRace.country}
+                        </h2>
+                      </motion.div>
+                      <motion.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className={cn(
+                          "font-bold uppercase tracking-[0.2em] text-slate-400",
+                          isFullscreen ? "text-xl md:text-3xl" : "text-sm md:text-lg"
+                        )}
+                      >
+                        {winningRace.name}
+                        {winningRace.aliases && winningRace.aliases.length > 0 && (
+                          <span className="ml-3 text-slate-500 opacity-60 italic">
+                            ({winningRace.aliases[0]})
+                          </span>
+                        )}
+                      </motion.p>
+                    </div>
+
+                    {/* Circuit Layout SVG */}
+                    <motion.div 
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 15 }}
                       className={cn(
-                        "font-bold uppercase tracking-[0.3em] text-slate-400",
-                        isFullscreen ? "text-lg 2xl:text-2xl" : "text-sm md:text-base"
+                        "relative flex items-center justify-center shrink-0",
+                        isFullscreen ? "h-[300px] md:h-[500px]" : "h-[250px] md:h-[350px]"
                       )}
                     >
-                      {winningRace.name}
-                    </motion.p>
-                  </div>
-
-                  {/* Circuit Layout SVG with Neon Effect */}
-                  <div className={cn(
-                    "relative flex items-center justify-center z-10 w-full",
-                    isFullscreen ? "h-[300px] md:h-[450px] 2xl:h-[550px]" : "h-[250px] md:h-[350px]"
-                  )}>
-                    <svg 
-                      viewBox={winningRace.viewBox || "0 0 500 500"} 
-                      className="w-full h-full"
-                      style={{ 
-                        filter: isHistorical 
-                          ? 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 30px rgba(245, 158, 11, 0.4))'
-                          : 'drop-shadow(0 0 15px rgba(220, 38, 38, 0.8)) drop-shadow(0 0 30px rgba(220, 38, 38, 0.4))'
-                      }}
-                    >
-                      <defs>
-                        <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor={isHistorical ? "#f59e0b" : "#ef4444"} />
-                          <stop offset="100%" stopColor={isHistorical ? "#fbbf24" : "#b91c1c"} />
-                        </linearGradient>
-                      </defs>
-                      
-                      {winningRace.svgPath2 ? (
-                        winningRace.svgPath2.map((path, idx) => (
+                      <svg 
+                        viewBox={winningRace.viewBox || "0 0 500 500"} 
+                        className="w-full h-full transition-all duration-500"
+                        style={{ 
+                          filter: isHistorical 
+                            ? 'drop-shadow(0 0 20px rgba(245, 158, 11, 0.9)) drop-shadow(0 0 40px rgba(245, 158, 11, 0.5))'
+                            : 'drop-shadow(0 0 20px rgba(220, 38, 38, 0.9)) drop-shadow(0 0 40px rgba(220, 38, 38, 0.5))'
+                        }}
+                      >
+                        <defs>
+                          <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor={isHistorical ? "#f59e0b" : "#ef4444"} />
+                            <stop offset="100%" stopColor={isHistorical ? "#fbbf24" : "#b91c1c"} />
+                          </linearGradient>
+                        </defs>
+                        
+                        {winningRace.svgPath2 ? (
+                          winningRace.svgPath2.map((path, idx) => (
+                            <motion.path
+                              key={idx}
+                              d={path}
+                              fill="none"
+                              stroke="url(#circuitGradient)"
+                              strokeWidth="10"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              initial={{ pathLength: 0, opacity: 0 }}
+                              animate={{ pathLength: 1, opacity: 1 }}
+                              transition={{ duration: 2.5, ease: "easeInOut", delay: 0.7 }}
+                            />
+                          ))
+                        ) : winningRace.svgPath ? (
                           <motion.path
-                            key={idx}
-                            d={path}
+                            d={winningRace.svgPath}
                             fill="none"
                             stroke="url(#circuitGradient)"
-                            strokeWidth="8"
+                            strokeWidth="10"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             initial={{ pathLength: 0, opacity: 0 }}
                             animate={{ pathLength: 1, opacity: 1 }}
-                            transition={{ duration: 2, ease: "easeInOut", delay: 0.7 }}
+                            transition={{ duration: 2.5, ease: "easeInOut", delay: 0.7 }}
                           />
-                        ))
-                      ) : winningRace.svgPath ? (
-                        <motion.path
-                          d={winningRace.svgPath}
-                          fill="none"
-                          stroke="url(#circuitGradient)"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          initial={{ pathLength: 0, opacity: 0 }}
-                          animate={{ pathLength: 1, opacity: 1 }}
-                          transition={{ duration: 2, ease: "easeInOut", delay: 0.7 }}
-                        />
-                      ) : null}
-                    </svg>
-
-                    {/* Decorative Sparkles */}
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute -top-10 -right-10"
-                    >
-                      <Sparkles size={48} className={isHistorical ? "text-amber-400" : "text-red-500"} />
+                        ) : null}
+                      </svg>
                     </motion.div>
-                  </div>
 
-                  {/* Confirm Button */}
-                  <motion.button
-                    initial={{ y: 50, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 2.5 }}
-                    onClick={() => {
-                      setShowWinner(false);
-                      setWinningRace(null);
-                    }}
-                    className={cn(
-                      "mt-12 px-12 py-4 rounded-full font-black italic uppercase tracking-widest transition-all relative group overflow-hidden z-10",
-                      isHistorical 
-                        ? "bg-amber-600 hover:bg-amber-500 text-black shadow-[0_0_30px_rgba(245,158,11,0.4)]" 
-                        : "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_30px_rgba(220,38,38,0.4)]"
-                    )}
-                  >
-                    <span className="relative z-10">CONTINUAR</span>
-                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-                  </motion.button>
+                    {/* Confirm Button */}
+                    <motion.button
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 1.5 }}
+                      onClick={() => {
+                        if (winningRace) {
+                          setSelectedRaces(prev => [...prev, winningRace]);
+                        }
+                        setShowWinner(false);
+                        setWinningRace(null);
+                      }}
+                      className={cn(
+                        "px-10 py-4 rounded-full font-black italic uppercase tracking-widest transition-all relative group overflow-hidden text-base",
+                        isHistorical 
+                          ? "bg-amber-600 hover:bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)]" 
+                          : "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]"
+                      )}
+                    >
+                      <span className="relative z-10">CONTINUAR</span>
+                      <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+                    </motion.button>
+                  </div>
                 </motion.div>
               </motion.div>
             )}
