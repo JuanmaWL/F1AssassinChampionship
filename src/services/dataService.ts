@@ -13,6 +13,11 @@ export interface VisitData {
   timestamp: number;
 }
 
+const requireDb = () => {
+  if (!db) throw new Error('Firebase not configured');
+  return db;
+};
+
 export const dataService = {
   /**
    * Loads championship data from Firebase Firestore for a specific season.
@@ -48,12 +53,9 @@ export const dataService = {
    * Saves championship data to Firebase Firestore for a specific season.
    */
   async saveData(data: ChampionshipData, seasonId: SeasonId): Promise<void> {
-    if (!db) {
-      return;
-    }
-
     try {
-      const docRef = doc(db, COLLECTION_NAME, seasonId);
+      const database = requireDb();
+      const docRef = doc(database, COLLECTION_NAME, seasonId);
       await setDoc(docRef, data);
     } catch (error) {
       console.error("Error saving data to Firebase:", error);
@@ -65,9 +67,9 @@ export const dataService = {
    * Saves a visit record to Firestore.
    */
   async saveVisit(visit: VisitData): Promise<void> {
-    if (!db) return;
     try {
-      await addDoc(collection(db, VISITS_COLLECTION), visit);
+      const database = requireDb();
+      await addDoc(collection(database, VISITS_COLLECTION), visit);
     } catch (error) {
       console.error("Error saving visit to Firebase:", error);
     }
@@ -77,9 +79,9 @@ export const dataService = {
    * Retrieves all visit records from Firestore.
    */
   async getVisits(): Promise<VisitData[]> {
-    if (!db) return [];
     try {
-      const q = query(collection(db, VISITS_COLLECTION), orderBy("timestamp", "desc"));
+      const database = requireDb();
+      const q = query(collection(database, VISITS_COLLECTION), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => doc.data() as VisitData);
     } catch (error) {

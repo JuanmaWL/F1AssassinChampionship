@@ -6,6 +6,7 @@ import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { GlobeCalendar } from './GlobeCalendar';
 import { CircuitTrack } from './CircuitTrack';
+import { EmptyState } from './ui/EmptyState';
 import { useChampionship } from '../context/ChampionshipContext';
 import { findCircuitInfo, CircuitData } from '../data/circuits';
 
@@ -153,7 +154,7 @@ export function Calendar() {
   };
 
   return (
-    <div className="pb-20 relative">
+    <div className={cn("relative", data.races.length > 0 && "pb-20")}>
       {/* F1 Style Background for Globe View */}
       {viewMode === 'globe' && (
         <div 
@@ -211,69 +212,56 @@ export function Calendar() {
       )}
 
       <div className="relative z-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
-              <CalendarIcon className={cn("w-8 h-8", accentColor)} />
-              Calendario de Carreras
-          </h2>
-        
-        {/* View Toggle */}
         {data.races.length > 0 && (
-          <div className="bg-slate-900 p-1 rounded-lg border border-white/10 hidden md:flex items-center self-start md:self-auto">
-              <button
-                  onClick={() => setViewMode('list')}
-                  className={cn(
-                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
-                      viewMode === 'list' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                  )}
-              >
-                  <List size={18} />
-                  Lista
-              </button>
-              <button
-                  onClick={() => setViewMode('grid')}
-                  className={cn(
-                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
-                      viewMode === 'grid' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                  )}
-              >
-                  <LayoutGrid size={18} />
-                  Grid
-              </button>
-              <button
-                  onClick={() => setViewMode('globe')}
-                  className={cn(
-                      "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
-                      viewMode === 'globe' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                  )}
-              >
-                  <Globe size={18} />
-                  Mundo
-              </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter flex items-center gap-3">
+                <CalendarIcon className={cn("w-8 h-8", accentColor)} />
+                Calendario de Carreras
+            </h2>
+          
+            {/* View Toggle */}
+            <div className="bg-slate-900 p-1 rounded-lg border border-white/10 hidden md:flex items-center self-start md:self-auto">
+                <button
+                    onClick={() => setViewMode('list')}
+                    className={cn(
+                        "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                        viewMode === 'list' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                    )}
+                >
+                    <List size={18} />
+                    Lista
+                </button>
+                <button
+                    onClick={() => setViewMode('grid')}
+                    className={cn(
+                        "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                        viewMode === 'grid' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                    )}
+                >
+                    <LayoutGrid size={18} />
+                    Grid
+                </button>
+                <button
+                    onClick={() => setViewMode('globe')}
+                    className={cn(
+                        "p-2 rounded-md transition-all flex items-center gap-2 text-sm font-bold uppercase",
+                        viewMode === 'globe' ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                    )}
+                >
+                    <Globe size={18} />
+                    Mundo
+                </button>
+            </div>
           </div>
         )}
-      </div>
 
-      {data.races.length === 0 ? (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-12 flex flex-col items-center justify-center text-center"
-        >
-          <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5">
-            <CalendarIcon className="text-slate-500 w-10 h-10" />
-          </div>
-          <h3 className="text-2xl font-black italic text-white uppercase tracking-tighter mb-3">Calendario Pendiente</h3>
-          <p className="text-slate-400 text-sm max-w-md mx-auto font-mono uppercase tracking-widest leading-relaxed">
-            La FIA está ultimando las fechas de la temporada. Vuelve pronto para conocer el calendario oficial de este campeonato.
-          </p>
-          <div className="mt-8 flex gap-3">
-              {[1, 2, 3].map(i => (
-                  <div key={i} className={cn("w-3 h-1 rounded-full animate-pulse", isHistorical ? "bg-amber-500/30" : "bg-red-500/30")} style={{ animationDelay: `${i * 0.2}s` }} />
-              ))}
-          </div>
-        </motion.div>
-      ) : viewMode === 'globe' ? (
+        {data.races.length === 0 ? (
+          <EmptyState 
+            icon={<CalendarIcon className="w-10 h-10" />}
+            title="Calendario Pendiente"
+            description="La FIA está ultimando las fechas de la temporada. Vuelve pronto para conocer el calendario oficial de este campeonato."
+          />
+        ) : viewMode === 'globe' ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

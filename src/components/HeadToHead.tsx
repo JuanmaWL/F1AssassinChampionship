@@ -7,35 +7,48 @@ import { cn } from '../lib/utils';
 import { Driver, Race, Constructor } from '../types';
 import { F1CarAnimation } from './dashboard/F1CarAnimation';
 
+import { EmptyState } from './ui/EmptyState';
+
 // --- Custom Components ---
 
-const SpeedLines = ({ color, flip = false }: { color: string, flip?: boolean }) => (
-  <div className={cn("absolute inset-0 pointer-events-none overflow-hidden z-0", flip ? "scale-x-[-1]" : "")}>
-    {[...Array(8)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute h-[2px] rounded-full"
-        style={{
-          backgroundColor: color,
-          top: `${10 + Math.random() * 80}%`,
-          left: '100%',
-          width: `${30 + Math.random() * 60}px`,
-          boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`
-        }}
-        animate={{
-          left: ['100%', '-50%'],
-          opacity: [0, 1, 0]
-        }}
-        transition={{
-          duration: 0.4 + Math.random() * 0.6,
-          repeat: Infinity,
-          delay: Math.random() * 2,
-          ease: "linear"
-        }}
-      />
-    ))}
-  </div>
-);
+const SpeedLines = ({ color, flip = false }: { color: string, flip?: boolean }) => {
+  const lines = useMemo(() => {
+    return [...Array(8)].map(() => ({
+      top: `${10 + Math.random() * 80}%`,
+      width: `${30 + Math.random() * 60}px`,
+      duration: 0.4 + Math.random() * 0.6,
+      delay: Math.random() * 2
+    }));
+  }, []);
+
+  return (
+    <div className={cn("absolute inset-0 pointer-events-none overflow-hidden z-0", flip ? "scale-x-[-1]" : "")}>
+      {lines.map((line, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-[2px] rounded-full"
+          style={{
+            backgroundColor: color,
+            top: line.top,
+            left: '100%',
+            width: line.width,
+            boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`
+          }}
+          animate={{
+            left: ['100%', '-50%'],
+            opacity: [0, 1, 0]
+          }}
+          transition={{
+            duration: line.duration,
+            repeat: Infinity,
+            delay: line.delay,
+            ease: "linear"
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // --- Custom Dropdown Components ---
 
@@ -502,9 +515,12 @@ export function HeadToHead() {
 
   if (drivers.length < 2) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
-        <Swords className="w-16 h-16 mb-4 opacity-20" />
-        <p className="font-mono text-sm uppercase tracking-widest">No hay suficientes pilotos</p>
+      <div className="relative z-10">
+        <EmptyState 
+          icon={<Swords className="w-10 h-10" />}
+          title="No hay suficientes pilotos"
+          description="Se necesitan al menos dos pilotos registrados en la temporada para poder realizar una comparativa detallada entre ellos."
+        />
       </div>
     );
   }

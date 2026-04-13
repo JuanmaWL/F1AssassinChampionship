@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, MonitorPlay, LayoutDashboard, ChevronUp, Play, List, LayoutGrid } from 'lucide-react';
+import { Trophy, RotateCcw, Check, Calendar as CalendarIcon, Sparkles, Maximize, Minimize, Info, ChevronUp, Play, List, LayoutGrid } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { useChampionship } from '../context/ChampionshipContext';

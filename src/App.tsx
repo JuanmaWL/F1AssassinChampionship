@@ -363,7 +363,7 @@ function AppContent() {
         activeTab === 'admin' ? "max-w-[1600px]" : "max-w-7xl"
       )}>
         <AnimatePresence mode="wait">
-          {isLoading ? (
+          {isLoading || isChangingSeason ? (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
@@ -373,8 +373,6 @@ function AppContent() {
               >
                 <LoadingOverlay />
               </motion.div>
-          ) : isChangingSeason ? (
-              null
           ) : (
               <motion.div
                 key={activeSeason + activeTab}
@@ -395,7 +393,18 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
-      {activeTab !== 'draw' && activeTab !== 'admin' && <Footer />}
+      <AnimatePresence>
+        {!isLoading && !isChangingSeason && activeTab !== 'draw' && activeTab !== 'admin' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Footer />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
-import { F1Car } from './F1Car';
 import { FOOTER_ASSETS } from '../constants/assets';
 
 import { SeasonId } from '../types';
+
+const F1Car = lazy(() => import('./F1Car').then(module => ({ default: module.F1Car })));
 
 interface IntroAnimationProps {
   onComplete: () => void;
@@ -100,7 +101,9 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
             transition={{ duration: 4, ease: "linear" }}
             className="absolute top-1/2 -translate-y-1/2 z-20 scale-75 md:scale-100 pointer-events-none"
         >
-           <F1Car />
+           <Suspense fallback={null}>
+             <F1Car />
+           </Suspense>
         </motion.div>
       )}
 
