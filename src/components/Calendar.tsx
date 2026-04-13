@@ -298,10 +298,13 @@ export function Calendar() {
           >
             {/* List View Number - Outside */}
             {viewMode === 'list' && (
-                <div className={cn(
-                    "text-5xl font-black italic text-slate-800 transition-colors duration-300 min-w-[3.5rem] text-right select-none",
-                    isHistorical ? "group-hover:text-amber-600" : "group-hover:text-red-600"
-                )}>
+                <div 
+                    className={cn(
+                        "text-5xl font-black italic text-transparent transition-all duration-300 min-w-[3.5rem] text-right select-none",
+                        isHistorical ? "group-hover:text-amber-500/20" : "group-hover:text-red-500/20"
+                    )}
+                    style={{ WebkitTextStroke: isHistorical ? '2px #f59e0b' : '2px #ef4444' }}
+                >
                     {index + 1}
                 </div>
             )}
@@ -335,7 +338,10 @@ export function Calendar() {
 
                     {/* Grid View Number - Inside */}
                     {viewMode === 'grid' && (
-                        <div className="absolute bottom-0 right-0 text-[160px] leading-[0.75] font-black italic text-white/10 group-hover:text-white/20 transition-colors select-none pointer-events-none z-0 border-l-4 border-b-4 border-white/10 pl-4 pb-2 rounded-bl-3xl">
+                        <div 
+                            className="absolute bottom-[-10px] right-2 text-[140px] leading-[0.75] font-black italic text-transparent pointer-events-none select-none z-0 opacity-40 transition-all duration-500 origin-bottom-right group-hover:opacity-80 group-hover:scale-105"
+                            style={{ WebkitTextStroke: isHistorical ? '3px #f59e0b' : '3px #ef4444' }}
+                        >
                             {index + 1}
                         </div>
                     )}
