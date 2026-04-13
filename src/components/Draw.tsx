@@ -7,33 +7,31 @@ import { useAuth } from '../context/AuthContext';
 import { useChampionship } from '../context/ChampionshipContext';
 import { dataService } from '../services/dataService';
 import { Race } from '../types';
+import { CIRCUITS } from '../data/circuits';
 
-const RACES = [
-  { id: 'aus', name: 'GP Australia', short: 'Australia', flagCode: 'au' },
-  { id: 'chn', name: 'GP China', short: 'China', flagCode: 'cn' },
-  { id: 'jpn', name: 'GP Japón', short: 'Japón', flagCode: 'jp' },
-  { id: 'bhr', name: 'GP Bahrein', short: 'Bahrein', flagCode: 'bh' },
-  { id: 'sau', name: 'GP Arabia Saudí', short: 'Arabia Saudí', flagCode: 'sa' },
-  { id: 'mia', name: 'GP Miami', short: 'Miami', flagCode: 'us' },
-  { id: 'emi', name: 'GP Emilia-Romaña', short: 'Emilia-Romaña', flagCode: 'it' },
-  { id: 'mon', name: 'GP Mónaco', short: 'Mónaco', flagCode: 'mc' },
-  { id: 'esp', name: 'GP España', short: 'España', flagCode: 'es' },
-  { id: 'can', name: 'GP Canadá', short: 'Canadá', flagCode: 'ca' },
-  { id: 'aut', name: 'GP Austria', short: 'Austria', flagCode: 'at' },
-  { id: 'gbr', name: 'GP Gran Bretaña', short: 'Gran Bretaña', flagCode: 'gb' },
-  { id: 'bel', name: 'GP Bélgica', short: 'Bélgica', flagCode: 'be' },
-  { id: 'hun', name: 'GP Hungría', short: 'Hungría', flagCode: 'hu' },
-  { id: 'ned', name: 'GP Países Bajos', short: 'Países Bajos', flagCode: 'nl' },
-  { id: 'ita', name: 'GP Italia', short: 'Italia', flagCode: 'it' },
-  { id: 'aze', name: 'GP Azerbaiyán', short: 'Azerbaiyán', flagCode: 'az' },
-  { id: 'sgp', name: 'GP Singapur', short: 'Singapur', flagCode: 'sg' },
-  { id: 'usa', name: 'GP Estados Unidos', short: 'Estados Unidos', flagCode: 'us' },
-  { id: 'mex', name: 'GP México', short: 'México', flagCode: 'mx' },
-  { id: 'bra', name: 'GP Brasil', short: 'Brasil', flagCode: 'br' },
-  { id: 'las', name: 'GP Las Vegas', short: 'Las Vegas', flagCode: 'us' },
-  { id: 'qat', name: 'GP Qatar', short: 'Qatar', flagCode: 'qa' },
-  { id: 'abu', name: 'GP Abu Dabi', short: 'Abu Dabi', flagCode: 'ae' }
-];
+// Transformamos CIRCUITS en las opciones para la ruleta con lógica de etiquetas
+const WHEEL_OPTIONS = Object.values(CIRCUITS).map((circuit, _, all) => {
+  const countryCount = all.filter(c => c.country === circuit.country).length;
+  let label = circuit.country;
+  
+  // Excepciones por longitud de nombre en la ruleta
+  if (circuit.id === 'saudi-arabia') label = 'Jeddah';
+  else if (circuit.id === 'abu-dhabi') label = 'Abu Dabi';
+  else if (countryCount > 1) {
+    // Lógica de diferenciación para países con múltiples circuitos
+    if (circuit.id === 'emilia-romagna') label = 'Imola';
+    else if (circuit.id === 'italy') label = 'Monza';
+    else if (circuit.id === 'miami') label = 'Miami';
+    else if (circuit.id === 'usa') label = 'Austin';
+    else if (circuit.id === 'las-vegas') label = 'Las Vegas';
+    else label = circuit.aliases?.[0] || circuit.name;
+  }
+  
+  return {
+    ...circuit,
+    label
+  };
+});
 
 const TARGET_RACES_COUNT = 12;
 
@@ -119,14 +117,14 @@ const ParticlesCanvas = () => {
 
 export function Draw() {
   const { isAdmin } = useAuth();
-  const { data, activeSeason, setData } = useChampionship();
+  const { data, activeSeason, setData, isHistorical } = useChampionship();
   const containerRef = useRef<HTMLDivElement>(null);
   const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedRaces, setSelectedRaces] = useState<typeof RACES>([]);
+  const [selectedRaces, setSelectedRaces] = useState<typeof WHEEL_OPTIONS>([]);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
-  const [winningRace, setWinningRace] = useState<typeof RACES[0] | null>(null);
+  const [winningRace, setWinningRace] = useState<typeof WHEEL_OPTIONS[0] | null>(null);
   const [showWinner, setShowWinner] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [hasPromptedSave, setHasPromptedSave] = useState(false);
@@ -160,7 +158,7 @@ export function Draw() {
       return;
     }
 
-    const SLICE = 360 / RACES.length;
+    const SLICE = 360 / WHEEL_OPTIONS.length;
     const DURATION = 6000; // ms — debe coincidir con la duración de la transición de la rueda
     const startAng = prevWheelAngleRef.current;
     const totalDelta = targetRotationRef.current - startAng;
@@ -257,7 +255,7 @@ export function Draw() {
     animFrameRefs.current.forEach(cancelAnimationFrame);
     animFrameRefs.current = [];
 
-    const unselected = RACES.filter(r => !selectedRaces.find(sr => sr.id === r.id));
+    const unselected = WHEEL_OPTIONS.filter(r => !selectedRaces.find(sr => sr.id === r.id));
     if (unselected.length === 0) {
       setIsSpinning(false);
       return;
@@ -265,9 +263,9 @@ export function Draw() {
 
     const winner = unselected[Math.floor(Math.random() * unselected.length)];
     setLastSelectedRace(winner.id);
-    const winnerIndex = RACES.findIndex(r => r.id === winner.id);
+    const winnerIndex = WHEEL_OPTIONS.findIndex(r => r.id === winner.id);
 
-    const sliceAngle = 360 / RACES.length;
+    const sliceAngle = 360 / WHEEL_OPTIONS.length;
     const randomOffset = (Math.random() * 0.8 - 0.4) * sliceAngle; 
     const targetMod = (360 - (winnerIndex * sliceAngle) + randomOffset) % 360;
     
@@ -321,8 +319,8 @@ export function Draw() {
     const newRaces: Race[] = selectedRaces.map((race, index) => {
       return {
         id: `race-${index + 1}`,
-        name: race.name,
-        circuit: `Circuito de ${race.short}`,
+        name: `GP de ${race.label}`,
+        circuit: race.name,
         date: "", // Empty date, to be configured manually
         flagCode: race.flagCode,
         status: 'pending'
@@ -429,7 +427,7 @@ export function Draw() {
               <div className="space-y-4">
                 <div className="flex gap-4 items-start group">
                   <div className="w-6 h-6 rounded-md bg-slate-800 border border-white/5 text-red-500 flex items-center justify-center shrink-0 text-xs font-black italic group-hover:bg-red-600 group-hover:text-white transition-colors">1</div>
-                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Se elegirán <strong>12 Grandes Premios</strong> de entre los 24 circuitos de la temporada 2025.</p>
+                  <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Se elegirán <strong>{TARGET_RACES_COUNT} Grandes Premios</strong> de entre los {WHEEL_OPTIONS.length} circuitos de la temporada 2026.</p>
                 </div>
                 <div className="flex gap-4 items-start group">
                   <div className="w-6 h-6 rounded-md bg-slate-800 border border-white/5 text-red-500 flex items-center justify-center shrink-0 text-xs font-black italic group-hover:bg-red-600 group-hover:text-white transition-colors">2</div>
@@ -464,7 +462,7 @@ export function Draw() {
               <h3 className={cn(
                 "font-black italic uppercase tracking-wider text-white transition-all",
                 isFullscreen ? "text-xl 2xl:text-2xl" : "text-lg"
-              )}>Circuitos (24)</h3>
+              )}>Circuitos ({WHEEL_OPTIONS.length})</h3>
               <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
                 <button 
                   onClick={() => setPoolViewMode('list')}
@@ -491,7 +489,7 @@ export function Draw() {
                 "grid gap-2 overflow-y-auto pr-2 h-full custom-scrollbar scroll-smooth",
                 poolViewMode === 'grid' ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2" : "grid-cols-1"
               )}>
-                {RACES.map(race => {
+                {WHEEL_OPTIONS.map(race => {
                   const isSelected = selectedRaces.some(r => r.id === race.id);
                   return (
                     <div 
@@ -506,13 +504,13 @@ export function Draw() {
                     >
                       <img 
                         src={`https://flagcdn.com/w20/${race.flagCode}.png`}
-                        alt={race.short}
+                        alt={race.label}
                         className={cn(
                           "h-auto rounded-xs grayscale-[0.5] transition-all",
                           isFullscreen ? "w-7 2xl:w-10" : "w-4"
                         )}
                       />
-                      <span className="truncate">{race.short}</span>
+                      <span className="truncate">{race.label}</span>
                       {isSelected && <Check size={isFullscreen ? 16 : 10} className="ml-auto" />}
                     </div>
                   );
@@ -603,8 +601,8 @@ export function Draw() {
                   transition={{ duration: 6, ease: [0.15, 0, 0.15, 1] }}
                   style={{ transformOrigin: 'center center' }}
                 >
-                {RACES.map((race, index) => {
-                  const total = RACES.length;
+                {WHEEL_OPTIONS.map((race, index) => {
+                  const total = WHEEL_OPTIONS.length;
                   const angle = 360 / total;
                   const rotationAngle = index * angle;
                   
@@ -646,7 +644,7 @@ export function Draw() {
                       >
                         <img 
                           src={`https://flagcdn.com/w40/${race.flagCode}.png`}
-                          alt={race.short}
+                          alt={race.label}
                           className={cn(
                             "h-auto rounded-sm shadow-md transition-all duration-500",
                             isFullscreen ? "w-12 2xl:w-16" : "w-8",
@@ -669,7 +667,7 @@ export function Draw() {
                             textShadow: isSelected ? 'none' : '0 1px 3px rgba(0,0,0,0.8)'
                           }}
                         >
-                          {race.short}
+                          {race.label}
                         </span>
                       </div>
                       {/* Divider line */}
@@ -679,8 +677,8 @@ export function Draw() {
                 })}
                 
                 {/* Pegs (Pitotes) */}
-                {RACES.map((_, index) => {
-                  const angle = 360 / RACES.length;
+                {WHEEL_OPTIONS.map((_, index) => {
+                  const angle = 360 / WHEEL_OPTIONS.length;
                   const rotationAngle = index * angle + angle / 2;
                   return (
                     <div
@@ -728,100 +726,141 @@ export function Draw() {
             </div>
           </div>
 
-          {/* Winner Overlay - Full-screen Horizontal Banner */}
+          {/* Winner Overlay - Full-screen Cinematic Result */}
           <AnimatePresence>
             {showWinner && winningRace && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl"
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-2xl p-4"
               >
-                  <motion.div 
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: "100%", opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    className={cn(
-                      "bg-gradient-to-r from-red-600 via-red-700 to-red-900 border-y-4 border-white/20 shadow-[0_0_100px_rgba(220,38,38,0.8)] flex items-center justify-center gap-6 md:gap-16 px-6 md:px-20 relative overflow-hidden",
-                      isFullscreen ? "h-56 md:h-72 2xl:h-[380px]" : "h-40 md:h-56"
-                    )}
-                  >
-                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_2s_infinite]"></div>
-                  
-                  <motion.div
-                    initial={{ scale: 0, rotate: -20 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", delay: 0.3 }}
-                    className="shrink-0 relative"
-                  >
-                    <img 
-                      src={`https://flagcdn.com/w320/${winningRace.flagCode}.png`}
-                      alt={winningRace.short}
-                      className={cn(
-                        "w-auto rounded-lg shadow-2xl border-2 border-white/30",
-                        isFullscreen ? "h-32 md:h-48 2xl:h-64" : "h-16 md:h-32"
-                      )}
-                    />
-                    
-                    {/* Passport Stamp */}
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="relative w-full max-w-5xl flex flex-col items-center"
+                >
+                  {/* Background Glow */}
+                  <div className={cn(
+                    "absolute inset-0 blur-[150px] opacity-20 rounded-full transition-colors duration-1000",
+                    isHistorical ? "bg-amber-500" : "bg-red-600"
+                  )} />
+
+                  {/* Header: Country & Name */}
+                  <div className="text-center mb-8 md:mb-12 relative z-10">
                     <motion.div
-                      initial={{ scale: 5, opacity: 0, rotate: -45 }}
-                      animate={{ scale: 1, opacity: 1, rotate: -12 }}
-                      transition={{ type: "spring", damping: 10, stiffness: 180, delay: 0.9 }}
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="flex items-center justify-center gap-4 mb-2"
+                    >
+                      <img 
+                        src={`https://flagcdn.com/w80/${winningRace.flagCode}.png`}
+                        alt={winningRace.country}
+                        className="h-8 md:h-12 w-auto rounded shadow-lg border border-white/10"
+                      />
+                      <h2 className={cn(
+                        "font-black italic uppercase tracking-tighter text-white leading-none",
+                        isFullscreen ? "text-6xl md:text-8xl 2xl:text-9xl" : "text-5xl md:text-7xl"
+                      )}>
+                        {winningRace.country}
+                      </h2>
+                    </motion.div>
+                    <motion.p
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5 }}
                       className={cn(
-                        "absolute z-20 pointer-events-none animate-stamp-land",
-                        isFullscreen 
-                          ? "-bottom-6 -right-6 md:-bottom-8 md:-right-8" 
-                          : "-bottom-4 -right-4 md:-bottom-6 md:-right-6"
+                        "font-bold uppercase tracking-[0.3em] text-slate-400",
+                        isFullscreen ? "text-lg 2xl:text-2xl" : "text-sm md:text-base"
                       )}
                     >
-                        <div className={cn(
-                          "relative flex items-center justify-center rounded-full border-[4px] md:border-[8px] border-[#C9A84C] shadow-[0_15px_40px_rgba(0,0,0,0.7),0_0_30px_rgba(201,168,76,0.3)] bg-black/60 backdrop-blur-[6px]",
-                          isFullscreen ? "w-24 h-24 md:w-36 md:h-36 2xl:w-48 2xl:h-48" : "w-28 h-28 md:w-36 md:h-36 2xl:w-48 2xl:h-48"
-                        )}>
-                          <div className="absolute inset-2 md:inset-3 rounded-full border-2 border-[#C9A84C]/30 border-dashed"></div>
-                          <div className="absolute inset-0 opacity-40 rounded-full bg-[url('https://www.transparenttextures.com/patterns/noise.png')]" />
-                          <div className="flex flex-col items-center justify-center transform -rotate-12 relative z-10">
-                            <div className="px-3 py-0.5 bg-[#C9A84C] text-black font-black uppercase tracking-[0.3em] text-[6px] md:text-[8px] 2xl:text-[10px] mb-1 rounded-sm shadow-lg">F1 WORLD TOUR</div>
-                            <span className={cn(
-                              "font-black uppercase tracking-widest text-[#F0E68C] leading-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]",
-                              isFullscreen ? "text-2xl md:text-5xl 2xl:text-6xl" : "text-2xl md:text-4xl 2xl:text-5xl"
-                            )}>APPROVED</span>
-                            <div className="mt-1 flex items-center gap-2">
-                              <div className="h-[2px] w-3 md:w-4 bg-[#C9A84C]/40"></div>
-                              <span className={cn(
-                                "font-mono text-[#C9A84C] font-black tracking-[0.4em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]",
-                                isFullscreen ? "text-[14px] md:text-xl 2xl:text-2xl" : "text-xs md:text-lg 2xl:text-xl"
-                              )}>2026</span>
-                            <div className="h-[2px] w-3 md:w-4 bg-[#C9A84C]/40"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </motion.div>
- 
-                  <motion.div
-                    initial={{ x: 100, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex flex-col items-start"
-                  >
-                    <span className="text-red-200 font-mono text-sm md:text-base font-bold uppercase tracking-[0.5em] mb-2">¡NUEVO GP CONFIRMADO!</span>
-                    <h3 className={cn(
-                      "text-white font-black italic uppercase tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transition-all",
-                      isFullscreen ? "text-6xl md:text-9xl 2xl:text-[10rem]" : "text-4xl md:text-8xl"
-                    )}>
                       {winningRace.name}
-                    </h3>
-                  </motion.div>
+                    </motion.p>
+                  </div>
 
-                  {/* Decorative Sparkles */}
-                  <div className="absolute top-4 right-10 opacity-30">
-                    <Sparkles size={40} className="text-white animate-pulse" />
+                  {/* Circuit Layout SVG with Neon Effect */}
+                  <div className={cn(
+                    "relative flex items-center justify-center z-10 w-full",
+                    isFullscreen ? "h-[300px] md:h-[450px] 2xl:h-[550px]" : "h-[250px] md:h-[350px]"
+                  )}>
+                    <svg 
+                      viewBox={winningRace.viewBox || "0 0 500 500"} 
+                      className="w-full h-full"
+                      style={{ 
+                        filter: isHistorical 
+                          ? 'drop-shadow(0 0 15px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 30px rgba(245, 158, 11, 0.4))'
+                          : 'drop-shadow(0 0 15px rgba(220, 38, 38, 0.8)) drop-shadow(0 0 30px rgba(220, 38, 38, 0.4))'
+                      }}
+                    >
+                      <defs>
+                        <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={isHistorical ? "#f59e0b" : "#ef4444"} />
+                          <stop offset="100%" stopColor={isHistorical ? "#fbbf24" : "#b91c1c"} />
+                        </linearGradient>
+                      </defs>
+                      
+                      {winningRace.svgPath2 ? (
+                        winningRace.svgPath2.map((path, idx) => (
+                          <motion.path
+                            key={idx}
+                            d={path}
+                            fill="none"
+                            stroke="url(#circuitGradient)"
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            initial={{ pathLength: 0, opacity: 0 }}
+                            animate={{ pathLength: 1, opacity: 1 }}
+                            transition={{ duration: 2, ease: "easeInOut", delay: 0.7 }}
+                          />
+                        ))
+                      ) : winningRace.svgPath ? (
+                        <motion.path
+                          d={winningRace.svgPath}
+                          fill="none"
+                          stroke="url(#circuitGradient)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0, opacity: 0 }}
+                          animate={{ pathLength: 1, opacity: 1 }}
+                          transition={{ duration: 2, ease: "easeInOut", delay: 0.7 }}
+                        />
+                      ) : null}
+                    </svg>
+
+                    {/* Decorative Sparkles */}
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 1, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute -top-10 -right-10"
+                    >
+                      <Sparkles size={48} className={isHistorical ? "text-amber-400" : "text-red-500"} />
+                    </motion.div>
                   </div>
-                  <div className="absolute bottom-4 left-10 opacity-30">
-                    <Sparkles size={40} className="text-white animate-pulse" />
-                  </div>
+
+                  {/* Confirm Button */}
+                  <motion.button
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 2.5 }}
+                    onClick={() => {
+                      setShowWinner(false);
+                      setWinningRace(null);
+                    }}
+                    className={cn(
+                      "mt-12 px-12 py-4 rounded-full font-black italic uppercase tracking-widest transition-all relative group overflow-hidden z-10",
+                      isHistorical 
+                        ? "bg-amber-600 hover:bg-amber-500 text-black shadow-[0_0_30px_rgba(245,158,11,0.4)]" 
+                        : "bg-red-600 hover:bg-red-500 text-white shadow-[0_0_30px_rgba(220,38,38,0.4)]"
+                    )}
+                  >
+                    <span className="relative z-10">CONTINUAR</span>
+                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+                  </motion.button>
                 </motion.div>
               </motion.div>
             )}
@@ -856,7 +895,7 @@ export function Draw() {
               <div className="w-[1px] h-6 bg-white/10"></div>
               <div className="flex flex-col items-center">
                 <span className={cn("text-slate-500 uppercase font-black tracking-widest mb-0.5", isFullscreen ? "text-[10px] 2xl:text-xs" : "text-[9px]")}>Restantes</span>
-                <span className={cn("font-black italic text-red-500 transition-all", isFullscreen ? "text-2xl 2xl:text-4xl" : "text-xl")}>{RACES.length - selectedRaces.length}</span>
+                <span className={cn("font-black italic text-red-500 transition-all", isFullscreen ? "text-2xl 2xl:text-4xl" : "text-xl")}>{WHEEL_OPTIONS.length - selectedRaces.length}</span>
               </div>
             </div>
           </div>
@@ -914,12 +953,12 @@ export function Draw() {
                         </div>
                         <img 
                           src={`https://flagcdn.com/w40/${race.flagCode}.png`}
-                          alt={race.short}
+                          alt={race.label}
                           className={cn("rounded shadow-sm", isFullscreen ? "w-8 h-6" : "w-7 h-5")}
                         />
                         <div className="flex flex-col min-w-0">
                           <span className={cn("font-black italic uppercase tracking-tight text-white truncate", isFullscreen ? "text-sm" : "text-xs")}>
-                            {race.short}
+                            {race.label}
                           </span>
                           <span className="text-[8px] text-red-500 font-bold uppercase tracking-widest">Confirmado</span>
                         </div>
