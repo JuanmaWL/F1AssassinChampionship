@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, TrendingUp, Crosshair, Calendar, Timer, Flame, AlertTriangle, Zap, ZapOff, X, Maximize2, Minimize2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Driver, Race, Constructor } from '../types';
-import { F1CarAnimation } from './dashboard/F1CarAnimation';
+import { F1CarAnimation } from '../components/dashboard/F1CarAnimation';
 
-import { EmptyState } from './ui/EmptyState';
+import { EmptyState } from '../components/ui/EmptyState';
 
 // --- Custom Components ---
 

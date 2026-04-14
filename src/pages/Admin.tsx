@@ -3,13 +3,13 @@ import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon,
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
 import { dataService } from '../services/dataService';
-import { ResultsEditor } from './admin/ResultsEditor';
-import { DriversEditor } from './admin/DriversEditor';
-import { TeamsEditor } from './admin/TeamsEditor';
-import { CalendarEditor } from './admin/CalendarEditor';
-import { CircuitsEditor } from './admin/CircuitsEditor';
-import { JsonImporter } from './admin/JsonImporter';
-import { MetricsViewer } from './admin/MetricsViewer';
+import { ResultsEditor } from '../components/admin/ResultsEditor';
+import { DriversEditor } from '../components/admin/DriversEditor';
+import { TeamsEditor } from '../components/admin/TeamsEditor';
+import { CalendarEditor } from '../components/admin/CalendarEditor';
+import { CircuitsEditor } from '../components/admin/CircuitsEditor';
+import { JsonImporter } from '../components/admin/JsonImporter';
+import { MetricsViewer } from '../components/admin/MetricsViewer';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
 

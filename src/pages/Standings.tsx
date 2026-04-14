@@ -1,15 +1,15 @@
 import { useMemo, useRef } from 'react';
-import { StatsOverview } from './dashboard/StatsOverview';
-import { Podium } from './dashboard/Podium';
-import { DriversTable } from './dashboard/DriversTable';
-import { ConstructorsTable } from './dashboard/ConstructorsTable';
-import { TeammateBattles } from './dashboard/TeammateBattles';
-import { EvolutionChart } from './dashboard/EvolutionChart';
+import { StatsOverview } from '../components/dashboard/StatsOverview';
+import { Podium } from '../components/dashboard/Podium';
+import { DriversTable } from '../components/dashboard/DriversTable';
+import { ConstructorsTable } from '../components/dashboard/ConstructorsTable';
+import { TeammateBattles } from '../components/dashboard/TeammateBattles';
+import { EvolutionChart } from '../components/dashboard/EvolutionChart';
 import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useChampionship } from '../context/ChampionshipContext';
 import { FOOTER_ASSETS } from '../constants/assets';
-import { SectionReveal } from './ui/SectionReveal';
+import { SectionReveal } from '../components/ui/SectionReveal';
 
 export function Dashboard() {
   const { data, activeSeason, isHistorical } = useChampionship();

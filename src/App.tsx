@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Dashboard } from './components/Dashboard';
+import { Dashboard } from './pages/Standings';
 import { IntroAnimation } from './components/IntroAnimation';
 import { BarChart2, Calendar as CalendarIcon, Trophy, Loader2, Dices, Shield, Swords } from 'lucide-react';
 import { cn } from './lib/utils';
@@ -10,10 +10,10 @@ import { SEASONS, SeasonId } from './types';
 import { useVisitTracker } from './hooks/useVisitTracker';
 
 // Lazy loaded components
-const Calendar = lazy(() => import('./components/Calendar').then(module => ({ default: module.Calendar })));
-const AdminPanel = lazy(() => import('./components/AdminPanel').then(module => ({ default: module.AdminPanel })));
-const Draw = lazy(() => import('./components/Draw').then(module => ({ default: module.Draw })));
-const HeadToHead = lazy(() => import('./components/HeadToHead').then(module => ({ default: module.HeadToHead })));
+const Calendar = lazy(() => import('./pages/CalendarView').then(module => ({ default: module.Calendar })));
+const AdminPanel = lazy(() => import('./pages/Admin').then(module => ({ default: module.AdminPanel })));
+const Draw = lazy(() => import('./pages/SeasonDraft').then(module => ({ default: module.Draw })));
+const HeadToHead = lazy(() => import('./pages/H2H').then(module => ({ default: module.HeadToHead })));
 
 type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw' | 'h2h';
 
