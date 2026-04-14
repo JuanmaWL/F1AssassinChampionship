@@ -1,5 +1,5 @@
-import { CircuitData } from '../data/circuits';
-import { cn } from '../lib/utils';
+import { CircuitData } from '../../data/circuits';
+import { cn } from '../../lib/utils';
 
 export const CircuitTrack = ({ circuitInfo, className }: { circuitInfo: CircuitData | null, className?: string }) => {
   if (!circuitInfo) {

@@ -1,11 +1,11 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
-import { FOOTER_ASSETS } from '../constants/assets';
+import { FOOTER_ASSETS } from '../../constants/assets';
 
-import { SeasonId } from '../types';
+import { SeasonId } from '../../types';
 
-const F1Car = lazy(() => import('./F1Car').then(module => ({ default: module.F1Car })));
+const F1Car = lazy(() => import('../f1-car/F1Car').then(module => ({ default: module.F1Car })));
 
 interface IntroAnimationProps {
   onComplete: () => void;

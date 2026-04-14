@@ -4,8 +4,8 @@ import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Gl
 import { motion, AnimatePresence } from 'motion/react';
 import { cn, formatDate } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
-import { GlobeCalendar } from '../components/GlobeCalendar';
-import { CircuitTrack } from '../components/CircuitTrack';
+import { GlobeCalendar } from '../components/calendar/GlobeCalendar';
+import { CircuitTrack } from '../components/calendar/CircuitTrack';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useChampionship } from '../context/ChampionshipContext';
 import { findCircuitInfo, CircuitData } from '../data/circuits';

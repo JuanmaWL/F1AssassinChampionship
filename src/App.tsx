@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard as Standings } from './pages/Standings';
-import { IntroAnimation } from './components/IntroAnimation';
+import { IntroAnimation } from './components/ui/IntroAnimation';
 import { Loader2 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';

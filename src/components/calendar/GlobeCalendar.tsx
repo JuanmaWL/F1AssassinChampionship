@@ -16,7 +16,7 @@ import {
   curveBasis
 } from 'd3';
 import * as topojson from 'topojson-client';
-import { Race } from '../types';
+import { Race } from '../../types';
 
 type D3GeoPath = (feature: any) => string | null;
 type TopoFeature = { type: string; geometry: any; properties: any };

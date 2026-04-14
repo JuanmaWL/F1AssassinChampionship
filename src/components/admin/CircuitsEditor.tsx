@@ -1,5 +1,5 @@
 import { CIRCUITS } from '../../data/circuits';
-import { CircuitTrack } from '../CircuitTrack';
+import { CircuitTrack } from '../calendar/CircuitTrack';
 import { cn } from '../../lib/utils';
 import { Compass, Info, Hash } from 'lucide-react';
 

@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { ChampionshipData, SeasonId } from "../types";
-import { mockData, mockData2024 } from "../mockData";
+import { DEFAULT_DATA, DEFAULT_DATA_2024 } from "../data/defaultData";
 
 const COLLECTION_NAME = "seasons";
 const VISITS_COLLECTION = "visits";
@@ -25,7 +25,7 @@ export const dataService = {
    */
   async getData(seasonId: SeasonId): Promise<ChampionshipData> {
     if (!db) {
-      return seasonId === '2024' ? mockData2024 : mockData;
+      return seasonId === '2024' ? DEFAULT_DATA_2024 : DEFAULT_DATA;
     }
 
     try {
@@ -36,16 +36,16 @@ export const dataService = {
         return docSnap.data() as ChampionshipData;
       } else {
         if (seasonId === '2024') {
-            return mockData2024;
+            return DEFAULT_DATA_2024;
         }
-        return mockData;
+        return DEFAULT_DATA;
       }
     } catch (error: any) {
       console.error("Error fetching data from Firebase:", error);
       if (error.code === 'permission-denied') {
         console.warn("Firestore: permiso denegado. Revisa las Rules en Firebase Console.");
       }
-      return seasonId === '2024' ? mockData2024 : mockData;
+      return seasonId === '2024' ? DEFAULT_DATA_2024 : DEFAULT_DATA;
     }
   },
 

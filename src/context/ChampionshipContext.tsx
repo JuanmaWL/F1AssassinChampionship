@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, ReactNode } from 'react';
 import { ChampionshipData, SeasonId } from '../types';
-import { mockData } from '../mockData';
+import { DEFAULT_DATA } from '../data/defaultData';
 import { dataService } from '../services/dataService';
 
 interface ChampionshipContextType {
@@ -17,7 +17,7 @@ const ChampionshipContext = createContext<ChampionshipContextType | undefined>(u
 
 export function ChampionshipProvider({ children }: { children: ReactNode }) {
   const [activeSeason, setActiveSeason] = useState<SeasonId>('2026');
-  const [data, setDataState] = useState<ChampionshipData>(mockData);
+  const [data, setDataState] = useState<ChampionshipData>(DEFAULT_DATA);
   const [isLoading, setIsLoading] = useState(true);
   
   // Cache para evitar peticiones innecesarias
