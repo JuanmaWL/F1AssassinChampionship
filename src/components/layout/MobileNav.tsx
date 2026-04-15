@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { BarChart2, Calendar as CalendarIcon, Swords } from 'lucide-react';
+import { BarChart2, Calendar as CalendarIcon, Swords, Shield } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { SEASONS, SeasonId } from '../../types';
 
@@ -23,7 +23,7 @@ export function MobileNav({
       <button
         onClick={() => setActiveTab('dashboard')}
         className={cn(
-          "flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all relative",
+          "flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all relative",
           activeTab === 'dashboard' ? "text-white" : "text-slate-500"
         )}
       >
@@ -37,7 +37,7 @@ export function MobileNav({
       <button
         onClick={() => setActiveTab('calendar')}
         className={cn(
-          "flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all relative",
+          "flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all relative",
           activeTab === 'calendar' ? "text-white" : "text-slate-500"
         )}
       >
@@ -51,7 +51,7 @@ export function MobileNav({
       <button
         onClick={() => setActiveTab('h2h')}
         className={cn(
-          "flex flex-col items-center justify-center w-16 h-12 rounded-xl transition-all relative",
+          "flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all relative",
           activeTab === 'h2h' ? "text-white" : "text-slate-500"
         )}
       >
@@ -70,7 +70,7 @@ export function MobileNav({
               key={season}
               onClick={() => handleSeasonChange(season)}
               className={cn(
-                "w-12 h-10 rounded-xl text-[9px] font-bold transition-all flex items-center justify-center font-sans",
+                "w-10 h-10 rounded-xl text-[9px] font-bold transition-all flex items-center justify-center font-sans",
                 activeSeason === season 
                   ? isHistorical ? "bg-amber-600 text-white" : "bg-red-600 text-white"
                   : "text-slate-500 hover:text-slate-300"

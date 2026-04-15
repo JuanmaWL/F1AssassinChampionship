@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity
 import { motion, AnimatePresence } from 'motion/react';
 import { Driver, Constructor, Race, RaceResult } from '../../types';
 import { cn } from '../../lib/utils';
+import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
 
 interface DriversTableProps {
   drivers: Driver[];
@@ -401,7 +402,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                     background: `linear-gradient(135deg, ${selectedDriver.teamColor}40, ${selectedDriver.teamColor}10, transparent)` 
                   }}
                 >
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+                  <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
                   <button
                     onClick={() => setSelectedDriver(null)}
                     className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10 z-50"
@@ -672,7 +673,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                                   {text}
                                 </div>
                                 {race.flagCode && (
-                                  <img src={`https://flagcdn.com/w20/${race.flagCode}.png`} alt={race.name} className="w-5 h-3.5 rounded-sm object-cover opacity-50 group-hover/race:opacity-100 transition-opacity" />
+                                  <img src={getFlagUrl(race.flagCode, 20)} alt={race.name} className="w-5 h-3.5 rounded-sm object-cover opacity-50 group-hover/race:opacity-100 transition-opacity" />
                                 )}
                                 {/* Tooltip */}
                                 <div className="absolute bottom-full mb-2 opacity-0 group-hover/race:opacity-100 transition-opacity bg-slate-900 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap pointer-events-none z-10">
@@ -719,7 +720,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                     <>
                       {/* Modal Header */}
                       <div className="relative h-32 bg-gradient-to-br from-purple-900/60 via-slate-900 to-slate-900 border-b border-purple-500/30 flex items-center px-10 overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30 mix-blend-overlay"></div>
+                        <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
                         
                         <div className="relative z-10 flex items-center gap-6">
                           <div className="w-16 h-16 rounded-2xl bg-purple-600/30 border border-purple-500/50 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.5)]">
@@ -770,7 +771,7 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
                                         </div>
                                         {race.flagCode ? (
                                           <img 
-                                            src={`https://flagcdn.com/w160/${race.flagCode}.png`} 
+                                            src={getFlagUrl(race.flagCode, 160)} 
                                             alt={race.name} 
                                             className="w-20 h-12 rounded-xl shadow-2xl object-cover border border-white/10 group-hover:scale-110 transition-transform duration-700" 
                                           />

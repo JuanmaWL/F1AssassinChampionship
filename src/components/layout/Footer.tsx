@@ -1,4 +1,4 @@
-import { Youtube, Github, ExternalLink, Trophy } from 'lucide-react';
+import { Youtube, Github, ExternalLink, Trophy, Shield } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useChampionship } from '../../context/ChampionshipContext';
 import { FOOTER_ASSETS } from '../../constants/assets';
@@ -8,7 +8,7 @@ const XIcon = ({ size = 16, className = "" }: { size?: number, className?: strin
     width={size} 
     height={size} 
     viewBox="0 0 24 24" 
-    fill="currentColor" 
+    fill="currentColor"
     className={className}
   >
     <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.932zm-1.292 19.49h2.039L6.486 3.24H4.298l13.311 17.403z" />
@@ -27,18 +27,18 @@ export function Footer() {
       youtube: "https://www.youtube.com/@alvillasvqk"
     },
     {
-      name: "Uyimero",
-      role: "Diseño Gráfico",
-      image: FOOTER_ASSETS.UYIMERO,
-      twitter: "https://x.com/Uyimero",
-      youtube: "https://www.youtube.com/@Uyimero"
-    },
-    {
       name: "Juasmo",
       role: "Desarrollo Web",
       image: FOOTER_ASSETS.JUASMO,
       twitter: "https://x.com/juanmawl",
       youtube: "https://www.youtube.com/@Juasmo"
+    },
+    {
+      name: "Uyimero",
+      role: "Diseño Gráfico",
+      image: FOOTER_ASSETS.UYIMERO,
+      twitter: "https://x.com/Uyimero",
+      youtube: "https://www.youtube.com/@Uyimero"
     }
   ];
 
@@ -207,8 +207,8 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col items-center md:items-start gap-4">
-            <p className="text-[11px] font-mono tracking-[0.3em] uppercase text-slate-400 font-medium">
-              &copy; {new Date().getFullYear()} F1 ASSASSINS CHAMPIONSHIP
+            <p className="text-[11px] font-mono tracking-[0.3em] uppercase text-slate-400 font-medium flex items-center gap-1.5">
+              <span className="text-xl">&copy;</span> {new Date().getFullYear()} F1 ASSASSINS CHAMPIONSHIP
             </p>
             <p className="text-[11px] font-mono tracking-[0.3em] uppercase text-slate-500 group/juasmo">
               Developed by <span className="text-white font-black transition-colors duration-500 cursor-default relative inline-block">
@@ -225,6 +225,25 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-8">
+            <button
+              onClick={() => {
+                // Dispatch a custom event to change the tab from anywhere
+                window.dispatchEvent(new CustomEvent('changeTab', { detail: 'vip' }));
+              }}
+              className="flex items-center gap-2.5 text-slate-500 hover:text-white transition-all group/credits hover:-translate-y-0.5"
+            >
+              <Shield size={18} className="group-hover/credits:animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] relative">
+                Créditos
+                <span className="absolute top-0 left-0 -z-10 text-red-500 opacity-0 group-hover/credits:opacity-70 group-hover/credits:animate-[glitch-1_0.8s_infinite_linear_alternate-reverse] pointer-events-none" style={{ clipPath: 'inset(0 0 0 0)' }}>
+                  Créditos
+                </span>
+                <span className="absolute top-0 left-0 -z-10 text-blue-500 opacity-0 group-hover/credits:opacity-70 group-hover/credits:animate-[glitch-2_0.8s_infinite_linear_alternate-reverse] pointer-events-none" style={{ clipPath: 'inset(0 0 0 0)' }}>
+                  Créditos
+                </span>
+              </span>
+            </button>
+            <div className="h-5 w-[1px] bg-white/10 hidden sm:block" />
             <a 
               href="https://github.com/JuanmaWL/F1AssassinChampionship" 
               target="_blank" 
@@ -235,8 +254,8 @@ export function Footer() {
               <span className="text-[9px] font-black uppercase tracking-[0.2em]">GitHub</span>
             </a>
             <div className="h-5 w-[1px] bg-white/10 hidden sm:block" />
-            <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
-              <Trophy size={12} className={isHistorical ? "text-amber-500" : "text-red-500"} />
+            <div className="flex items-center gap-2.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 group/webapp hover:text-white transition-all cursor-default hover:-translate-y-0.5">
+              <Trophy size={18} className={cn("transition-transform group-hover/webapp:scale-110", isHistorical ? "text-amber-500" : "text-red-500")} />
               <span>Webapp oficial del campeonato</span>
             </div>
           </div>

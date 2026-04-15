@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Flag, Trophy, Timer, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ChampionshipData, SeasonId } from '../../types';
+import { TEXTURE_ASSETS } from '../../constants/assets';
 interface StatsOverviewProps {
   data: ChampionshipData;
   activeSeason: SeasonId;
@@ -95,7 +96,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
         }`}
       >
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
         <div className={`absolute -right-10 -top-10 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-all duration-500 group-hover:opacity-100 group-hover:scale-125 ${isSeasonFinished ? 'bg-yellow-600/20' : 'bg-cyan-600/20'}`}></div>
         
         {/* Hover Particles Effect - Reworked */}
@@ -182,7 +183,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
         }`}
       >
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
         <div className={`absolute -right-10 -top-10 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-all duration-500 group-hover:scale-125 ${isSeasonFinished ? 'bg-slate-600/10' : 'bg-emerald-600/20'}`}></div>
 
         {/* Hover Particles Effect - Reworked */}
@@ -255,7 +256,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
         }`}
       >
         {/* Decorative background elements */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
         <div className={`absolute -right-10 -top-10 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-all duration-500 group-hover:scale-125 ${isSeasonFinished ? 'bg-slate-600/10' : 'bg-red-600/20 group-hover:bg-red-600/30'}`}></div>
         
         {/* Hover Particles Effect - Reworked */}

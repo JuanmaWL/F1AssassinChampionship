@@ -6,6 +6,7 @@ import { Trophy, Swords, ChevronDown, Activity, Flag, Medal, Users, Target, Tren
 import { cn } from '../lib/utils';
 import { Driver, Race, Constructor } from '../types';
 import { F1CarAnimation } from '../components/dashboard/F1CarAnimation';
+import { TEXTURE_ASSETS } from '../constants/assets';
 
 import { EmptyState } from '../components/ui/EmptyState';
 
@@ -552,7 +553,7 @@ export function HeadToHead() {
                   animate={{ x: 0 }}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
                   <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
                   
                   {/* Fire/Energy Particles Left */}
@@ -590,7 +591,7 @@ export function HeadToHead() {
                   animate={{ x: 0 }}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/carbon-fibre.png')" }}></div>
+                  <div className="absolute inset-0 bg-black/20 mix-blend-overlay opacity-30" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
                   <div className="absolute inset-0 bg-gradient-to-l from-black/90 via-black/40 to-transparent"></div>
   
                   {/* Fire/Energy Particles Right */}

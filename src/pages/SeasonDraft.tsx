@@ -8,6 +8,7 @@ import { useChampionship } from '../context/ChampionshipContext';
 import { dataService } from '../services/dataService';
 import { Race } from '../types';
 import { CIRCUITS } from '../data/circuits';
+import { getFlagUrl } from '../constants/assets';
 
 // Transformamos CIRCUITS en las opciones para la ruleta con lógica de etiquetas
 const WHEEL_OPTIONS = Object.values(CIRCUITS).map((circuit, _, all) => {
@@ -496,7 +497,7 @@ export function Draw() {
                       )}
                     >
                       <img 
-                        src={`https://flagcdn.com/w20/${race.flagCode}.png`}
+                        src={getFlagUrl(race.flagCode, 20)}
                         alt={race.label}
                         className={cn(
                           "h-auto rounded-xs grayscale-[0.5] transition-all",
@@ -641,7 +642,7 @@ export function Draw() {
                         style={{ paddingTop: '20px' }}
                       >
                         <img 
-                          src={`https://flagcdn.com/w40/${race.flagCode}.png`}
+                          src={getFlagUrl(race.flagCode, 40)}
                           alt={race.label}
                           className={cn(
                             "h-auto rounded-sm shadow-md transition-all duration-500",
@@ -777,7 +778,7 @@ export function Draw() {
                         className="flex items-center justify-center gap-4 md:gap-6 mb-2"
                       >
                         <img 
-                          src={`https://flagcdn.com/w160/${winningRace.flagCode}.png`}
+                          src={getFlagUrl(winningRace.flagCode, 160)}
                           alt={winningRace.country}
                           className="h-10 md:h-16 w-auto rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/20 shrink-0"
                         />
@@ -976,7 +977,7 @@ export function Draw() {
                           #{i + 1}
                         </div>
                         <img 
-                          src={`https://flagcdn.com/w40/${race.flagCode}.png`}
+                          src={getFlagUrl(race.flagCode, 40)}
                           alt={race.label}
                           className={cn("rounded shadow-sm", isFullscreen ? "w-8 h-6" : "w-7 h-5")}
                         />

@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
 import { useEditorState } from '../../hooks/useEditorState';
+import { getFlagUrl } from '../../constants/assets';
 
 interface CalendarEditorProps {
   data: ChampionshipData;
@@ -281,7 +282,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                     />
                     {editForm.flagCode && (
                       <img 
-                        src={`https://flagcdn.com/24x18/${editForm.flagCode}.png`}
+                        src={getFlagUrl(editForm.flagCode || 'un', '24x18')}
                         alt="Preview"
                         className="w-6 h-4 rounded-sm object-cover"
                         onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -352,7 +353,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                         />
                         {editForm.flagCode && (
                           <img 
-                            src={`https://flagcdn.com/24x18/${editForm.flagCode}.png`}
+                            src={getFlagUrl(editForm.flagCode || 'un', '24x18')}
                             alt="Preview"
                             className="w-6 h-4 rounded-sm object-cover"
                             onError={(e) => (e.currentTarget.style.display = 'none')}
@@ -388,7 +389,7 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
                     <td className="p-4 text-slate-400 text-sm">{race.circuit}</td>
                     <td className="p-4">
                       <img 
-                        src={`https://flagcdn.com/24x18/${race.flagCode}.png`} 
+                        src={getFlagUrl(race.flagCode, '24x18')} 
                         alt={race.flagCode} 
                         className="inline-block rounded-sm"
                         onError={(e) => (e.currentTarget.style.display = 'none')}

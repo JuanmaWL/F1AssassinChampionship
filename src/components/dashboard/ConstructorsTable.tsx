@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, X, Medal, Hash, AlertTriangle, Activity, ChevronRight, Wrench } from 'lucide-react';
 import { Constructor, Race, Driver } from '../../types';
 import { cn } from '../../lib/utils';
+import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
 
 interface ConstructorsTableProps {
   constructors: Constructor[];
@@ -226,7 +227,7 @@ export function ConstructorsTable({ constructors, hasCompletedRaces, races, driv
                     background: `linear-gradient(135deg, ${selectedConstructor.color}40, ${selectedConstructor.color}10, transparent)` 
                   }}
                 >
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+                  <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
                   <button
                     onClick={() => setSelectedConstructor(null)}
                     className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10 z-10"
@@ -342,7 +343,7 @@ export function ConstructorsTable({ constructors, hasCompletedRaces, races, driv
                                   <div key={race.id} className="flex items-center gap-3 group/race">
                                     <div className="w-8 text-right">
                                       {race.flagCode && (
-                                        <img src={`https://flagcdn.com/w20/${race.flagCode}.png`} alt={race.name} className="w-6 h-4 rounded-sm object-cover inline-block shadow-sm" title={race.name} />
+                                        <img src={getFlagUrl(race.flagCode, 20)} alt={race.name} className="w-6 h-4 rounded-sm object-cover inline-block shadow-sm" title={race.name} />
                                       )}
                                     </div>
                                     <div className="flex-1 h-8 bg-slate-950 rounded-lg border border-white/5 overflow-hidden relative flex items-center">

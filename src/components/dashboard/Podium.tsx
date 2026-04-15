@@ -5,6 +5,7 @@ import { Driver, Constructor } from '../../types';
 import { cn } from '../../lib/utils';
 import { F1CarAnimation } from './F1CarAnimation';
 import { Confetti } from './Confetti';
+import { TEXTURE_ASSETS } from '../../constants/assets';
 
 interface PodiumProps {
   drivers: Driver[];
@@ -223,7 +224,7 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
                   <FireParticles colorClass="bg-yellow-400" />
                   
                   {/* Background Texture */}
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                  <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CUBES}')` }}></div>
                   
                   <div className="relative z-10">
                     {getTeamLogo(topThree[0].team) && (

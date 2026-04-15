@@ -8,7 +8,7 @@ import { EvolutionChart } from '../components/dashboard/EvolutionChart';
 import { motion, useInView } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useChampionship } from '../context/ChampionshipContext';
-import { FOOTER_ASSETS } from '../constants/assets';
+import { FOOTER_ASSETS, TEXTURE_ASSETS } from '../constants/assets';
 import { SectionReveal } from '../components/ui/SectionReveal';
 
 export function Dashboard() {
@@ -59,7 +59,8 @@ export function Dashboard() {
                 alt="Season Background" 
                 className={cn(
                     "w-full h-full object-cover object-[center_15%] mix-blend-luminosity",
-                    isHistorical ? "opacity-60 sepia-[0.4] grayscale-[0.8] brightness-50" : "opacity-40"
+                    // AUMENTADA LA OPACIDAD Y EL BRILLO AQUÍ:
+                    isHistorical ? "opacity-90 sepia-[0.3] grayscale-[0.4] brightness-75" : "opacity-50"
                 )}
                 referrerPolicy="no-referrer"
                 animate={{
@@ -75,16 +76,17 @@ export function Dashboard() {
             />
             <div className={cn(
                 "absolute inset-0 bg-gradient-to-t",
-                isHistorical ? "from-slate-950 via-slate-950/80 to-slate-950/40" : "from-slate-950 via-transparent to-slate-950/50"
+                // REDUCIDA LA OPACIDAD DEL DEGRADADO NEGRO AQUÍ:
+                isHistorical ? "from-slate-950 via-slate-950/60 to-transparent" : "from-slate-950 via-transparent to-slate-950/30"
             )}></div>
         </div>
         
         {/* Carbon Fiber Texture */}
-        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] mix-blend-overlay"></div>
+        <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
         
         {/* Historical Sepia/Dust Effect */}
         {isHistorical && (
-            <div className="absolute inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
+            <div className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.STARDUST}')` }}></div>
         )}
 
         {/* Moving Light/Speed Lines */}

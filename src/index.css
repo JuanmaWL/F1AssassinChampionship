@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&family=Cinzel:wght@700;900&family=Fira+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -194,3 +195,51 @@
     animation-delay: 1.3s;
   }
 }
+
+/* --- EPIC ROOM STYLES --- */
+.epic-content { border-radius: 40px; animation: 200s linear infinite epic-brightness; overflow: hidden; width: 1000px; height: 562px; position: relative; }
+.epic-container-full { margin: 0; justify-content: center; transform: scale(1); animation: 200s linear infinite alternate epic-zoom-in; display: flex; align-items: center; width: 1000px; height: 562px; position: relative; }
+.epic-cube { position: relative; transform-style: preserve-3d; perspective: 480px; perspective-origin: 51% 70%; width: 870px; height: 190px; }
+.epic-face { position: absolute; width: 870px; height: 190px; background: transparent; border: 0 solid #000; opacity: 0.5; display: flex; align-items: center; overflow: hidden; }
+.epic-top, .epic-bottom { width: 870px; height: 870px; }
+.epic-front { transform: translateZ(435px); display: none; }
+.epic-back { transform: translateZ(-435px) rotateY(180deg) scaleX(-1); }
+.epic-left { transform: translateX(-435px) rotateY(-90deg) scaleX(-1); }
+.epic-right { transform: translateX(435px) rotateY(90deg) scaleX(-1); }
+.epic-top { transform: translateY(-435px) rotateX(90deg) scaleY(-1); }
+.epic-bottom { transform: translateY(-245px) rotateX(-90deg) scaleY(-1); }
+
+.epic-text-p {
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: "Bebas Neue", sans-serif;
+  font-weight: 400;
+  font-size: calc(6em + (190px / 10) * 0.7);
+  padding-top: 20px;
+  color: #fff;
+  margin: 0;
+}
+.epic-text-p span { color: red; }
+
+.epic-left .epic-text-p { margin-left: 480px; animation: 200s linear infinite alternate epic-left; }
+.epic-back .epic-text-p { margin-left: -390px; animation: 200s linear infinite alternate epic-back; }
+.epic-right .epic-text-p { margin-left: -1260px; animation: 200s linear infinite alternate epic-right; }
+
+@keyframes epic-left { 100% { margin-left: -54000px; } }
+@keyframes epic-back { 100% { margin-left: -54870px; } }
+@keyframes epic-right { 100% { margin-left: -55740px; } }
+
+.epic-hue { top: 0; left: 0; width: 100%; height: 100%; mix-blend-mode: overlay; background: radial-gradient(ellipse at center, #1e5799 0, #7db9e8 100%); opacity: 1; position: absolute; }
+.epic-hue.animated { animation: 8s infinite epic-filter-animation; }
+
+.epic-container-reflect { position: absolute; display: flex; align-items: center; justify-content: center; margin-top: 380px; filter: blur(10px); }
+.epic-container-reflect .epic-cube { perspective-origin: 51% -30%; }
+.epic-container-reflect .epic-back { transform: translateZ(-435px) rotateY(180deg) scaleX(-1) scaleY(-1); }
+.epic-container-reflect .epic-left { transform: translateX(-435px) rotateY(-90deg) scaleX(-1) scaleY(-1); }
+.epic-container-reflect .epic-right { transform: translateX(435px) rotateY(90deg) scaleX(-1) scaleY(-1); }
+.epic-container-reflect .epic-text-p { transform: scaleY(70%); }
+
+@keyframes epic-filter-animation { 0%, 100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(100deg); } }
+@keyframes epic-zoom-in { 0% { transform: scale(1); } 100% { transform: scale(2.5); } }
+@keyframes epic-blur { 0% { filter: blur(0px); } 100% { filter: blur(3px); } }
+@keyframes epic-brightness { 0% { filter: brightness(1) contrast(1); } 100% { filter: brightness(0.8) contrast(1.3); } }

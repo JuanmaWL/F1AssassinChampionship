@@ -10,6 +10,7 @@ import { Header } from './components/layout/Header';
 import { MobileNav } from './components/layout/MobileNav';
 import { SeasonId } from './types';
 import { useVisitTracker } from './hooks/useVisitTracker';
+import { EpicRoom } from './components/ui/EpicRoom';
 
 // Lazy loaded components
 const CalendarView = lazy(() => import('./pages/CalendarView').then(module => ({ default: module.Calendar })));
@@ -17,7 +18,7 @@ const Admin = lazy(() => import('./pages/Admin').then(module => ({ default: modu
 const SeasonDraft = lazy(() => import('./pages/SeasonDraft').then(module => ({ default: module.Draw })));
 const H2H = lazy(() => import('./pages/H2H').then(module => ({ default: module.HeadToHead })));
 
-export type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw' | 'h2h';
+export type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw' | 'h2h' | 'vip';
 
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
@@ -69,6 +70,18 @@ function AppContent() {
     return () => { document.body.style.overflow = 'unset'; };
   }, [showIntro]);
 
+  // Listen for custom changeTab events (e.g. from footer)
+  useEffect(() => {
+    const handleTabChange = (e: CustomEvent) => {
+      if (e.detail) {
+        setActiveTab(e.detail as Tab);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('changeTab', handleTabChange as EventListener);
+    return () => window.removeEventListener('changeTab', handleTabChange as EventListener);
+  }, []);
+
   // Scroll to top when season or tab changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -100,28 +113,33 @@ function AppContent() {
         {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} activeSeason={activeSeason} />}
       </AnimatePresence>
 
-      <Header 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        activeSeason={activeSeason}
-        handleSeasonChange={handleSeasonChange}
-        isHistorical={isHistorical}
-        data={data}
-        setShowIntro={setShowIntro}
-      />
+      {activeTab !== 'vip' && (
+        <>
+          <Header 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            activeSeason={activeSeason}
+            handleSeasonChange={handleSeasonChange}
+            isHistorical={isHistorical}
+            data={data}
+            setShowIntro={setShowIntro}
+          />
 
-      <MobileNav 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        activeSeason={activeSeason}
-        handleSeasonChange={handleSeasonChange}
-        isHistorical={isHistorical}
-      />
+          <MobileNav 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            activeSeason={activeSeason}
+            handleSeasonChange={handleSeasonChange}
+            isHistorical={isHistorical}
+          />
+        </>
+      )}
 
       {/* Main Content */}
       <main className={cn(
-        "pt-28 pb-24 md:pb-8 px-4 md:px-8 mx-auto flex-grow w-full transition-all duration-500",
-        activeTab === 'admin' ? "max-w-[1600px]" : "max-w-7xl"
+        "mx-auto flex-grow w-full transition-all duration-500",
+        activeTab === 'vip' ? "pt-0 pb-0 max-w-none px-0 h-screen" : "pt-28 pb-24 md:pb-8 max-w-7xl px-4 md:px-8",
+        activeTab === 'admin' ? "max-w-[1600px] px-4 md:px-8" : ""
       )}>
         <AnimatePresence mode="wait">
           {isLoading || isChangingSeason ? (
@@ -131,6 +149,7 @@ function AppContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25, ease: "easeInOut" }}
+                className={activeTab === 'vip' ? "px-4 md:px-8" : ""}
               >
                 <LoadingOverlay />
               </motion.div>
@@ -141,6 +160,7 @@ function AppContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25, ease: "easeInOut" }}
+                className={activeTab === 'vip' ? "h-screen w-full" : ""}
               >
                 <Suspense fallback={<LoadingSpinner />}>
                     {activeTab === 'dashboard' && <Standings />}
@@ -148,6 +168,7 @@ function AppContent() {
                     {activeTab === 'h2h' && <H2H />}
                     {activeTab === 'draw' && <SeasonDraft />}
                     {activeTab === 'admin' && <Admin />}
+                    {activeTab === 'vip' && <EpicRoom />}
                 </Suspense>
               </motion.div>
           )}
@@ -155,7 +176,7 @@ function AppContent() {
       </main>
 
       <AnimatePresence>
-        {!isLoading && !isChangingSeason && activeTab !== 'draw' && activeTab !== 'admin' && (
+        {!isLoading && !isChangingSeason && activeTab !== 'draw' && activeTab !== 'admin' && activeTab !== 'vip' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

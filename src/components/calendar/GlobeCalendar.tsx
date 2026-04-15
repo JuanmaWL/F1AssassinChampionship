@@ -17,6 +17,7 @@ import {
 } from 'd3';
 import * as topojson from 'topojson-client';
 import { Race } from '../../types';
+import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
 
 type D3GeoPath = (feature: any) => string | null;
 type TopoFeature = { type: string; geometry: any; properties: any };
@@ -281,7 +282,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                 </div>
                 <div class="flex items-start justify-between gap-2">
                   <span class="text-sm font-black italic uppercase tracking-tighter text-white leading-tight">${datum.name}</span>
-                  ${datum.flagCode ? `<img src="https://flagcdn.com/w40/${datum.flagCode}.png" class="w-6 h-4 rounded-sm object-cover shadow-sm border border-white/10 shrink-0 mt-0.5" alt="Flag" />` : ''}
+                  ${datum.flagCode ? `<img src="${getFlagUrl(datum.flagCode, 40)}" class="w-6 h-4 rounded-sm object-cover shadow-sm border border-white/10 shrink-0 mt-0.5" alt="Flag" />` : ''}
                 </div>
               </div>
               <div class="flex items-center gap-2 text-[11px] text-slate-300 font-mono uppercase tracking-wider mb-0.5">
@@ -656,7 +657,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
       </svg>
       
       {/* F1 Styling Background Elements */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       
       <div 
