@@ -1,13 +1,16 @@
+:root {
+  --car-color: #9b111e;
+  --car-color-dark: #660000;
+}
+
 /* F1 Car CSS based on user request */
 .f1-car-container {
   width: 667px;
   height: 330px;
-  position: absolute;
-  /* Position will be handled by parent or specific placement */
-  transform: scale(0.6); /* Scale down a bit to fit better */
+  position: relative;
   pointer-events: none;
   user-select: none;
-  z-index: 0; /* Behind text */
+  z-index: 1;
 }
 
 .f1-car-container div {
@@ -30,13 +33,13 @@
   top: 156px;
   left: 190px;
   z-index: 2;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
 }
 
 .f1car-nose-top {
   width: 0;
   height: 0;
-  border-bottom: 21px solid .f1car-e74c3c;
+  border-bottom: 21px solid var(--car-color);
   border-left: 0px solid transparent;
   border-right: 200px solid transparent;
   top: 137px;
@@ -47,7 +50,7 @@
 .f1car-nose-bottom {
   width: 0;
   height: 0;
-  border-top: 21px solid .f1car-e74c3c;
+  border-top: 21px solid var(--car-color);
   border-left: 0px solid transparent;
   border-right: 200px solid transparent;
   top: 179px;
@@ -61,13 +64,13 @@
   top: 86px;
   left: 539px;
   z-index: 1;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
 }
 
 .f1car-top-front-wing {
   width: 0;
   height: 0;
-  border-right: 30px solid .f1car-e74c3c;
+  border-right: 30px solid var(--car-color);
   border-top: 0px solid transparent;
   border-bottom: 70px solid transparent;
   top: 86px;
@@ -78,7 +81,7 @@
 .f1car-top-front-wing-tail {
   width: 49px;
   height: 20px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 86px;
   left: 512px;
 }
@@ -86,7 +89,7 @@
 .f1car-top-front-wheel {
   width: 60px;
   height: 35px;
-  background: .f1car-222;
+  background: #222;
   top: 83px;
   left: 437px;
   border-radius: 8px;
@@ -96,7 +99,7 @@
 .f1car-top-back-wheel {
   width: 60px;
   height: 35px;
-  background: .f1car-222;
+  background: #222;
   top: 83px;
   left: 120px;
   border-radius: 8px;
@@ -106,7 +109,7 @@
 .f1car-top-body-curve {
   width: 85px;
   height: 32px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   border-radius: 100px / 50px;
   top: 104px;
   left: 289px;
@@ -117,7 +120,7 @@
   height: 0;
   border-left: 0px solid transparent;
   border-right: 18px solid transparent;
-  border-bottom: 50px solid .f1car-e74c3c;
+  border-bottom: 50px solid var(--car-color);
   top: 113px;
   left: 372px;
 }
@@ -125,7 +128,7 @@
 .f1car-top-body-curve-straight {
   width: 100px;
   height: 30px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 116px;
   left: 207px;
   transform: rotate(-12deg);
@@ -135,7 +138,7 @@
 .f1car-top-body-curve-straight-2 {
   width: 45px;
   height: 30px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 137px;
   left: 174px;
   transform: rotate(-36deg);
@@ -145,7 +148,7 @@
 .f1car-top-front-wing-trim {
   width: 14px;
   height: 6px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 124px;
   left: 554px;
   z-index: 1;
@@ -154,7 +157,7 @@
 .f1car-top-front-wing-trim-2 {
   width: 14px;
   height: 25px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 92px;
   left: 554px;
   z-index: 1;
@@ -163,7 +166,7 @@
 .f1car-bottom-front-wing-trim-2 {
   width: 14px;
   height: 25px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 220px;
   left: 554px;
   z-index: 1;
@@ -172,7 +175,7 @@
 .f1car-bottom-front-wing-trim {
   width: 14px;
   height: 6px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 207px;
   left: 554px;
   z-index: 1;
@@ -181,7 +184,7 @@
 .f1car-top-spoke-1 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 96px;
   left: 465px;
@@ -191,7 +194,7 @@
 .f1car-top-spoke-2 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 105px;
   left: 475px;
@@ -201,7 +204,7 @@
 .f1car-top-spoke-3 {
   width: 5px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 105px;
   left: 457px;
@@ -211,7 +214,7 @@
 .f1car-top-spoke-4 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 105px;
   left: 445px;
@@ -221,7 +224,7 @@
 .f1car-bottom-spoke-1 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 172px;
   left: 465px;
@@ -231,7 +234,7 @@
 .f1car-bottom-spoke-2 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 172px;
   left: 475px;
@@ -241,7 +244,7 @@
 .f1car-bottom-spoke-3 {
   width: 5px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 172px;
   left: 457px;
@@ -251,7 +254,7 @@
 .f1car-bottom-spoke-4 {
   width: 8px;
   height: 60px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 172px;
   left: 445px;
@@ -261,7 +264,7 @@
 .f1car-back-spoke {
   width: 18px;
   height: 160px;
-  background: .f1car-777;
+  background: #777;
   z-index: 0;
   top: 92px;
   left: 141px;
@@ -270,7 +273,7 @@
 .f1car-bottom-front-wing {
   width: 0;
   height: 0;
-  border-right: 30px solid .f1car-e74c3c;
+  border-right: 30px solid var(--car-color);
   border-bottom: 0px solid transparent;
   border-top: 70px solid transparent;
   top: 182px;
@@ -281,7 +284,7 @@
 .f1car-bottom-front-wing-tail {
   width: 49px;
   height: 20px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 232px;
   left: 512px;
 }
@@ -289,7 +292,7 @@
 .f1car-bottom-front-wheel {
   width: 60px;
   height: 35px;
-  background: .f1car-222;
+  background: #222;
   top: 219px;
   left: 437px;
   border-radius: 8px;
@@ -299,7 +302,7 @@
 .f1car-bottom-back-wheel {
   width: 60px;
   height: 35px;
-  background: .f1car-222;
+  background: #222;
   top: 219px;
   left: 120px;
   border-radius: 8px;
@@ -309,7 +312,7 @@
 .f1car-rear-body {
   width: 16px;
   height: 96px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 120px;
   left: 147px;
   z-index: 2;
@@ -318,9 +321,9 @@
 .f1car-rear-wing-bg {
   width: 53px;
   height: 84px;
-  border-top: 6px solid .f1car-e74c3c;
-  border-bottom: 6px solid .f1car-e74c3c;
-  background: .f1car-ecf0f1;
+  border-top: 6px solid var(--car-color);
+  border-bottom: 6px solid var(--car-color);
+  background: #ecf0f1;
   top: 120px;
   left: 103px;
   z-index: 1;
@@ -329,7 +332,7 @@
 .f1car-bottom-body-curve {
   width: 85px;
   height: 32px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   border-radius: 100px / 50px;
   top: 201px;
   left: 289px;
@@ -340,7 +343,7 @@
   height: 0;
   border-left: 0px solid transparent;
   border-right: 18px solid transparent;
-  border-top: 50px solid .f1car-e74c3c;
+  border-top: 50px solid var(--car-color);
   top: 174px;
   left: 372px;
 }
@@ -348,7 +351,7 @@
 .f1car-bottom-body-curve-straight {
   width: 100px;
   height: 30px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 191px;
   left: 207px;
   transform: rotate(12deg);
@@ -358,7 +361,7 @@
 .f1car-bottom-body-curve-straight-2 {
   width: 45px;
   height: 30px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 171px;
   left: 174px;
   transform: rotate(36deg);
@@ -368,7 +371,7 @@
 .f1car-body-hood {
   width: 134px;
   height: 93px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   top: 123px;
   left: 240px;
   z-index: 2;
@@ -377,7 +380,7 @@
 .f1car-back-body-curve {
   width: 85px;
   height: 60px;
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   border-radius: 100px / 50px;
   top: 139px;
   left: 168px;
@@ -387,7 +390,7 @@
 .f1car-back-body {
   width: 85px;
   height: 94px;
-  background: .f1car-222;
+  background: #222;
   top: 122px;
   left: 148px;
   z-index: 0;
@@ -398,7 +401,7 @@
   height: 0;
   border-left: 20px solid transparent;
   border-right: 0 solid transparent;
-  border-bottom: 12px solid .f1car-222;
+  border-bottom: 12px solid #222;
   z-index: 0;
   top: 111px;
   left: 172px;
@@ -409,7 +412,7 @@
   height: 0;
   border-left: 20px solid transparent;
   border-right: 0 solid transparent;
-  border-top: 12px solid .f1car-222;
+  border-top: 12px solid #222;
   z-index: 0;
   top: 214px;
   left: 172px;
@@ -418,14 +421,14 @@
 .f1car-back-body-2 {
   width: 97px;
   height: 115px;
-  background: .f1car-222;
+  background: #222;
   top: 111px;
   left: 192px;
   z-index: 0;
 }
 
 .f1car-mirror-bottom {
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   width: 13px;
   height: 23px;
   top: 191px;
@@ -435,7 +438,7 @@
 }
 
 .f1car-mirror-top {
-  background: .f1car-e74c3c;
+  background: var(--car-color);
   width: 13px;
   height: 23px;
   top: 122px;
@@ -447,7 +450,7 @@
 .f1car-driver-bg {
   width: 68px;
   height: 29px;
-  background: .f1car-222;
+  background: #222;
   top: 155px;
   left: 331px;
   z-index: 5;
@@ -457,7 +460,7 @@
 .f1car-driver-wheel {
   width: 5px;
   height: 25px;
-  background: .f1car-95a5a6;
+  background: #95a5a6;
   top: 157px;
   left: 391px;
   z-index: 5;
@@ -465,7 +468,7 @@
 }
 
 .f1car-bottom-body-spine {
-  background: .f1car-c0392b;
+  background: var(--car-color-dark);
   width: 80px;
   height: 5px;
   top: 197px;
@@ -475,7 +478,7 @@
 }
 
 .f1car-top-body-spine {
-  background: .f1car-c0392b;
+  background: var(--car-color-dark);
   width: 80px;
   height: 5px;
   top: 135px;
@@ -485,7 +488,7 @@
 }
 
 .f1car-bottom-body-spine-2 {
-  background: .f1car-c0392b;
+  background: var(--car-color-dark);
   width: 115px;
   height: 5px;
   top: 187px;
@@ -496,7 +499,7 @@
 }
 
 .f1car-top-body-spine-2 {
-  background: .f1car-c0392b;
+  background: var(--car-color-dark);
   width: 115px;
   height: 5px;
   top: 145px;
@@ -513,12 +516,12 @@
   left: 180px;
   z-index: 4;
   border-radius: 50px 0px 0px 50px;
-  border-left: 6px solid .f1car-c0392b;
+  border-left: 6px solid var(--car-color-dark);
   opacity: 0.2 !important;
 }
 
 .f1car-driver-helmet {
-  background: .f1car-3498db;
+  background: #3498db;
   width: 27px;
   height: 25px;
   top: 157px;
