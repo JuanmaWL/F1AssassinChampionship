@@ -8,8 +8,17 @@ const VISITS_COLLECTION = "visits";
 
 export interface VisitData {
   hashedIp: string;
-  userAgent: string;
+  os: string;
+  browser: string;
+  language: string;
+  screenResolution: string;
   deviceType: string;
+  referrer: string;
+  pathname: string;
+  timezone: string;
+  touchSupport: boolean;
+  memory?: number;
+  cores?: number;
   timestamp: number;
 }
 

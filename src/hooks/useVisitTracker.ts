@@ -39,6 +39,34 @@ export function useVisitTracker() {
 
         // Get basic user agent info
         const userAgent = navigator.userAgent;
+        
+        const getBrowserInfo = (ua: string) => {
+          let os = 'Unknown';
+          if (/win/i.test(ua)) os = 'Windows';
+          else if (/mac/i.test(ua)) os = 'macOS';
+          else if (/linux/i.test(ua)) os = 'Linux';
+          else if (/android/i.test(ua)) os = 'Android';
+          else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+
+          let browser = 'Unknown';
+          if (/edg/i.test(ua)) browser = 'Edge';
+          else if (/chrome/i.test(ua)) browser = 'Chrome';
+          else if (/firefox/i.test(ua)) browser = 'Firefox';
+          else if (/safari/i.test(ua)) browser = 'Safari';
+          
+          return { os, browser };
+        };
+
+        const { os, browser } = getBrowserInfo(userAgent);
+        const language = navigator.language;
+        const screenResolution = `${window.screen.width}x${window.screen.height}`;
+        const referrer = document.referrer || 'Directo';
+        const pathname = window.location.pathname;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const memory = (navigator as any).deviceMemory;
+        const cores = navigator.hardwareConcurrency;
+        
         let deviceType = 'desktop';
         if (/mobile/i.test(userAgent)) deviceType = 'mobile';
         if (/tablet/i.test(userAgent)) deviceType = 'tablet';
@@ -46,8 +74,17 @@ export function useVisitTracker() {
         // Save to Firebase
         await dataService.saveVisit({
           hashedIp,
-          userAgent,
+          os,
+          browser,
+          language,
+          screenResolution,
           deviceType,
+          referrer,
+          pathname,
+          timezone,
+          touchSupport,
+          memory,
+          cores,
           timestamp: Date.now()
         });
 

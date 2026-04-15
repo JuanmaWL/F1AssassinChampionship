@@ -30,6 +30,47 @@ export function MetricsViewer() {
       tablet: visits.filter(v => v.deviceType === 'tablet').length,
     };
 
+    const browsers = visits.reduce((acc, v) => {
+      const browser = v.browser || 'Legacy/Desconocido';
+      acc[browser] = (acc[browser] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const os = visits.reduce((acc, v) => {
+      const system = v.os || 'Legacy/Desconocido';
+      acc[system] = (acc[system] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const resolutions = visits.reduce((acc, v) => {
+      if (!v.screenResolution) {
+        acc['Desconocido'] = (acc['Desconocido'] || 0) + 1;
+        return acc;
+      }
+      const [width] = v.screenResolution.split('x').map(Number);
+      const type = width < 768 ? 'Mobile' : 'Desktop';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const referrers = visits.reduce((acc, v) => {
+      const ref = v.referrer || 'Directo';
+      acc[ref] = (acc[ref] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const timezones = visits.reduce((acc, v) => {
+      const tz = v.timezone || 'Desconocido';
+      acc[tz] = (acc[tz] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const hardware = {
+      avgCores: visits.reduce((acc, v) => acc + (v.cores || 0), 0) / visits.length || 0,
+      avgMemory: visits.reduce((acc, v) => acc + (v.memory || 0), 0) / visits.length || 0,
+      touchDevices: visits.filter(v => v.touchSupport).length,
+    };
+
     // Group by day for the chart
     const visitsByDay = new Map<string, { date: string, unique: Set<string>, total: number }>();
     
@@ -52,7 +93,7 @@ export function MetricsViewer() {
       Totales: d.total
     }));
 
-    return { totalUnique, totalVisits, devices, chartData };
+    return { totalUnique, totalVisits, devices, browsers, os, resolutions, referrers, timezones, hardware, chartData };
   }, [visits]);
 
   if (isLoading) {
@@ -99,6 +140,76 @@ export function MetricsViewer() {
             {Math.round((metrics.devices.desktop / metrics.totalVisits) * 100 || 0)}%
           </span>
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Desktop</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Navegadores</h3>
+          {Object.entries(metrics.browsers).map(([browser, count]) => (
+            <div key={browser} className="flex justify-between text-xs mb-2">
+              <span className="text-slate-400">{browser}</span>
+              <span className="text-white font-mono">{count}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Sistemas Operativos</h3>
+          {Object.entries(metrics.os).map(([os, count]) => (
+            <div key={os} className="flex justify-between text-xs mb-2">
+              <span className="text-slate-400">{os}</span>
+              <span className="text-white font-mono">{count}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Resolución (Desktop vs Mobile)</h3>
+          {Object.entries(metrics.resolutions).map(([type, count]) => (
+            <div key={type} className="flex justify-between text-xs mb-2">
+              <span className="text-slate-400">{type}</span>
+              <span className="text-white font-mono">{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Fuentes de Tráfico</h3>
+          {Object.entries(metrics.referrers).slice(0, 5).map(([ref, count]) => (
+            <div key={ref} className="flex justify-between text-xs mb-2">
+              <span className="text-slate-400 truncate mr-2" title={ref}>{ref}</span>
+              <span className="text-white font-mono">{count}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Zonas Horarias</h3>
+          {Object.entries(metrics.timezones).slice(0, 5).map(([tz, count]) => (
+            <div key={tz} className="flex justify-between text-xs mb-2">
+              <span className="text-slate-400">{tz}</span>
+              <span className="text-white font-mono">{count}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-900/50 border border-white/10 rounded-xl p-6">
+          <h3 className="text-sm font-bold text-white mb-4">Capacidades Hardware (Promedio)</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Núcleos CPU</span>
+              <span className="text-white font-mono">{metrics.hardware.avgCores.toFixed(1)}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Memoria RAM</span>
+              <span className="text-white font-mono">~{metrics.hardware.avgMemory.toFixed(1)} GB</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Dispositivos Táctiles</span>
+              <span className="text-white font-mono">
+                {Math.round((metrics.hardware.touchDevices / metrics.totalVisits) * 100 || 0)}%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
