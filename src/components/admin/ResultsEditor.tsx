@@ -1,6 +1,7 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { ChampionshipData, RaceResult, SeasonId } from '../../types';
-import { Upload, Save, Loader2, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
+import { Upload, Save, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { GoogleGenAI } from '@google/genai';
 import { cn } from '../../lib/utils';
 import { calculateStandings, getPoints } from '../../lib/calculations';
@@ -390,7 +391,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
                     <span className="text-slate-300 font-medium">
                       {isProcessing ? 'Analizando Imagen...' : 'Imagen cargada'}
                     </span>
-                    {isProcessing && <Loader2 className={cn("animate-spin", accentColor)} />}
+                    {isProcessing && <LoadingSpinner size="sm" />}
                   </div>
                 ) : (
                   <>
@@ -409,7 +410,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
                       <span className="text-slate-300 font-medium">
                         {isProcessing ? 'Analizando Imagen...' : 'Subir Captura (IA)'}
                       </span>
-                      {isProcessing && <Loader2 className={cn("animate-spin", accentColor)} />}
+                      {isProcessing && <LoadingSpinner size="sm" />}
                     </label>
                   </>
                 )}
@@ -611,7 +612,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
                             "bg-purple-600 hover:bg-purple-700 text-white"
                         )}
                     >
-                        {isEnhancing ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                        {isEnhancing ? <LoadingSpinner size="sm" /> : <Wand2 size={14} />}
                         Mejorar con IA
                     </button>
                 </div>

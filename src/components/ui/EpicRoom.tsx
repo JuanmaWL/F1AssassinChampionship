@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, RotateCcw, Loader2 } from 'lucide-react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { LoadingSpinner } from './LoadingSpinner';
 import { EPIC_ROOM_ASSETS } from '../../constants/assets';
 
 interface EpicRoomProps {
@@ -59,8 +60,7 @@ export function EpicRoom({
     <div ref={wrapperRef} className="w-full h-full flex items-center justify-center bg-black overflow-hidden relative">
       {isLoading && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black">
-          <Loader2 className="w-10 h-10 animate-spin text-red-500 mb-4" />
-          <p className="text-white/50 text-sm font-mono uppercase tracking-widest animate-pulse">Cargando Sala VIP...</p>
+          <LoadingSpinner size="lg" label="Cargando Sala VIP..." />
         </div>
       )}
 

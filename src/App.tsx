@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Dashboard as Standings } from './pages/Standings';
 import { IntroAnimation } from './components/ui/IntroAnimation';
-import { Loader2 } from 'lucide-react';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
@@ -11,6 +10,8 @@ import { MobileNav } from './components/layout/MobileNav';
 import { SeasonId } from './types';
 import { useVisitTracker } from './hooks/useVisitTracker';
 import { EpicRoom } from './components/ui/EpicRoom';
+import { AuthProvider } from './context/AuthContext';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 // Lazy loaded components
 const CalendarView = lazy(() => import('./pages/CalendarView').then(module => ({ default: module.Calendar })));
@@ -20,10 +21,9 @@ const H2H = lazy(() => import('./pages/H2H').then(module => ({ default: module.H
 
 export type Tab = 'dashboard' | 'calendar' | 'admin' | 'draw' | 'h2h' | 'vip';
 
-const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center h-[50vh] text-slate-500">
-    <Loader2 className="w-10 h-10 animate-spin mb-4 text-red-500" />
-    <p className="font-mono text-xs uppercase tracking-widest">Cargando módulo...</p>
+const LoadingModule = () => (
+  <div className="flex flex-col items-center justify-center h-[50vh]">
+    <LoadingSpinner size="lg" label="Cargando módulo..." />
   </div>
 );
 
@@ -162,7 +162,7 @@ function AppContent() {
                 transition={{ duration: 0.25, ease: "easeInOut" }}
                 className={activeTab === 'vip' ? "h-screen w-full" : ""}
               >
-                <Suspense fallback={<LoadingSpinner />}>
+                <Suspense fallback={<LoadingModule />}>
                     {activeTab === 'dashboard' && <Standings />}
                     {activeTab === 'calendar' && <CalendarView />}
                     {activeTab === 'h2h' && <H2H />}
@@ -190,8 +190,6 @@ function AppContent() {
     </div>
   );
 }
-
-import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
   return (

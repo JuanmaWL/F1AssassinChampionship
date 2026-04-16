@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { dataService, VisitData } from '../../services/dataService';
-import { Loader2, Users, Monitor, Smartphone, Tablet, Activity } from 'lucide-react';
+import { Users, Monitor, Smartphone, Tablet, Activity } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function MetricsViewer() {
   const [visits, setVisits] = useState<VisitData[]>([]);
@@ -98,9 +99,8 @@ export function MetricsViewer() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <p className="font-mono text-xs uppercase tracking-widest">Cargando métricas...</p>
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="md" label="Cargando métricas..." />
       </div>
     );
   }

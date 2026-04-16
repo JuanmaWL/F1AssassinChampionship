@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, ChangeEvent } from 'react';
 import { ChampionshipData, Constructor, SeasonId } from '../../types';
-import { Plus, Trash2, Edit2, X, Check, Upload, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, Check, Upload } from 'lucide-react';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
 import { storageService } from '../../services/storageService';
@@ -366,7 +367,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                             className="p-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-colors"
                             title="Subir imagen"
                         >
-                            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                            {isUploading ? <LoadingSpinner size="sm" /> : <Upload size={16} />}
                         </button>
                       </div>
                       {editForm.logoUrl && (
@@ -440,7 +441,7 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                                 className="p-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-colors"
                                 title="Subir imagen"
                             >
-                                {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                {isUploading ? <LoadingSpinner size="sm" /> : <Upload size={16} />}
                             </button>
                           </div>
                           {editForm.logoUrl && (

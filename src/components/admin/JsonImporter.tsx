@@ -4,6 +4,7 @@ import { Upload, Download, AlertTriangle, Check, FileJson, FileText, Bot, Databa
 import { dataService } from '../../services/dataService';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI } from "@google/genai";
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 interface JsonImporterProps {
   currentData: ChampionshipData;
@@ -457,11 +458,19 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
                 <button
                   onClick={() => processWithAI(activeSection as 'drivers' | 'teams' | 'calendar')}
                   disabled={(!textContent && !imagePreview) || isProcessingAI}
-                  className="w-full md:w-auto px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold uppercase rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full md:w-auto px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold uppercase rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[120px]"
                 >
-                  {isProcessingAI ? <span className="animate-pulse">Procesando...</span> : <>
-                    <Bot size={14} /> Procesar
-                  </>}
+                  {isProcessingAI ? (
+                    <>
+                      <LoadingSpinner size="sm" className="p-0 border-0" />
+                      <span>Procesando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bot size={14} /> 
+                      <span>Procesar</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -523,10 +532,11 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
               onClick={handleImport}
               disabled={!jsonContent || isImporting}
               className={cn(
-                "w-full py-3 rounded-lg text-white font-bold uppercase text-sm tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2",
+                "w-full py-3 rounded-lg text-white font-bold uppercase text-sm tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3",
                 buttonColor
               )}
             >
+              {isImporting && <LoadingSpinner size="sm" className="mr-0" />}
               {isImporting ? "Guardando..." : (activeSection === 'edit' ? "Guardar Cambios" : "Confirmar Importación")}
             </button>
           </div>

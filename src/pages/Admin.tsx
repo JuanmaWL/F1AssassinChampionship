@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { Loader2, Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
+import { Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
 import { dataService } from '../services/dataService';
@@ -120,7 +121,7 @@ export function AdminPanel() {
             >
               {isProcessing ? (
                   <>
-                    <Loader2 className="animate-spin" size={20} /> 
+                    <LoadingSpinner size="sm" className="mr-0" />
                     <span>Verificando...</span>
                   </>
               ) : (
@@ -182,13 +183,13 @@ export function AdminPanel() {
               }}
               disabled={isRefreshing}
               className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors border shadow-sm disabled:opacity-50",
+                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors border shadow-sm disabled:opacity-50 min-w-[140px] justify-center",
                 isHistorical 
                   ? "bg-amber-900/20 text-amber-400 border-amber-500/30 hover:bg-amber-900/40" 
                   : "bg-red-900/20 text-red-400 border-red-500/30 hover:bg-red-900/40"
               )}
             >
-              <RefreshCw size={14} className={cn(isRefreshing && "animate-spin")} />
+              {isRefreshing ? <LoadingSpinner size="sm" className="mr-0" /> : <RefreshCw size={14} />}
               {isRefreshing ? "Recargando..." : "Recargar Datos"}
             </button>
 

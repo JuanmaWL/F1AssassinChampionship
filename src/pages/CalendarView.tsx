@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { GlobeCalendar } from '../components/calendar/GlobeCalendar';
 import { CircuitTrack } from '../components/calendar/CircuitTrack';
 import { EmptyState } from '../components/ui/EmptyState';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useChampionship } from '../context/ChampionshipContext';
 import { findCircuitInfo, CircuitData } from '../data/circuits';
 
@@ -60,6 +61,7 @@ export function Calendar() {
   const { data, activeSeason, isHistorical } = useChampionship();
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [layoutCircuit, setLayoutCircuit] = useState<CircuitData | null>(null);
+  const [isLayoutLoading, setIsLayoutLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
 
@@ -367,7 +369,10 @@ export function Calendar() {
                         onClick={(e) => {
                             e.stopPropagation();
                             const info = findCircuitInfo(race.circuit);
-                            if (info) setLayoutCircuit(info);
+                            if (info) {
+                                setIsLayoutLoading(true);
+                                setLayoutCircuit(info);
+                            }
                         }}
                         title="Ver trazado detallado"
                       >
@@ -791,7 +796,10 @@ export function Calendar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[300] flex items-center justify-center p-4 pt-24 bg-black/90 backdrop-blur-md"
-            onClick={() => setLayoutCircuit(null)}
+            onClick={() => {
+                setLayoutCircuit(null);
+                setIsLayoutLoading(true);
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -802,7 +810,10 @@ export function Calendar() {
             >
                 <div className="absolute top-4 right-4 z-50">
                     <button
-                        onClick={() => setLayoutCircuit(null)}
+                        onClick={() => {
+                            setLayoutCircuit(null);
+                            setIsLayoutLoading(true);
+                        }}
                         className="p-2 bg-black/10 hover:bg-black/20 rounded-full transition-colors text-black backdrop-blur-sm"
                     >
                         <X size={24} />
@@ -823,18 +834,17 @@ export function Calendar() {
                     </div>
                     
                     <div className="w-full flex-grow flex items-center justify-center bg-white min-h-[200px] relative">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
-                        </div>
+                        {isLayoutLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
+                                <LoadingSpinner size="md" />
+                            </div>
+                        )}
                         <img 
                             src={layoutCircuit.layoutSvgUrl} 
                             alt={`Layout de ${layoutCircuit.name}`}
                             className="max-w-full max-h-[50vh] object-contain relative z-10"
                             referrerPolicy="no-referrer"
-                            onLoad={(e) => {
-                                const loader = e.currentTarget.parentElement?.querySelector('.animate-spin');
-                                if (loader) loader.parentElement?.remove();
-                            }}
+                            onLoad={() => setIsLayoutLoading(false)}
                         />
                     </div>
                     
