@@ -1,7 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FOOTER_ASSETS } from '../../constants/assets';
-
+import { INTRO_ANIMATION_DURATION } from '../../constants/config';
 import { SeasonId } from '../../types';
 
 const F1Car = lazy(() => import('../f1-car/F1Car').then(module => ({ default: module.F1Car })));
@@ -33,6 +33,8 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
     };
   }, []);
 
+  // Scroll restriction ...
+
   useEffect(() => {
     // Sequence timing - Professional racing intro
     const timers = [
@@ -48,7 +50,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       setTimeout(() => {
         setIsMetamorphosing(false);         // End metamorphosis glitch
       }, 7800), // Shorter, elegant flash
-      setTimeout(() => onComplete(), 10800), // Complete
+      setTimeout(() => onComplete(), INTRO_ANIMATION_DURATION), // Complete
     ];
 
     return () => timers.forEach(clearTimeout);

@@ -9,6 +9,7 @@ import { F1CarAnimation } from '../components/dashboard/F1CarAnimation';
 import { TEXTURE_ASSETS } from '../constants/assets';
 
 import { EmptyState } from '../components/ui/EmptyState';
+import { SPEED_LINE_CYCLE_DURATION } from '../constants/config';
 
 // --- Custom Components ---
 
@@ -17,7 +18,7 @@ const SpeedLines = ({ color, flip = false }: { color: string, flip?: boolean }) 
     return [...Array(8)].map(() => ({
       top: `${10 + Math.random() * 80}%`,
       width: `${30 + Math.random() * 60}px`,
-      duration: 0.4 + Math.random() * 0.6,
+      duration: 0.4 + Math.random() * (SPEED_LINE_CYCLE_DURATION / 1000),
       delay: Math.random() * 2
     }));
   }, []);
@@ -299,6 +300,24 @@ export function HeadToHead() {
   const prevD2 = useRef(driver2Id);
   const statsRef = useRef<HTMLDivElement>(null);
 
+  const leftParticles = useMemo(() => 
+    [...Array(10)].map(() => ({
+      left: `${Math.random() * 60}%`, 
+      top: `${Math.random() * 100}%`,
+      duration: 1 + Math.random() * 2,
+      delay: Math.random() * 2
+    }))
+  , []);
+
+  const rightParticles = useMemo(() => 
+    [...Array(10)].map(() => ({
+      left: `${40 + Math.random() * 60}%`, 
+      top: `${Math.random() * 100}%`,
+      duration: 1 + Math.random() * 2,
+      delay: Math.random() * 2
+    }))
+  , []);
+
   // Reset comparison when drivers change
   useEffect(() => {
     setIsComparing(false);
@@ -558,13 +577,13 @@ export function HeadToHead() {
                   
                   {/* Fire/Energy Particles Left */}
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(10)].map((_, i) => (
+                    {leftParticles.map((p, i) => (
                       <motion.div
                         key={`p1-${i}`}
                         className="absolute w-1 h-20 bg-white/20 blur-sm"
                         style={{ 
-                          left: `${Math.random() * 60}%`, 
-                          top: `${Math.random() * 100}%`,
+                          left: p.left, 
+                          top: p.top,
                           rotate: '11deg'
                         }}
                         animate={{ 
@@ -572,9 +591,9 @@ export function HeadToHead() {
                           opacity: [0, 1, 0]
                         }}
                         transition={{ 
-                          duration: 1 + Math.random() * 2, 
+                          duration: p.duration, 
                           repeat: Infinity, 
-                          delay: Math.random() * 2 
+                          delay: p.delay
                         }}
                       />
                     ))}
@@ -596,13 +615,13 @@ export function HeadToHead() {
   
                   {/* Fire/Energy Particles Right */}
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    {[...Array(10)].map((_, i) => (
+                    {rightParticles.map((p, i) => (
                       <motion.div
                         key={`p2-${i}`}
                         className="absolute w-1 h-20 bg-white/20 blur-sm"
                         style={{ 
-                          left: `${40 + Math.random() * 60}%`, 
-                          top: `${Math.random() * 100}%`,
+                          left: p.left, 
+                          top: p.top,
                           rotate: '11deg'
                         }}
                         animate={{ 
@@ -610,9 +629,9 @@ export function HeadToHead() {
                           opacity: [0, 1, 0]
                         }}
                         transition={{ 
-                          duration: 1 + Math.random() * 2, 
+                          duration: p.duration, 
                           repeat: Infinity, 
-                          delay: Math.random() * 2 
+                          delay: p.delay
                         }}
                       />
                     ))}

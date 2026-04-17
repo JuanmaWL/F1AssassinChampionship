@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { ADMIN_SESSION_TTL_HOURS, ADMIN_SESSION_CHECK_INTERVAL } from '../constants/config';
 
 interface AuthContextType {
   isAdmin: boolean;
@@ -9,7 +10,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const SESSION_KEY = 'f1_admin_auth';
-const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 horas en milisegundos
+const SESSION_TTL = ADMIN_SESSION_TTL_HOURS * 60 * 60 * 1000;
 
 interface SessionData {
   valid: boolean;
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const interval = setInterval(checkExpiration, 60000); // 1 minuto
+    const interval = setInterval(checkExpiration, ADMIN_SESSION_CHECK_INTERVAL);
     return () => clearInterval(interval);
   }, [isAdmin, logout]);
 
