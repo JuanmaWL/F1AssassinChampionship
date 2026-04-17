@@ -6,6 +6,7 @@ import { GoogleGenAI } from '@google/genai';
 import { cn } from '../../lib/utils';
 import { calculateStandings, getPoints } from '../../lib/calculations';
 import { dataService } from '../../services/dataService';
+import { useToast } from '../../context/ToastContext';
 
 interface ResultsEditorProps {
   data: ChampionshipData;
@@ -22,9 +23,8 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [parsedResults, setParsedResults] = useState<RaceResult[] | null>(null);
   const [raceReport, setRaceReport] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addToast } = useToast();
 
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const borderColor = isHistorical ? "border-amber-500/30" : "border-red-500/30";
@@ -37,15 +37,13 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
 
     setPreviewUrl(URL.createObjectURL(file));
     setParsedResults(null);
-    setError(null);
-    setSuccess(null);
 
     try {
       setIsProcessing(true);
       await parseResultsWithAI(file);
     } catch (err) {
       console.error(err);
-      setError('Error al procesar la imagen. Por favor intenta de nuevo o ingresa manualmente.');
+      addToast('Error al procesar la imagen. Por favor intenta de nuevo o ingresa manualmente.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -180,11 +178,11 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       });
 
       setParsedResults(mappedResults);
-      setSuccess("¡IA procesó los resultados con éxito! Por favor revisa abajo.");
+      addToast('¡IA procesó los resultados con éxito! Por favor revisa abajo.', 'success');
 
     } catch (err) {
       console.error("AI Parsing Error:", err);
-      setError("Fallo en IA. Revisa la API Key o introduce los resultados manualmente.");
+      addToast('Fallo en IA. Revisa la API Key o introduce los resultados manualmente.', 'error');
     }
   };
 
@@ -222,11 +220,11 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       const enhancedText = response.text;
       if (enhancedText) {
         setRaceReport(enhancedText);
-        setSuccess("Reporte mejorado con IA exitosamente.");
+        addToast('Reporte mejorado con IA exitosamente.', 'success');
       }
     } catch (err) {
       console.error("AI Enhancement Error:", err);
-      setError("Error al mejorar el reporte con IA.");
+      addToast('Error al mejorar el reporte con IA.', 'error');
     } finally {
       setIsEnhancing(false);
     }
@@ -260,19 +258,16 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     if (race && race.status === 'completed' && race.results) {
         setParsedResults(race.results);
         setRaceReport(race.raceReport || '');
-        setSuccess("Resultados cargados. Puedes editarlos abajo.");
-        setError(null);
+        addToast("Resultados cargados. Puedes editarlos abajo.", "info");
     } else {
         setParsedResults(null);
         setRaceReport('');
-        setSuccess(null);
-        setError(null);
     }
   };
 
   const startManualEntry = () => {
     if (data.drivers.length === 0) {
-        setError("No hay pilotos registrados. Por favor añade pilotos primero en la pestaña 'Pilotos'.");
+        addToast("No hay pilotos registrados. Por favor añade pilotos primero en la pestaña 'Pilotos'.", "error");
         return;
     }
 
@@ -287,13 +282,12 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
         pitStops: 0
     }));
     setParsedResults(manualResults);
-    setSuccess("Modo de ingreso manual activado. Por favor completa la tabla.");
-    setError(null);
+    addToast('Modo de ingreso manual activado. Por favor completa la tabla.', 'info');
   };
 
   const handleSave = async () => {
     if (!selectedRaceId || !parsedResults) {
-      setError("Por favor selecciona una carrera y asegura que hay resultados.");
+      addToast('Por favor selecciona una carrera y asegura que hay resultados.', 'error');
       return;
     }
 
@@ -319,13 +313,13 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
         await dataService.saveData(updatedData, activeSeason);
         onUpdateData(updatedData);
 
-        setSuccess("¡Datos del campeonato actualizados y guardados en la nube!");
+        addToast('¡Datos del campeonato actualizados y guardados en la nube!', 'success');
         setParsedResults(null);
         setPreviewUrl(null);
         setSelectedRaceId('');
     } catch (err) {
         console.error("Save error:", err);
-        setError("Error al guardar los datos en la nube. Verifica tu conexión.");
+        addToast('Error al guardar los datos en la nube. Verifica tu conexión.', 'error');
     } finally {
         setIsSaving(false);
     }
@@ -429,19 +423,6 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
                   <span className="text-slate-300 font-medium">Ingreso Manual / Alternativo</span>
               </button>
           </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg flex items-center gap-3">
-              <AlertTriangle size={20} />
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg flex items-center gap-3">
-              <CheckCircle size={20} />
-              {success}
-            </div>
-          )}
 
           {parsedResults && (
             <div className="space-y-4">

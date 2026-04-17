@@ -4,6 +4,7 @@ import { IntroAnimation } from './components/ui/IntroAnimation';
 import { cn } from './lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import { ChampionshipProvider, useChampionship } from './context/ChampionshipContext';
+import { ToastProvider } from './context/ToastContext';
 import { Footer } from './components/layout/Footer';
 import { Header } from './components/layout/Header';
 import { MobileNav } from './components/layout/MobileNav';
@@ -194,9 +195,11 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <ChampionshipProvider>
-        <AppContent />
-      </ChampionshipProvider>
+      <ToastProvider>
+        <ChampionshipProvider>
+          <AppContent />
+        </ChampionshipProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

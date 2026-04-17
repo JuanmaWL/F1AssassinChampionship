@@ -6,6 +6,7 @@ import { verifyPassword } from '../lib/auth';
 import { dataService } from '../services/dataService';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 // Lazy loaded editors
 const ResultsEditor = lazy(() => import('../components/admin/ResultsEditor').then(module => ({ default: module.ResultsEditor })));
@@ -21,6 +22,7 @@ type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'setti
 export function AdminPanel() {
   const { data, setData, activeSeason, isHistorical, refreshData } = useChampionship();
   const { isAdmin: isAuthenticated, login, logout } = useAuth();
+  const { addToast } = useToast();
   const [password, setPassword] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -503,7 +505,12 @@ export function AdminPanel() {
                         onChange={async (e) => {
                           const updatedData = { ...data, isDrawActive: e.target.checked };
                           setData(updatedData);
-                          await dataService.saveData(updatedData, activeSeason);
+                          try {
+                            await dataService.saveData(updatedData, activeSeason);
+                            addToast(e.target.checked ? 'Modo Ruleta Activado' : 'Modo Ruleta Desactivado', 'success');
+                          } catch(err) {
+                            addToast('Error al actualizar ajuste', 'error');
+                          }
                         }}
                       />
                       <div className={cn(

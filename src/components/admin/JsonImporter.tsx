@@ -5,6 +5,7 @@ import { dataService } from '../../services/dataService';
 import { cn } from '../../lib/utils';
 import { GoogleGenAI } from "@google/genai";
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useToast } from '../../context/ToastContext';
 
 interface JsonImporterProps {
   currentData: ChampionshipData;
@@ -22,9 +23,9 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageType, setImageType] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const { addToast } = useToast();
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
@@ -34,7 +35,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     if (activeSection === 'edit') {
       setJsonContent(JSON.stringify(currentData, null, 2));
       setError(null);
-      setSuccess(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
@@ -62,7 +62,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
         setImageType(file.type);
       }
       setError(null);
-      setSuccess(null);
     };
 
     if (type === 'image') {
@@ -175,7 +174,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
 
       const parsedData = JSON.parse(jsonMatch[0]);
       setJsonContent(JSON.stringify(parsedData, null, 2));
-      setSuccess("IA ha procesado el contenido. Revisa el JSON generado antes de importar.");
+      addToast('IA ha procesado el contenido. Revisa el JSON generado antes de importar.', 'success');
       setTextContent(''); // Clear text input to focus user on JSON
       clearImage(); // Clear image after processing
     } catch (err: any) {
@@ -194,7 +193,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
 
     setIsImporting(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const parsedData = JSON.parse(jsonContent);
@@ -252,13 +250,13 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
         
         if (updateCount === 0) throw new Error("No se encontraron carreras coincidentes para actualizar resultados.");
         newData.races = updatedRaces;
-        setSuccess(`Se actualizaron los resultados de ${updateCount} carreras.`);
+        addToast(`Se actualizaron los resultados de ${updateCount} carreras.`, 'success');
       }
 
       await dataService.saveData(newData, activeSeason);
       onUpdateData(newData);
       if (activeSection !== 'results') { // Custom message for results already set
-        setSuccess(`Datos de ${activeSection === 'full' ? 'base de datos completa' : activeSection} importados correctamente.`);
+        addToast(`Datos de ${activeSection === 'full' ? 'base de datos completa' : activeSection} importados correctamente.`, 'success');
       }
       setJsonContent('');
     } catch (err: any) {
@@ -352,7 +350,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
                   setImagePreview(null);
                   setImageType('');
                   setError(null);
-                  setSuccess(null);
                 }}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
@@ -378,7 +375,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
                   setImagePreview(null);
                   setImageType('');
                   setError(null);
-                  setSuccess(null);
                 }}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all",
@@ -518,13 +514,6 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
               <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-xs flex items-start gap-2">
                 <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                 {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-3 rounded-lg text-xs flex items-start gap-2">
-                <Check size={14} className="mt-0.5 shrink-0" />
-                {success}
               </div>
             )}
 

@@ -25,7 +25,6 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
     editForm,
     setEditForm,
     isSaving,
-    saveMessage,
     handleCancel: baseHandleCancel,
     startEditing: baseStartEditing,
     startNew: baseStartNew,
@@ -128,6 +127,8 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       const updatedData = { ...data, constructors: updatedTeams };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
+    }, {
+      successMessage: editingId === 'new' ? 'Escudería creada correctamente' : 'Escudería actualizada correctamente'
     });
   };
 
@@ -138,6 +139,9 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       const updatedData = { ...data, constructors: updatedTeams };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
+    }, {
+      successMessage: 'Escudería eliminada',
+      successType: 'info'
     });
   };
 
@@ -157,6 +161,9 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       onUpdateData(updatedData);
       setSelectedIds([]);
       setShowBulkDeleteConfirm(false);
+    }, {
+      successMessage: 'Escuderías eliminadas',
+      successType: 'info'
     });
   };
 
@@ -169,6 +176,9 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
       onUpdateData(updatedData);
       setSelectedIds([]);
       setShowDeleteAllConfirm(false);
+    }, {
+      successMessage: 'Todas las escuderías han sido eliminadas',
+      successType: 'info'
     });
   };
 
@@ -276,12 +286,6 @@ export function TeamsEditor({ data, onUpdateData, activeSeason, isHistorical }: 
                   </button>
                 )}
               </div>
-            )}
-
-            {saveMessage && (
-                <span className="text-green-400 text-sm font-bold animate-pulse flex items-center gap-2">
-                    <Check size={14} /> {saveMessage}
-                </span>
             )}
         </div>
         <button

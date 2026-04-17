@@ -23,7 +23,6 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
     editForm,
     setEditForm,
     isSaving,
-    saveMessage,
     handleCancel,
     startEditing,
     startNew,
@@ -61,6 +60,8 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
       const updatedData = { ...data, races: updatedRaces };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
+    }, {
+      successMessage: editingId === 'new' ? 'Carrera creada correctamente' : 'Carrera actualizada correctamente'
     });
   };
 
@@ -71,6 +72,9 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
       const updatedData = { ...data, races: updatedRaces };
       await dataService.saveData(updatedData, activeSeason);
       onUpdateData(updatedData);
+    }, {
+      successMessage: 'Carrera eliminada',
+      successType: 'info'
     });
   };
 
@@ -89,6 +93,9 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
       onUpdateData(updatedData);
       setSelectedIds([]);
       setShowBulkDeleteConfirm(false);
+    }, {
+      successMessage: 'Carreras eliminadas',
+      successType: 'info'
     });
   };
 
@@ -101,6 +108,9 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
       onUpdateData(updatedData);
       setSelectedIds([]);
       setShowDeleteAllConfirm(false);
+    }, {
+      successMessage: 'Todas las carreras han sido eliminadas',
+      successType: 'info'
     });
   };
 
@@ -208,18 +218,6 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
           <Plus size={16} /> Nueva Carrera
         </button>
       </div>
-
-      {saveMessage && (
-        <div className={cn(
-            "p-4 rounded-lg border flex items-center gap-2 animate-in fade-in slide-in-from-top-2",
-            saveMessage.includes("Error") 
-                ? "bg-red-500/10 border-red-500/20 text-red-400" 
-                : "bg-green-500/10 border-green-500/20 text-green-400"
-        )}>
-            {saveMessage.includes("Error") ? <X size={18} /> : <Check size={18} />}
-            <span className="font-mono text-sm uppercase tracking-wider font-bold">{saveMessage}</span>
-        </div>
-      )}
 
       <div className="bg-slate-900/50 border border-white/5 rounded-xl overflow-hidden">
         <table className="w-full text-left">

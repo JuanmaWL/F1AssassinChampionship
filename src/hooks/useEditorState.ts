@@ -1,16 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { useToast } from '../context/ToastContext';
 
 export function useEditorState<T>() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<T>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { addToast } = useToast();
 
   const handleCancel = () => {
     setEditingId(null);
     setEditForm({});
-    setSaveMessage(null);
   };
 
   const startEditing = (id: string, item: T) => {
@@ -23,19 +22,18 @@ export function useEditorState<T>() {
     setEditForm(defaults);
   };
 
-  const withSave = async (fn: () => Promise<void>) => {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+  const withSave = async (
+    fn: () => Promise<void>, 
+    options?: { successMessage?: string, successType?: 'success' | 'info' | 'error', errorMessage?: string }
+  ) => {
     setIsSaving(true);
-    setSaveMessage(null);
     try {
       await fn();
-      setSaveMessage('Guardado exitosamente');
-      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 3000);
+      addToast(options?.successMessage || 'Guardado exitosamente', options?.successType || 'success');
       handleCancel();
     } catch (error) {
       console.error('Error saving:', error);
-      setSaveMessage('Error al guardar');
-      saveTimerRef.current = setTimeout(() => setSaveMessage(null), 3000);
+      addToast(options?.errorMessage || 'Error al guardar', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -46,7 +44,6 @@ export function useEditorState<T>() {
     editForm,
     setEditForm,
     isSaving,
-    saveMessage,
     handleCancel,
     startEditing,
     startNew,
