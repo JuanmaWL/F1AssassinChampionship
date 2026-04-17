@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Race, RaceResult } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -17,7 +17,7 @@ const SortIcon = ({ columnKey, sortConfig }: { columnKey: string; sortConfig: { 
 };
 
 // Optimized Image Component for Circuit Backgrounds
-const OptimizedCircuitImage = ({ src, alt, className, isHistorical }: { src: string; alt: string; className?: string; isHistorical?: boolean }) => {
+const OptimizedCircuitImage = React.memo(function OptimizedCircuitImage({ src, alt, className, isHistorical }: { src: string; alt: string; className?: string; isHistorical?: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -55,7 +55,7 @@ const OptimizedCircuitImage = ({ src, alt, className, isHistorical }: { src: str
       )}
     </div>
   );
-};
+});
 
 export function Calendar() {
   const { data, activeSeason, isHistorical } = useChampionship();
@@ -147,13 +147,12 @@ export function Calendar() {
     return sortableItems;
   }, [selectedRace, sortConfig, getDriverName, getTeamName]);
 
-  const requestSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
+  const requestSort = useCallback((key: string) => {
+    setSortConfig(prev => {
+      const direction = prev?.key === key && prev?.direction === 'asc' ? 'desc' : 'asc';
+      return { key, direction };
+    });
+  }, []);
 
   return (
     <div className={cn("relative", data.races.length > 0 && "pb-20")}>
@@ -381,8 +380,15 @@ export function Calendar() {
                           <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] relative z-10" />
                       </div>
                   )}
+
+                  {/* Grid View Chevron Link */}
+                  {viewMode === 'grid' && race.status === 'completed' && (
+                      <div className="absolute top-4 right-4 z-20">
+                          <ChevronRight className="text-slate-500 group-hover:text-white transition-colors transform group-hover:translate-x-1" />
+                      </div>
+                  )}
                   
-                  <div className="flex-1">
+                  <div className="flex-1 pr-6 md:pr-0">
                     <div className="flex items-center gap-3 mb-1">
                       <span className={cn("text-sm font-mono uppercase tracking-widest", isHistorical ? "text-amber-400" : "text-red-400")}>
                         {race.date ? formatDate(race.date) : "POR DEFINIR"}
@@ -512,7 +518,9 @@ export function Calendar() {
                           </div>
                         ))}
                       </div>
-                      <ChevronRight className="text-slate-600 group-hover:text-white transition-colors transform group-hover:translate-x-1" />
+                      {viewMode === 'list' && (
+                          <ChevronRight className="text-slate-600 group-hover:text-white transition-colors transform group-hover:translate-x-1" />
+                      )}
                     </div>
                   )}
                   
