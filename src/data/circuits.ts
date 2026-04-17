@@ -596,3 +596,7 @@ export const findCircuitInfo = (searchString: string | undefined): CircuitData |
   console.warn(`findCircuitInfo: No match found for "${searchString}"`);
   return null;
 };
+
+export const loadCircuits = async () => {
+  return import('./circuits').then(m => m.CIRCUITS);
+};

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Race, RaceResult } from '../types';
 import { Calendar as CalendarIcon, MapPin, ChevronRight, X, LayoutGrid, List, Globe, Timer, Clock, Wrench, AlertTriangle, FileText, Trophy, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,43 +9,67 @@ import { CircuitTrack } from '../components/calendar/CircuitTrack';
 import { EmptyState } from '../components/ui/EmptyState';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { useChampionship } from '../context/ChampionshipContext';
-import { findCircuitInfo, CircuitData } from '../data/circuits';
+import { CircuitData } from '../data/circuits';
 
 const SortIcon = ({ columnKey, sortConfig }: { columnKey: string; sortConfig: { key: string; direction: 'asc' | 'desc' } | null }) => {
   if (sortConfig?.key !== columnKey) return <ArrowUpDown size={12} className="opacity-30" />;
   return sortConfig.direction === 'asc' ? <ArrowUp size={12} className="text-white" /> : <ArrowDown size={12} className="text-white" />;
 };
 
-// Optimized Image Component for Circuit Backgrounds
+// Optimized Image Component for Circuit Backgrounds with Lazy Load & Intersection Observer
 const OptimizedCircuitImage = React.memo(function OptimizedCircuitImage({ src, alt, className, isHistorical }: { src: string; alt: string; className?: string; isHistorical?: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' } // Load when image is 200px away from viewport
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
-      {/* Placeholder / Loading State */}
+    <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
+      {/* Placeholder / Loading State / Skeleton */}
       <div 
         className={cn(
-          "absolute inset-0 transition-opacity duration-1000 z-10",
+          "absolute inset-0 transition-opacity duration-700 z-10",
           isLoaded ? "opacity-0 pointer-events-none" : "opacity-100",
-          isHistorical ? "bg-amber-950/20" : "bg-slate-900/40"
+          isHistorical ? "bg-amber-950/30" : "bg-slate-900/60"
         )}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent animate-pulse" />
       </div>
 
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setError(true)}
-        referrerPolicy="no-referrer"
-        className={cn(
-          "w-full h-full object-cover transition-all duration-1000",
-          !isLoaded ? "scale-110 blur-sm" : "scale-100 blur-0",
-          error ? "opacity-0" : "opacity-100"
-        )}
-      />
+      {isInView && (
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setIsLoaded(true)}
+          onError={() => setError(true)}
+          referrerPolicy="no-referrer"
+          className={cn(
+            "w-full h-full object-cover transition-all duration-700",
+            !isLoaded ? "scale-110 blur-xl opacity-0" : "scale-100 blur-0 opacity-100",
+            error ? "opacity-0" : ""
+          )}
+        />
+      )}
       
       {/* Fallback if error */}
       {error && (
@@ -64,6 +88,20 @@ export function Calendar() {
   const [isLayoutLoading, setIsLayoutLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'globe'>('list');
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'position', direction: 'asc' });
+
+  const [circuitsLoaded, setCircuitsLoaded] = useState(false);
+  const [circuitsModule, setCircuitsModule] = useState<typeof import('../data/circuits') | null>(null);
+
+  useEffect(() => {
+    import('../data/circuits').then(m => {
+      setCircuitsModule(m);
+      setCircuitsLoaded(true);
+    });
+  }, []);
+
+  const findCircuit = useCallback((name: string) => {
+    return circuitsModule?.findCircuitInfo(name) ?? null;
+  }, [circuitsModule]);
 
   // Scroll lock when race details or layout modal are open
   useEffect(() => {
@@ -315,7 +353,7 @@ export function Calendar() {
                 <div className="absolute inset-0 overflow-hidden rounded-xl z-0">
                     {/* Optimized Circuit Background Image */}
                     <OptimizedCircuitImage 
-                        src={findCircuitInfo(race.circuit)?.photoUrl || `https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400`}
+                        src={findCircuit(race.circuit)?.photoUrl || `https://picsum.photos/seed/${race.circuit.replace(/\s/g, '')}/800/400`}
                         alt={race.circuit}
                         isHistorical={isHistorical}
                         className={cn(
@@ -367,7 +405,7 @@ export function Calendar() {
                         className="w-16 h-16 md:w-20 md:h-20 opacity-60 hover:opacity-100 transition-all duration-1000 ease-out flex-shrink-0 mr-2 p-2 cursor-zoom-in hover:scale-110 z-20 group/track relative"
                         onClick={(e) => {
                             e.stopPropagation();
-                            const info = findCircuitInfo(race.circuit);
+                            const info = findCircuit(race.circuit);
                             if (info) {
                                 setIsLayoutLoading(true);
                                 setLayoutCircuit(info);
@@ -377,7 +415,7 @@ export function Calendar() {
                       >
                           {/* Circular Hover Effect - Optimized for ultra-smooth transition using opacity */}
                           <div className="absolute inset-[-6px] rounded-full border-2 border-white/20 bg-white/5 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.1)] opacity-0 group-hover/track:opacity-100 scale-90 group-hover/track:scale-100 transition-all duration-1000 ease-out pointer-events-none z-0" />
-                          <CircuitTrack circuitInfo={findCircuitInfo(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] relative z-10" />
+                          <CircuitTrack circuitInfo={findCircuit(race.circuit)} className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] relative z-10" />
                       </div>
                   )}
 
@@ -562,7 +600,7 @@ export function Calendar() {
               <div className="sticky top-0 z-20 overflow-hidden border-b border-white/10 bg-slate-900 shadow-xl">
                   {/* Optimized Modal Background Image */}
                   <OptimizedCircuitImage 
-                      src={findCircuitInfo(selectedRace.circuit)?.photoUrl || `https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400`}
+                      src={findCircuit(selectedRace.circuit)?.photoUrl || `https://picsum.photos/seed/${selectedRace.circuit.replace(/\s/g, '')}/1200/400`}
                       alt={selectedRace.circuit}
                       isHistorical={isHistorical}
                       className="absolute inset-0 z-0 opacity-40 grayscale"
@@ -571,7 +609,7 @@ export function Calendar() {
                   
                   {/* SVG Track Overlay in Modal - Reduced size and increased padding to prevent cutting */}
                   <div className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 w-40 h-40 md:w-56 md:h-56 opacity-20 pointer-events-none flex items-center justify-center p-10">
-                      <CircuitTrack circuitInfo={findCircuitInfo(selectedRace.circuit)} className="w-full h-full text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" />
+                      <CircuitTrack circuitInfo={findCircuit(selectedRace.circuit)} className="w-full h-full text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" />
                   </div>
                   
                   <div className="relative z-10 p-4 md:p-6 flex justify-between items-start">
