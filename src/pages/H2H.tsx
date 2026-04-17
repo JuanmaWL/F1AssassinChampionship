@@ -100,10 +100,26 @@ function DriverDropdown({
   }, [drivers, sortMode, searchTerm]);
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div 
+      className="relative w-full" 
+      ref={dropdownRef}
+      role="listbox"
+      aria-expanded={isOpen}
+      aria-label="Seleccionar piloto"
+    >
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setIsOpen(false);
+          if (e.key === 'ArrowDown') {
+            setIsOpen(true);
+            setTimeout(() => {
+              const firstItem = dropdownRef.current?.querySelector('[role="option"]:not(:disabled)') as HTMLElement;
+              firstItem?.focus();
+            }, 100);
+          }
+        }}
         className={cn(
           "w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-white/30 transition-colors flex items-center justify-between",
           align === 'right' ? "flex-row-reverse" : ""
@@ -157,8 +173,25 @@ function DriverDropdown({
                 return (
                 <button
                   key={d.id}
+                  role="option"
+                  aria-selected={d.id === value}
                   disabled={d.id === disabledId}
                   onClick={() => { onChange(d.id); setIsOpen(false); setSearchTerm(''); }}
+                  onKeyDown={(e) => {
+                    const items = dropdownRef.current?.querySelectorAll('[role="option"]:not(:disabled)');
+                    if (!items) return;
+                    const index = Array.from(items).indexOf(e.currentTarget as Element);
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      (items[(index + 1) % items.length] as HTMLElement).focus();
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      (items[(index - 1 + items.length) % items.length] as HTMLElement).focus();
+                    } else if (e.key === 'Escape') {
+                      setIsOpen(false);
+                      dropdownRef.current?.querySelector('button')?.focus();
+                    }
+                  }}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 transition-colors text-left",
                     d.id === disabledId ? "opacity-30 cursor-not-allowed" : "hover:bg-white/10"
@@ -223,10 +256,26 @@ function PeriodDropdown({
   };
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div 
+      className="relative w-full" 
+      ref={dropdownRef}
+      role="listbox"
+      aria-expanded={isOpen}
+      aria-label="Seleccionar carrera"
+    >
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setIsOpen(false);
+          if (e.key === 'ArrowDown') {
+            setIsOpen(true);
+            setTimeout(() => {
+              const firstItem = dropdownRef.current?.querySelector('[role="option"]:not(:disabled)') as HTMLElement;
+              firstItem?.focus();
+            }, 100);
+          }
+        }}
         className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-bold focus:outline-none focus:border-white/30 transition-colors flex items-center justify-between shadow-inner"
       >
         <span className="truncate">
@@ -249,8 +298,25 @@ function PeriodDropdown({
                 return (
                 <button
                   key={r.id}
+                  role="option"
+                  aria-selected={r.id === value}
                   disabled={disabled}
                   onClick={() => { onChange(r.id); setIsOpen(false); }}
+                  onKeyDown={(e) => {
+                    const items = dropdownRef.current?.querySelectorAll('[role="option"]:not(:disabled)');
+                    if (!items) return;
+                    const index = Array.from(items).indexOf(e.currentTarget as Element);
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      (items[(index + 1) % items.length] as HTMLElement).focus();
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      (items[(index - 1 + items.length) % items.length] as HTMLElement).focus();
+                    } else if (e.key === 'Escape') {
+                      setIsOpen(false);
+                      dropdownRef.current?.querySelector('button')?.focus();
+                    }
+                  }}
                   className={cn(
                     "w-full flex items-center justify-between p-3 transition-colors text-left border-b border-white/5 last:border-0",
                     r.id === value ? "bg-white/10" : "hover:bg-white/5",
