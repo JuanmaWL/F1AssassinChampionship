@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useAnimation } from 'motion/react';
 import { FOOTER_ASSETS } from '../../constants/assets';
 import { INTRO_ANIMATION_DURATION } from '../../constants/config';
 import { SeasonId } from '../../types';
@@ -15,6 +15,8 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
   const [stage, setStage] = useState(0);
   const [titleText, setTitleText] = useState("ASSASSINS");
   const [isMetamorphosing, setIsMetamorphosing] = useState(false);
+  const [showChampionship, setShowChampionship] = useState(false);
+  const controls = useAnimation();
 
   // Disable intro on mobile
   useEffect(() => {
@@ -33,8 +35,6 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
     };
   }, []);
 
-  // Scroll restriction ...
-
   useEffect(() => {
     // Sequence timing - Professional racing intro
     const timers = [
@@ -46,6 +46,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       }, 7000), 
       setTimeout(() => {
         setIsMetamorphosing(true);          // Start metamorphosis glitch (triggered by car)
+        setShowChampionship(true);          // Trigger blur-morph
       }, 7300),
       setTimeout(() => {
         setIsMetamorphosing(false);         // End metamorphosis glitch
@@ -55,6 +56,44 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
 
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
+
+  // Glitch recurrente para "CHAMPIONSHIP"
+  useEffect(() => {
+    let isMounted = true;
+    
+    const runGlitchLoop = async () => {
+      if (!showChampionship) return;
+      
+      // Esperar unos segundos antes del primer glitch recurrente
+      await new Promise(resolve => setTimeout(resolve, 8000));
+      
+      while (isMounted && showChampionship) {
+        if (!isMounted) break;
+        
+        await controls.start({
+            skewX: [0, 2, -2, 0],
+            textShadow: [
+                "0px 0px 0px rgba(0,0,0,0)",
+                "2px 0 #ff0000, -2px 0 #00ffff",
+                "0px 0px 0px rgba(0,0,0,0)"
+            ],
+            transition: { duration: 0.2, times: [0, 0.2, 0.8, 1] }
+        });
+        
+        if (isMounted) {
+          await new Promise(resolve => setTimeout(resolve, 8000));
+        }
+      }
+    };
+
+    if (showChampionship) {
+      runGlitchLoop();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [showChampionship, controls]);
 
   // Elegant flash effect during metamorphosis
   useEffect(() => {
@@ -79,6 +118,21 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         scale: 1
       }}
     >
+      {/* SVG Threshold Filter for Goo Effect */}
+      <svg style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
+        <defs>
+          <filter id="threshold">
+            <feColorMatrix 
+              in="SourceGraphic" 
+              type="matrix" 
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -9" 
+              result="goo" 
+            />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+
       {/* Cinematic Flash Effect on Metamorphosis */}
       <AnimatePresence>
         {isMetamorphosing && (
@@ -143,7 +197,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         ))}
       </div>
 
-      {/* F1 Car Animation - Passes IN FRONT of everything */}
+      {/* F1 Car Animation */}
       {stage >= 4 && (
         <motion.div 
             initial={{ x: "-150vw" }}
@@ -156,7 +210,6 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
               transformOrigin: 'center center'
             }}
         >
-           {/* Speed Trails / Smoke behind wheels */}
            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-full">
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -177,26 +230,6 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                   className="absolute left-[100px] top-[150px] w-20 h-8 bg-white/20 blur-xl rounded-full"
                 />
               ))}
-              {/* Speed Lines following the car */}
-              {[...Array(10)].map((_, i) => (
-                <motion.div
-                  key={`line-${i}`}
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ 
-                    opacity: [0, 0.8, 0], 
-                    width: [100, 400],
-                    x: [-200, -600]
-                  }}
-                  transition={{ 
-                    duration: 0.3, 
-                    repeat: Infinity, 
-                    delay: i * 0.03,
-                    ease: "linear"
-                  }}
-                  className="absolute left-[150px] h-[1px] bg-red-500/50"
-                  style={{ top: `${120 + i * 15}px` }}
-                />
-              ))}
            </div>
 
            <motion.div
@@ -210,7 +243,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       )}
 
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 md:p-6 max-h-screen gap-4 md:gap-8 overflow-hidden">
-        {/* TOP: F1 Start Lights Sequence - Hide when logo appears */}
+        {/* TOP: F1 Start Lights */}
         <AnimatePresence mode="popLayout">
           {stage === 1 && (
             <motion.div 
@@ -219,27 +252,24 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
               initial={{ opacity: 0, y: -40, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -60, scale: 0.8, filter: "blur(10px)" }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center"
+              transition={{ duration: 0.6 }}
+              className="flex gap-4 md:gap-6 p-4 bg-black/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl"
             >
-              <div className="flex gap-4 md:gap-6 p-4 bg-black/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                      <div key={i} className="relative w-6 h-6 md:w-8 md:h-8">
-                          <div className="absolute inset-0 rounded-full bg-slate-900 border-2 border-slate-700 shadow-inner" />
-                          <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ 
-                                  opacity: 1, 
-                                  scale: 1,
-                                  backgroundColor: "#ef4444",
-                                  boxShadow: "0 0 30px #ef4444, inset 0 0 10px rgba(255,255,255,0.5)"
-                              }}
-                              transition={{ delay: i * 0.6, duration: 0.1 }}
-                              className="absolute inset-0 rounded-full"
-                          />
-                      </div>
-                  ))}
-              </div>
+                {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} className="relative w-6 h-6 md:w-8 md:h-8">
+                        <div className="absolute inset-0 rounded-full bg-slate-900 border-2 border-slate-700 shadow-inner" />
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ 
+                                opacity: 1, 
+                                backgroundColor: "#ef4444",
+                                boxShadow: "0 0 30px #ef4444"
+                            }}
+                            transition={{ delay: i * 0.6, duration: 0.1 }}
+                            className="absolute inset-0 rounded-full"
+                        />
+                    </div>
+                ))}
             </motion.div>
           )}
         </AnimatePresence>
@@ -268,32 +298,51 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                               >
                                 F1
                               </motion.span>
-                              <motion.span 
-                                key="titleText"
-                                animate={isMetamorphosing ? {
-                                  x: [0, -4, 4, -2, 2, 0],
-                                  filter: [
-                                    "brightness(1) contrast(1)",
-                                    "brightness(2) contrast(1.5) drop-shadow(4px 0px 0px #ff0000) drop-shadow(-4px 0px 0px #00ffff)",
-                                    "brightness(1) contrast(1)"
-                                  ],
-                                  opacity: [1, 0.8, 1]
-                                } : {
-                                  x: 0,
-                                  filter: "brightness(1) contrast(1) drop-shadow(0px 0px 0px rgba(255,0,0,0)) drop-shadow(0px 0px 0px rgba(0,255,255,0))",
-                                  opacity: 1
-                                }}
-                                transition={isMetamorphosing ? {
-                                  duration: 0.4,
-                                  ease: "easeInOut"
-                                } : {
-                                  duration: 0.2
-                                }}
-                                className={`px-6 w-full text-center font-sans tracking-tighter text-white ${stage >= 4 ? 'glitch-text' : ''}`}
-                                data-text={titleText}
-                              >
-                                {titleText}
-                              </motion.span>
+                              
+                              {/* Blur Morph Container */}
+                              <div className="relative w-full flex items-center justify-center min-h-[1em]" style={{ filter: "url(#threshold)" }}>
+                                <AnimatePresence>
+                                    {!showChampionship ? (
+                                        <motion.span
+                                            key="assassins"
+                                            initial={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                                            exit={{ 
+                                                opacity: 0, 
+                                                scale: 1.2, 
+                                                filter: "blur(20px)",
+                                                transition: { duration: 0.8, ease: "easeInOut" }
+                                            }}
+                                            className="absolute"
+                                        >
+                                            ASSASSINS
+                                        </motion.span>
+                                    ) : (
+                                        <motion.span
+                                            key="championship"
+                                            initial={{ opacity: 0, scale: 0.8, filter: "blur(20px)" }}
+                                            animate={controls}
+                                            variants={{
+                                                initial: { 
+                                                    opacity: 1, 
+                                                    scale: 1, 
+                                                    filter: "blur(0px)",
+                                                    textShadow: ["0px 0px 0px rgba(0,0,0,0)", "3px 0 #ff0000, -3px 0 #00ffff", "0px 0px 0px rgba(0,0,0,0)"],
+                                                    transition: { 
+                                                        opacity: { duration: 0.6 },
+                                                        scale: { duration: 0.8 },
+                                                        filter: { duration: 0.8 },
+                                                        textShadow: { duration: 0.4, delay: 0.4 }
+                                                    }
+                                                }
+                                            }}
+                                            animate={showChampionship ? "initial" : {}}
+                                            className="absolute"
+                                        >
+                                            CHAMPIONSHIP
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                              </div>
                           </h1>
                         </motion.div>
                         
@@ -308,7 +357,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
             )}
         </AnimatePresence>
 
-        {/* BOTTOM: Platform Badges & Participant Logos */}
+        {/* BOTTOM: Logos */}
         <AnimatePresence mode="popLayout">
             {stage >= 3 && (
                 <motion.div
