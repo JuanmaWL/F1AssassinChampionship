@@ -1,18 +1,20 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, lazy, Suspense } from 'react';
 import { Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
 import { dataService } from '../services/dataService';
-import { ResultsEditor } from '../components/admin/ResultsEditor';
-import { DriversEditor } from '../components/admin/DriversEditor';
-import { TeamsEditor } from '../components/admin/TeamsEditor';
-import { CalendarEditor } from '../components/admin/CalendarEditor';
-import { CircuitsEditor } from '../components/admin/CircuitsEditor';
-import { JsonImporter } from '../components/admin/JsonImporter';
-import { MetricsViewer } from '../components/admin/MetricsViewer';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
+
+// Lazy loaded editors
+const ResultsEditor = lazy(() => import('../components/admin/ResultsEditor').then(module => ({ default: module.ResultsEditor })));
+const DriversEditor = lazy(() => import('../components/admin/DriversEditor').then(module => ({ default: module.DriversEditor })));
+const TeamsEditor = lazy(() => import('../components/admin/TeamsEditor').then(module => ({ default: module.TeamsEditor })));
+const CalendarEditor = lazy(() => import('../components/admin/CalendarEditor').then(module => ({ default: module.CalendarEditor })));
+const CircuitsEditor = lazy(() => import('../components/admin/CircuitsEditor').then(module => ({ default: module.CircuitsEditor })));
+const JsonImporter = lazy(() => import('../components/admin/JsonImporter').then(module => ({ default: module.JsonImporter })));
+const MetricsViewer = lazy(() => import('../components/admin/MetricsViewer').then(module => ({ default: module.MetricsViewer })));
 
 type AdminTab = 'results' | 'drivers' | 'teams' | 'calendar' | 'import' | 'settings' | 'metrics' | 'circuits';
 
@@ -424,50 +426,64 @@ export function AdminPanel() {
         <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
           <div className="max-w-full">
             {activeTab === 'teams' && (
-              <TeamsEditor 
-                data={data} 
-                onUpdateData={setData} 
-                activeSeason={activeSeason} 
-                isHistorical={isHistorical} 
-              />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <TeamsEditor 
+                  data={data} 
+                  onUpdateData={setData} 
+                  activeSeason={activeSeason} 
+                  isHistorical={isHistorical} 
+                />
+              </Suspense>
             )}
             {activeTab === 'drivers' && (
-              <DriversEditor 
-                data={data} 
-                onUpdateData={setData} 
-                activeSeason={activeSeason} 
-                isHistorical={isHistorical} 
-              />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <DriversEditor 
+                  data={data} 
+                  onUpdateData={setData} 
+                  activeSeason={activeSeason} 
+                  isHistorical={isHistorical} 
+                />
+              </Suspense>
             )}
             {activeTab === 'calendar' && (
-              <CalendarEditor 
-                data={data} 
-                onUpdateData={setData} 
-                activeSeason={activeSeason} 
-                isHistorical={isHistorical} 
-              />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <CalendarEditor 
+                  data={data} 
+                  onUpdateData={setData} 
+                  activeSeason={activeSeason} 
+                  isHistorical={isHistorical} 
+                />
+              </Suspense>
             )}
             {activeTab === 'circuits' && (
-              <CircuitsEditor />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <CircuitsEditor />
+              </Suspense>
             )}
             {activeTab === 'results' && (
-              <ResultsEditor 
-                data={data} 
-                onUpdateData={setData} 
-                activeSeason={activeSeason} 
-                isHistorical={isHistorical} 
-              />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <ResultsEditor 
+                  data={data} 
+                  onUpdateData={setData} 
+                  activeSeason={activeSeason} 
+                  isHistorical={isHistorical} 
+                />
+              </Suspense>
             )}
             {activeTab === 'import' && (
-              <JsonImporter 
-                currentData={data} 
-                onUpdateData={setData} 
-                activeSeason={activeSeason} 
-                isHistorical={isHistorical} 
-              />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <JsonImporter 
+                  currentData={data} 
+                  onUpdateData={setData} 
+                  activeSeason={activeSeason} 
+                  isHistorical={isHistorical} 
+                />
+              </Suspense>
             )}
             {activeTab === 'metrics' && (
-              <MetricsViewer />
+              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                <MetricsViewer />
+              </Suspense>
             )}
             {activeTab === 'settings' && (
               <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
