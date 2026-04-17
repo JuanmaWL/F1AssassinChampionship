@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMemo, useState, useEffect } from 'react';
 import { Driver, Constructor, Race } from '../../types';
 import { motion } from 'motion/react';
@@ -11,7 +12,7 @@ interface TeammateBattlesProps {
   races: Race[];
 }
 
-export function TeammateBattles({ drivers, constructors, races }: TeammateBattlesProps) {
+export const TeammateBattles = React.memo(function TeammateBattles({ drivers, constructors, races }: TeammateBattlesProps) {
   const { isHistorical } = useChampionship();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [isCompact, setIsCompact] = useState(false);
@@ -305,4 +306,4 @@ export function TeammateBattles({ drivers, constructors, races }: TeammateBattle
       </div>
     </div>
   );
-}
+});

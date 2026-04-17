@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Crown, Trophy, Star } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -61,7 +62,7 @@ const FireParticles = ({ colorClass }: { colorClass: string }) => (
   </div>
 );
 
-export function Podium({ drivers, constructors, isSeasonFinished = false }: PodiumProps) {
+export const Podium = React.memo(function Podium({ drivers, constructors, isSeasonFinished = false }: PodiumProps) {
   const topThree = drivers.slice(0, 3);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -308,4 +309,4 @@ export function Podium({ drivers, constructors, isSeasonFinished = false }: Podi
       </motion.div>
     </div>
   );
-}
+});

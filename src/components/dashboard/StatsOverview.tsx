@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import { Flag, Trophy, Timer, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -8,7 +9,7 @@ interface StatsOverviewProps {
   activeSeason: SeasonId;
 }
 
-export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
+export const StatsOverview = React.memo(function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
   const actualRaces = data.races.length;
   const totalRaces = actualRaces > 0 ? actualRaces : 12;
   const remainingRaces = actualRaces > 0 ? data.races.filter((r) => r.status === 'pending').length : 12;
@@ -360,4 +361,4 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
       </div>
     </div>
   );
-}
+});

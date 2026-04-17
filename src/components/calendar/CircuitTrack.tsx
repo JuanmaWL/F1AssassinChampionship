@@ -1,7 +1,8 @@
+import React from 'react';
 import { CircuitData } from '../../data/circuits';
 import { cn } from '../../lib/utils';
 
-export const CircuitTrack = ({ circuitInfo, className }: { circuitInfo: CircuitData | null, className?: string }) => {
+export const CircuitTrack = React.memo(function CircuitTrack({ circuitInfo, className }: { circuitInfo: CircuitData | null, className?: string }) {
   if (!circuitInfo) {
     return null;
   }
@@ -38,4 +39,4 @@ export const CircuitTrack = ({ circuitInfo, className }: { circuitInfo: CircuitD
       )}
     </svg>
   );
-};
+});

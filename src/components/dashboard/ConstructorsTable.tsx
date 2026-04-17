@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -13,7 +14,7 @@ interface ConstructorsTableProps {
   drivers: Driver[];
 }
 
-export function ConstructorsTable({ constructors, hasCompletedRaces, races, drivers }: ConstructorsTableProps) {
+export const ConstructorsTable = React.memo(function ConstructorsTable({ constructors, hasCompletedRaces, races, drivers }: ConstructorsTableProps) {
   const [selectedConstructor, setSelectedConstructor] = useState<Constructor | null>(null);
 
   // Scroll lock for modal
@@ -388,4 +389,4 @@ export function ConstructorsTable({ constructors, hasCompletedRaces, races, driv
     )}
     </motion.div>
   );
-}
+});

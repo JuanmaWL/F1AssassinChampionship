@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity, X, Medal, Users, Calendar, MapPin, Info } from 'lucide-react';
@@ -12,7 +13,7 @@ interface DriversTableProps {
   races: Race[];
 }
 
-export function DriversTable({ drivers, constructors, races }: DriversTableProps) {
+export const DriversTable = React.memo(function DriversTable({ drivers, constructors, races }: DriversTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [activeFastestLapDriver, setActiveFastestLapDriver] = useState<string | null>(null);
@@ -849,4 +850,4 @@ export function DriversTable({ drivers, constructors, races }: DriversTableProps
       )}
     </motion.div>
   );
-}
+});
