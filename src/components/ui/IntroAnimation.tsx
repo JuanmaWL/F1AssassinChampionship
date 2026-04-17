@@ -6,6 +6,38 @@ import { SeasonId } from '../../types';
 
 const F1Car = lazy(() => import('../f1-car/F1Car').then(module => ({ default: module.F1Car })));
 
+// CRT Monitor Filter Component
+function CRTFilter() {
+  return (
+    <svg style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
+      <defs>
+        <filter id="threshold">
+          <feColorMatrix 
+            in="SourceGraphic" 
+            type="matrix" 
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -9" 
+            result="goo" 
+          />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+
+        {/* CRT Scanlines Filter */}
+        <filter id="crt-scanlines">
+          <feTurbulence baseFrequency="0.9" numOctaves="4" result="turbulence" seed="2" />
+          <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="0.3" />
+        </filter>
+        
+        {/* Vignette for depth */}
+        <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(0,0,0,0)" />
+          <stop offset="70%" stopColor="rgba(0,0,0,0.2)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0.6)" />
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
 interface IntroAnimationProps {
   onComplete: () => void;
   activeSeason: SeasonId;
@@ -16,7 +48,9 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
   const [titleText, setTitleText] = useState("ASSASSINS");
   const [isMetamorphosing, setIsMetamorphosing] = useState(false);
   const [showChampionship, setShowChampionship] = useState(false);
-  const controls = useAnimation();
+  const [carHasPassed, setCarHasPassed] = useState(false);
+  const [showCRTEffect, setShowCRTEffect] = useState(false);
+  const impactControls = useAnimation();
 
   // Disable intro on mobile
   useEffect(() => {
@@ -43,6 +77,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       setTimeout(() => setStage(3), 5500),  // Badges and participant logos appear
       setTimeout(() => {
         setStage(4);                        // Car starts passing (FAST)
+        setShowCRTEffect(true);             // Activate CRT effect during car pass
       }, 7000), 
       setTimeout(() => {
         setIsMetamorphosing(true);          // Start metamorphosis glitch (triggered by car)
@@ -50,60 +85,32 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       }, 7300),
       setTimeout(() => {
         setIsMetamorphosing(false);         // End metamorphosis glitch
-      }, 7800), // Shorter, elegant flash
+        setCarHasPassed(true);              // Trigger post-car impact
+      }, 7800), 
+      setTimeout(() => {
+        setShowCRTEffect(false);            // Remove CRT effect
+      }, 8500),
       setTimeout(() => onComplete(), INTRO_ANIMATION_DURATION), // Complete
     ];
 
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
 
-  // Glitch recurrente para "CHAMPIONSHIP"
+  // Post-car impact effect with zoom and particles
   useEffect(() => {
-    let isMounted = true;
-    
-    const runGlitchLoop = async () => {
-      if (!showChampionship) return;
-      
-      // Esperar unos segundos antes del primer glitch recurrente
-      await new Promise(resolve => setTimeout(resolve, 8000));
-      
-      while (isMounted && showChampionship) {
-        if (!isMounted) break;
-        
-        await controls.start({
-            skewX: [0, 2, -2, 0],
-            textShadow: [
-                "0px 0px 0px rgba(0,0,0,0)",
-                "2px 0 #ff0000, -2px 0 #00ffff",
-                "0px 0px 0px rgba(0,0,0,0)"
-            ],
-            transition: { duration: 0.2, times: [0, 0.2, 0.8, 1] }
+    if (carHasPassed) {
+      // Trigger impact animations
+      const impactTimer = setTimeout(async () => {
+        await impactControls.start({
+          scale: [1, 1.08, 0.98, 1],
+          rotateY: [0, 2, -2, 0],
+          transition: { duration: 0.6, ease: "easeOut" }
         });
-        
-        if (isMounted) {
-          await new Promise(resolve => setTimeout(resolve, 8000));
-        }
-      }
-    };
+      }, 50);
 
-    if (showChampionship) {
-      runGlitchLoop();
+      return () => clearTimeout(impactTimer);
     }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [showChampionship, controls]);
-
-  // Elegant flash effect during metamorphosis
-  useEffect(() => {
-    if (isMetamorphosing) {
-      const timeout = setTimeout(() => {
-        setTitleText("CHAMPIONSHIP");
-      }, 150); // Change text right in the middle of the flash
-      return () => clearTimeout(timeout);
-    }
-  }, [isMetamorphosing]);
+  }, [carHasPassed, impactControls]);
 
   return (
     <motion.div
@@ -118,20 +125,32 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         scale: 1
       }}
     >
-      {/* SVG Threshold Filter for Goo Effect */}
-      <svg style={{ position: 'absolute', width: 0, height: 0, pointerEvents: 'none' }}>
-        <defs>
-          <filter id="threshold">
-            <feColorMatrix 
-              in="SourceGraphic" 
-              type="matrix" 
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -9" 
-              result="goo" 
-            />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-          </filter>
-        </defs>
-      </svg>
+      {/* CRT Monitor Filter Component */}
+      <CRTFilter />
+
+      {/* CRT Scanlines Overlay - Active during car pass */}
+      {showCRTEffect && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.15, 0.25, 0.15] }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+          className="absolute inset-0 z-[95] pointer-events-none"
+          style={{
+            backgroundImage: 
+              'repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)',
+            mixBlendMode: 'multiply'
+          }}
+        />
+      )}
+
+      {/* Vignette Effect Layer */}
+      <div 
+        className="absolute inset-0 z-[94] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0.7) 100%)'
+        }}
+      />
 
       {/* Cinematic Flash Effect on Metamorphosis */}
       <AnimatePresence>
@@ -197,6 +216,41 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         ))}
       </div>
 
+      {/* Thermal Distortion / Heat Haze Trail Behind Car */}
+      {stage >= 4 && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={`thermal-${i}`}
+              className="absolute rounded-full blur-3xl"
+              initial={{ 
+                x: "50vw",
+                y: "25vh",
+                width: 120 + i * 15,
+                height: 80 + i * 10,
+                opacity: 0
+              }}
+              animate={{
+                x: ["50vw", "40vw", "20vw", "10vw"],
+                y: ["25vh", "22vh", "26vh", "24vh"],
+                opacity: [0, 0.3, 0.15, 0],
+                scaleX: [1, 1.3, 1.1],
+                scaleY: [1, 0.8, 0.9]
+              }}
+              transition={{
+                duration: 0.8,
+                delay: i * 0.08,
+                ease: "easeOut"
+              }}
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(255,100,0,0.2) 0%, transparent 70%)',
+                filter: 'blur(20px)'
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* F1 Car Animation */}
       {stage >= 4 && (
         <motion.div 
@@ -242,8 +296,26 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
         </motion.div>
       )}
 
+      {/* Post-Car Impact Zoom Effect */}
+      <motion.div
+        animate={impactControls}
+        className="absolute inset-0 z-[65] pointer-events-none"
+        style={{
+          perspective: '1000px'
+        }}
+      >
+        {carHasPassed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.4, 0] }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 bg-red-600/20"
+          />
+        )}
+      </motion.div>
+
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-4 md:p-6 max-h-screen gap-4 md:gap-8 overflow-hidden">
-        {/* TOP: F1 Start Lights */}
+        {/* TOP: F1 Start Lights - Enhanced 3D */}
         <AnimatePresence mode="popLayout">
           {stage === 1 && (
             <motion.div 
@@ -253,20 +325,57 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -60, scale: 0.8, filter: "blur(10px)" }}
               transition={{ duration: 0.6 }}
-              className="flex gap-4 md:gap-6 p-4 bg-black/60 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl"
+              className="flex gap-4 md:gap-6 p-6 md:p-8 bg-black/80 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl"
+              style={{
+                perspective: '1000px',
+                boxShadow: '0 25px 50px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)'
+              }}
             >
                 {[0, 1, 2, 3, 4].map((i) => (
-                    <div key={i} className="relative w-6 h-6 md:w-8 md:h-8">
-                        <div className="absolute inset-0 rounded-full bg-slate-900 border-2 border-slate-700 shadow-inner" />
+                    <div key={i} className="relative w-8 h-8 md:w-10 md:h-10">
+                        {/* Light Bokeh Glow Background */}
+                        <motion.div
+                            className="absolute inset-0 rounded-full"
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ 
+                                opacity: 0, 
+                                scale: 1,
+                            }}
+                            transition={{ delay: i * 0.6, duration: 0.1 }}
+                            style={{
+                              background: 'radial-gradient(circle at 30% 30%, #ef4444, transparent)',
+                              filter: 'blur(15px)',
+                              transform: 'scale(2.5)'
+                            }}
+                        />
+                        
+                        {/* Main Light Housing */}
+                        <div 
+                            className="absolute inset-0 rounded-full border-4 border-slate-700 shadow-inner"
+                            style={{
+                              background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.1)'
+                            }}
+                        />
+
+                        {/* Animated Light Core */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ 
                                 opacity: 1, 
                                 backgroundColor: "#ef4444",
-                                boxShadow: "0 0 30px #ef4444"
                             }}
-                            transition={{ delay: i * 0.6, duration: 0.1 }}
-                            className="absolute inset-0 rounded-full"
+                            transition={{ delay: i * 0.6, duration: 0.15 }}
+                            className="absolute inset-1 rounded-full"
+                            style={{
+                              boxShadow: '0 0 20px #ef4444, 0 0 40px #ef4444, inset 0 0 8px rgba(255,0,0,0.5), 0 0 60px rgba(239, 68, 68, 0.6)'
+                            }}
+                        />
+
+                        {/* Shine / Highlight */}
+                        <div 
+                            className="absolute top-1 left-1 w-2 h-2 md:w-3 md:h-3 rounded-full bg-white/40 blur-sm"
+                            style={{ boxShadow: '0 0 8px rgba(255,255,255,0.6)' }}
                         />
                     </div>
                 ))}
@@ -317,29 +426,54 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                                             ASSASSINS
                                         </motion.span>
                                     ) : (
-                                        <motion.span
-                                            key="championship"
-                                            initial={{ opacity: 0, scale: 0.8, filter: "blur(20px)" }}
-                                            animate={controls}
-                                            variants={{
-                                                initial: { 
-                                                    opacity: 1, 
-                                                    scale: 1, 
-                                                    filter: "blur(0px)",
-                                                    textShadow: ["0px 0px 0px rgba(0,0,0,0)", "3px 0 #ff0000, -3px 0 #00ffff", "0px 0px 0px rgba(0,0,0,0)"],
-                                                    transition: { 
-                                                        opacity: { duration: 0.6 },
-                                                        scale: { duration: 0.8 },
-                                                        filter: { duration: 0.8 },
-                                                        textShadow: { duration: 0.4, delay: 0.4 }
-                                                    }
-                                                }
+                                        <motion.div key="championship-wrapper" className="relative">
+                                          {/* Shimmer Overlay for Metallic Effect */}
+                                          <motion.div
+                                            className="absolute inset-0 z-10 pointer-events-none"
+                                            style={{
+                                              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                              width: '100%'
                                             }}
-                                            animate={showChampionship ? "initial" : {}}
-                                            className="absolute"
-                                        >
-                                            CHAMPIONSHIP
-                                        </motion.span>
+                                            animate={{
+                                              x: ['-100%', '100%']
+                                            }}
+                                            transition={{
+                                              duration: 2.5,
+                                              repeat: Infinity,
+                                              ease: 'easeInOut'
+                                            }}
+                                          />
+
+                                          <motion.span
+                                              key="championship"
+                                              initial={{ opacity: 0, scale: 0.8, filter: "blur(20px)" }}
+                                              animate={showChampionship ? "initial" : {}}
+                                              variants={{
+                                                  initial: { 
+                                                      opacity: 1, 
+                                                      scale: 1, 
+                                                      filter: "blur(0px)",
+                                                      textShadow: [
+                                                          "0px 0px 0px rgba(0,0,0,0)",
+                                                          "3px 0 #ff0000, -3px 0 #00ffff",
+                                                          "0px 0px 0px rgba(0,0,0,0)"
+                                                      ],
+                                                      transition: { 
+                                                          opacity: { duration: 0.6 },
+                                                          scale: { duration: 0.8 },
+                                                          filter: { duration: 0.8 },
+                                                          textShadow: { duration: 0.4, delay: 0.4 }
+                                                      }
+                                                  }
+                                              }}
+                                              className="absolute relative"
+                                              style={{
+                                                textShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(220, 38, 38, 0.6)'
+                                              }}
+                                          >
+                                              CHAMPIONSHIP
+                                          </motion.span>
+                                        </motion.div>
                                     )}
                                 </AnimatePresence>
                               </div>
@@ -387,19 +521,19 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                             ],
                           } : stage >= 4 ? {
                             x: 0,
-                            scale: [1, 1.05, 1],
-                            filter: "grayscale(0%) brightness(1) drop-shadow(0px 0px 0px rgba(255,0,0,0)) drop-shadow(0px 0px 0px rgba(0,255,255,0))"
+                            scale: carHasPassed ? [1, 1.08, 1.05] : [1, 1.05, 1],
+                            filter: "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))"
                           } : {
                             x: 0,
                             scale: 1,
-                            filter: "grayscale(0%) brightness(1) drop-shadow(0px 0px 0px rgba(255,0,0,0)) drop-shadow(0px 0px 0px rgba(0,255,255,0))"
+                            filter: "grayscale(0%) brightness(1)"
                           }}
                           transition={isMetamorphosing ? {
                             duration: 0.4,
                             ease: "easeInOut"
                           } : stage >= 4 ? {
-                            duration: 3 + (idx * 0.5), 
-                            repeat: Infinity, 
+                            duration: carHasPassed ? 0.8 : (3 + (idx * 0.5)), 
+                            repeat: carHasPassed ? 0 : Infinity, 
                             ease: "easeInOut"
                           } : {
                             duration: 0.4,
@@ -410,7 +544,7 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                           <img 
                             src={logo.src} 
                             alt={logo.alt} 
-                            className="h-10 sm:h-12 md:h-16 object-contain transition-transform duration-300 group-hover:scale-110" 
+                            className="h-10 sm:h-12 md:h-16 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg" 
                             referrerPolicy="no-referrer" 
                           />
                         </motion.div>
@@ -441,7 +575,13 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.1 * i, type: "spring" }}
-                            className="px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2 md:gap-2.5 shadow-xl text-white/90"
+                            whileHover={{ scale: 1.1 }}
+                            className="px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2 md:gap-2.5 shadow-xl text-white/90 transition-all duration-300"
+                            style={carHasPassed ? {
+                              boxShadow: '0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.2), inset 0 0 10px rgba(220, 38, 38, 0.1)'
+                            } : {
+                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+                            }}
                           >
                             {p.icon}
                             <span className="text-[10px] md:text-sm font-bold tracking-wider">{p.name}</span>
