@@ -313,7 +313,7 @@ export function StatsOverview({ data, activeSeason }: StatsOverviewProps) {
                             BUT the request asks for a dramatic timer. 
                             Let's rely on the string format "Xd Xh Xm Xs" or "Pendiente..." 
                         */}
-                        {timeLeft.includes('d') ? (
+                        {/^\d+d \d+h \d+m \d+s$/.test(timeLeft) ? (
                             <>
                                 {timeLeft.split(' ').map((part, i) => {
                                     const value = part.replace(/[a-z]/g, '');
