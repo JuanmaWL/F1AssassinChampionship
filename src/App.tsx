@@ -13,6 +13,7 @@ import { useVisitTracker } from './hooks/useVisitTracker';
 import { EpicRoom } from './components/ui/EpicRoom';
 import { AuthProvider } from './context/AuthContext';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 // Lazy loaded components
 const CalendarView = lazy(() => import('./pages/CalendarView').then(module => ({ default: module.Calendar })));
@@ -163,14 +164,16 @@ function AppContent() {
                 transition={{ duration: 0.25, ease: "easeInOut" }}
                 className={activeTab === 'vip' ? "h-screen w-full" : ""}
               >
-                <Suspense fallback={<LoadingModule />}>
-                    {activeTab === 'dashboard' && <Standings />}
-                    {activeTab === 'calendar' && <CalendarView />}
-                    {activeTab === 'h2h' && <H2H />}
-                    {activeTab === 'draw' && <SeasonDraft />}
-                    {activeTab === 'admin' && <Admin />}
-                    {activeTab === 'vip' && <EpicRoom />}
-                </Suspense>
+                <ErrorBoundary fallback={<div className="flex items-center justify-center p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                  <Suspense fallback={<LoadingModule />}>
+                      {activeTab === 'dashboard' && <Standings />}
+                      {activeTab === 'calendar' && <CalendarView />}
+                      {activeTab === 'h2h' && <H2H />}
+                      {activeTab === 'draw' && <SeasonDraft />}
+                      {activeTab === 'admin' && <Admin />}
+                      {activeTab === 'vip' && <EpicRoom />}
+                  </Suspense>
+                </ErrorBoundary>
               </motion.div>
           )}
         </AnimatePresence>
@@ -194,12 +197,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <ChampionshipProvider>
-          <AppContent />
-        </ChampionshipProvider>
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <ChampionshipProvider>
+            <AppContent />
+          </ChampionshipProvider>
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

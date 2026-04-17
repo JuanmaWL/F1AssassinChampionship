@@ -7,6 +7,7 @@ import { dataService } from '../services/dataService';
 import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 // Lazy loaded editors
 const ResultsEditor = lazy(() => import('../components/admin/ResultsEditor').then(module => ({ default: module.ResultsEditor })));
@@ -428,64 +429,78 @@ export function AdminPanel() {
         <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
           <div className="max-w-full">
             {activeTab === 'teams' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <TeamsEditor 
-                  data={data} 
-                  onUpdateData={setData} 
-                  activeSeason={activeSeason} 
-                  isHistorical={isHistorical} 
-                />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <TeamsEditor 
+                    data={data} 
+                    onUpdateData={setData} 
+                    activeSeason={activeSeason} 
+                    isHistorical={isHistorical} 
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'drivers' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <DriversEditor 
-                  data={data} 
-                  onUpdateData={setData} 
-                  activeSeason={activeSeason} 
-                  isHistorical={isHistorical} 
-                />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <DriversEditor 
+                    data={data} 
+                    onUpdateData={setData} 
+                    activeSeason={activeSeason} 
+                    isHistorical={isHistorical} 
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'calendar' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <CalendarEditor 
-                  data={data} 
-                  onUpdateData={setData} 
-                  activeSeason={activeSeason} 
-                  isHistorical={isHistorical} 
-                />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <CalendarEditor 
+                    data={data} 
+                    onUpdateData={setData} 
+                    activeSeason={activeSeason} 
+                    isHistorical={isHistorical} 
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'circuits' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <CircuitsEditor />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <CircuitsEditor />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'results' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <ResultsEditor 
-                  data={data} 
-                  onUpdateData={setData} 
-                  activeSeason={activeSeason} 
-                  isHistorical={isHistorical} 
-                />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <ResultsEditor 
+                    data={data} 
+                    onUpdateData={setData} 
+                    activeSeason={activeSeason} 
+                    isHistorical={isHistorical} 
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'import' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <JsonImporter 
-                  currentData={data} 
-                  onUpdateData={setData} 
-                  activeSeason={activeSeason} 
-                  isHistorical={isHistorical} 
-                />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <JsonImporter 
+                    currentData={data} 
+                    onUpdateData={setData} 
+                    activeSeason={activeSeason} 
+                    isHistorical={isHistorical} 
+                  />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'metrics' && (
-              <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
-                <MetricsViewer />
-              </Suspense>
+              <ErrorBoundary fallback={<div className="flex items-center justify-center my-20 p-8 text-red-400 font-bold bg-red-500/10 rounded-2xl border border-red-500/20">Error cargando módulo</div>}>
+                <Suspense fallback={<LoadingSpinner label="Cargando editor..." className="my-20" />}>
+                  <MetricsViewer />
+                </Suspense>
+              </ErrorBoundary>
             )}
             {activeTab === 'settings' && (
               <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
