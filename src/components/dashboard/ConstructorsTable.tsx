@@ -6,6 +6,7 @@ import { Trophy, X, Medal, Hash, AlertTriangle, Activity, ChevronRight, Wrench }
 import { Constructor, Race, Driver } from '../../types';
 import { cn } from '../../lib/utils';
 import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface ConstructorsTableProps {
   constructors: Constructor[];
@@ -18,16 +19,7 @@ export const ConstructorsTable = React.memo(function ConstructorsTable({ constru
   const [selectedConstructor, setSelectedConstructor] = useState<Constructor | null>(null);
 
   // Scroll lock for modal
-  useEffect(() => {
-    if (selectedConstructor) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedConstructor]);
+  useScrollLock(!!selectedConstructor);
 
   const getConstructorStats = useCallback((constructorName: string) => {
     const teamDrivers = drivers.filter(d => d.team === constructorName).map(d => d.id);

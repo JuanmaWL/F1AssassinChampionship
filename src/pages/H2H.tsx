@@ -354,8 +354,13 @@ export function HeadToHead() {
 
   const [showFightAnim, setShowFightAnim] = useState(false);
   const [enableFightAnim, setEnableFightAnim] = useState(() => {
-    const saved = localStorage.getItem('f1-h2h-anim');
-    return saved !== null ? saved === 'true' : true;
+    try {
+      const saved = localStorage.getItem('f1-h2h-anim');
+      return saved !== null ? saved === 'true' : true;
+    } catch (e) {
+      console.warn('localStorage is blocked', e);
+      return true; // Default value on error
+    }
   });
   const [isComparing, setIsComparing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -402,7 +407,11 @@ export function HeadToHead() {
   }, [showFightAnim]);
 
   useEffect(() => {
-    localStorage.setItem('f1-h2h-anim', enableFightAnim.toString());
+    try {
+      localStorage.setItem('f1-h2h-anim', enableFightAnim.toString());
+    } catch (e) {
+      console.warn('localStorage is blocked', e);
+    }
   }, [enableFightAnim]);
 
   const handleCompare = () => {

@@ -7,6 +7,8 @@ import { Driver, Constructor, Race, RaceResult } from '../../types';
 import { cn } from '../../lib/utils';
 import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
 
+import { useScrollLock } from '../../hooks/useScrollLock';
+
 interface DriversTableProps {
   drivers: Driver[];
   constructors: Constructor[];
@@ -29,16 +31,7 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
   );
 
   // Scroll lock for modal
-  useEffect(() => {
-    if (selectedDriver || activeFastestLapDriver) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedDriver, activeFastestLapDriver]);
+  useScrollLock(!!(selectedDriver || activeFastestLapDriver));
 
   const getDriverStats = useCallback((driverId: string) => {
     const completedRaces = races.filter(r => r.status === 'completed' && r.results);

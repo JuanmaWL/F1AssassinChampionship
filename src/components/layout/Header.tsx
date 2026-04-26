@@ -177,7 +177,7 @@ export function Header({
 
           <div className="flex items-center gap-1 md:gap-2 bg-slate-900/40 p-1 rounded-xl border border-white/5">
             <AnimatePresence mode="popLayout" initial={false}>
-              {data.isDrawActive && (
+              {data.isDrawActive && !isHistorical && (
                 <motion.div
                   key="draw-button-container"
                   initial={{ opacity: 0, scale: 0.8, width: 0 }}

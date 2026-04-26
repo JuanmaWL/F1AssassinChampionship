@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { ChampionshipData, SeasonId } from "../types";
 import { DEFAULT_DATA, DEFAULT_DATA_2024 } from "../data/defaultData";
@@ -90,7 +90,7 @@ export const dataService = {
   async getVisits(): Promise<VisitData[]> {
     try {
       const database = requireDb();
-      const q = query(collection(database, VISITS_COLLECTION), orderBy("timestamp", "desc"));
+      const q = query(collection(database, VISITS_COLLECTION), orderBy("timestamp", "desc"), limit(500));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => doc.data() as VisitData);
     } catch (error) {

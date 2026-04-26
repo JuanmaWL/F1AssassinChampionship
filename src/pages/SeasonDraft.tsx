@@ -143,9 +143,12 @@ export function Draw() {
 
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
   const animFrameRefs = useRef<number[]>([]);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       timeoutRefs.current.forEach(clearTimeout);
       animFrameRefs.current.forEach(cancelAnimationFrame);
     };
@@ -280,11 +283,14 @@ export function Draw() {
     setRotation(newRotation);
 
     const tId1 = setTimeout(() => {
+      if (!isMountedRef.current) return;
       setWinningRace(winner);
       setShowWinner(true);
       setIsSpinning(false);
 
-      fireConfetti();
+      if (isMountedRef.current) {
+        fireConfetti();
+      }
     }, 6000);
     timeoutRefs.current.push(tId1);
   };

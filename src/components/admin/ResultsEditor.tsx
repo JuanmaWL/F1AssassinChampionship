@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { ChampionshipData, RaceResult, SeasonId } from '../../types';
 import { Upload, Save, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
@@ -15,16 +15,28 @@ interface ResultsEditorProps {
   isHistorical: boolean;
 }
 
+// Cache para preservar estado al cambiar de pestaña
+let cachedSelectedRaceId = '';
+let cachedPreviewUrl: string | null = null;
+let cachedParsedResults: RaceResult[] | null = null;
+let cachedRaceReport = '';
+
 export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }: ResultsEditorProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedRaceId, setSelectedRaceId] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [parsedResults, setParsedResults] = useState<RaceResult[] | null>(null);
-  const [raceReport, setRaceReport] = useState<string>('');
+  const [selectedRaceId, setSelectedRaceId] = useState<string>(cachedSelectedRaceId);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(cachedPreviewUrl);
+  const [parsedResults, setParsedResults] = useState<RaceResult[] | null>(cachedParsedResults);
+  const [raceReport, setRaceReport] = useState<string>(cachedRaceReport);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
+
+  // Guardar en cache cuando cambien
+  useEffect(() => { cachedSelectedRaceId = selectedRaceId; }, [selectedRaceId]);
+  useEffect(() => { cachedPreviewUrl = previewUrl; }, [previewUrl]);
+  useEffect(() => { cachedParsedResults = parsedResults; }, [parsedResults]);
+  useEffect(() => { cachedRaceReport = raceReport; }, [raceReport]);
 
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
   const borderColor = isHistorical ? "border-amber-500/30" : "border-red-500/30";
