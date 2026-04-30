@@ -70,6 +70,14 @@ const fallbackCoordinates: Record<string, string> = {
   'cn': "31°20′20″N 121°13′11″E", // China
 };
 
+let _worldDataCache: any = null;
+const getWorldData = async () => {
+  if (_worldDataCache) return _worldDataCache;
+  const data = await d3Json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json");
+  _worldDataCache = data;
+  return data;
+};
+
 export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,9 +132,7 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
 
     (async () => {
       try {
-        const worldData: any = await d3Json(
-          "https://unpkg.com/world-atlas@2.0.2/countries-110m.json"
-        );
+        const worldData: any = await getWorldData();
 
         const data = races.map((race) => {
           const coordString = fallbackCoordinates[race.flagCode || ''] || "38°53′23″N 77°00′32″W";

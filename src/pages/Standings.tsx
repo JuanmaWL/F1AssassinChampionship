@@ -11,6 +11,20 @@ import { useChampionship } from '../context/ChampionshipContext';
 import { FOOTER_ASSETS, TEXTURE_ASSETS } from '../constants/assets';
 import { SectionReveal } from '../components/ui/SectionReveal';
 
+const SPEED_LINES = [...Array(5)].map(() => ({
+  top: `${Math.random() * 100}%`,
+  duration: Math.random() * 2 + 1,
+  delay: Math.random() * 2
+}));
+
+const PARTICLES = [...Array(15)].map(() => ({
+  x: Math.random() * 100 + "%",
+  y: Math.random() * 100 + "%",
+  yOffset: Math.random() * -20 - 10,
+  duration: Math.random() * 3 + 2,
+  delay: Math.random() * 2
+}));
+
 export function Dashboard() {
   const { data, activeSeason, isHistorical } = useChampionship();
 
@@ -19,20 +33,6 @@ export function Dashboard() {
 
   const hasCompletedRaces = useMemo(() => data.races.some(r => r.status === 'completed'), [data.races]);
   const isSeasonFinished = useMemo(() => data.races.length > 0 && data.races.every(r => r.status === 'completed'), [data.races]);
-
-  const speedLines = useMemo(() => [...Array(5)].map((_, i) => ({
-    top: `${Math.random() * 100}%`,
-    duration: Math.random() * 2 + 1,
-    delay: Math.random() * 2
-  })), []);
-
-  const particles = useMemo(() => [...Array(15)].map((_, i) => ({
-    x: Math.random() * 100 + "%",
-    y: Math.random() * 100 + "%",
-    yOffset: Math.random() * -20 - 10,
-    duration: Math.random() * 3 + 2,
-    delay: Math.random() * 2
-  })), []);
 
   const bannerRef = useRef<HTMLDivElement>(null);
   const isBannerInView = useInView(bannerRef, { once: false, margin: "100px" });
@@ -91,7 +91,7 @@ export function Dashboard() {
 
         {/* Moving Light/Speed Lines */}
         <div className="absolute inset-0 overflow-hidden">
-            {speedLines.map((line, i) => (
+            {SPEED_LINES.map((line, i) => (
                 <motion.div
                     key={i}
                     className={cn(
@@ -131,7 +131,7 @@ export function Dashboard() {
 
         {/* Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {particles.map((particle, i) => (
+            {PARTICLES.map((particle, i) => (
                 <motion.div
                     key={`p-${i}`}
                     className={cn(
