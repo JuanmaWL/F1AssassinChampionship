@@ -5,6 +5,7 @@ import { cn } from '../../lib/utils';
 import { dataService } from '../../services/dataService';
 import { useEditorState } from '../../hooks/useEditorState';
 import { getFlagUrl } from '../../constants/assets';
+import { BulkDeleteBar } from './BulkDeleteBar';
 
 interface CalendarEditorProps {
   data: ChampionshipData;
@@ -136,48 +137,18 @@ export function CalendarEditor({ data, onUpdateData, activeSeason, isHistorical 
           
           <div className="h-6 w-px bg-white/10 mx-2" />
 
-          {selectedIds.length > 0 ? (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
-              <span className="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-500/10 px-2 py-1 rounded border border-red-500/20">
-                {selectedIds.length} Seleccionados
-              </span>
-              
-              {showBulkDeleteConfirm ? (
-                <div className="flex items-center gap-1 bg-red-600 rounded-lg p-1 animate-in zoom-in-95 duration-200">
-                  <span className="text-[9px] font-black text-white uppercase px-2">¿Seguro?</span>
-                  <button 
-                    onClick={handleBulkDelete}
-                    className="p-1 bg-white text-red-600 rounded hover:bg-red-50 transition-colors"
-                  >
-                    <Check size={12} />
-                  </button>
-                  <button 
-                    onClick={() => setShowBulkDeleteConfirm(false)}
-                    className="p-1 bg-red-800 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowBulkDeleteConfirm(true)}
-                  className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded border border-red-500/30 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
-                >
-                  <Trash2 size={12} /> Eliminar
-                </button>
-              )}
-              
-              <button
-                onClick={() => {
-                  setSelectedIds([]);
-                  setShowBulkDeleteConfirm(false);
-                }}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded border border-white/10 transition-all text-[10px] font-bold uppercase"
-              >
-                Cancelar
-              </button>
-            </div>
-          ) : (
+          <BulkDeleteBar
+            selectedCount={selectedIds.length}
+            showConfirm={showBulkDeleteConfirm}
+            setShowConfirm={setShowBulkDeleteConfirm}
+            onConfirmDelete={handleBulkDelete}
+            onCancelSelection={() => {
+              setSelectedIds([]);
+              setShowBulkDeleteConfirm(false);
+            }}
+          />
+
+          {selectedIds.length === 0 && (
             <div className="flex items-center gap-2">
               {showDeleteAllConfirm ? (
                 <div className="flex items-center gap-1 bg-red-700 rounded-lg p-1 animate-in zoom-in-95 duration-200 border border-red-500">

@@ -1,5 +1,5 @@
 import { useState, FormEvent, lazy, Suspense, Fragment } from 'react';
-import { Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
+import { Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity, Terminal, ShieldAlert } from 'lucide-react';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { cn } from '../lib/utils';
 import { verifyPassword } from '../lib/auth';
@@ -55,64 +55,63 @@ export function AdminPanel() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] relative">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-10">
-          <div className={cn("w-[800px] h-[800px] rounded-full blur-3xl", isHistorical ? "bg-amber-600" : "bg-red-600")}></div>
+      <div className="flex flex-col items-center justify-center min-h-[70vh] w-full px-4 py-8 relative">
+        {/* Simple Background Glow with radial masking */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-slate-950 opacity-90 mix-blend-multiply"></div>
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'repeating-linear-gradient(30deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px), repeating-linear-gradient(150deg, transparent, transparent 10px, #ffffff 10px, #ffffff 11px)', backgroundSize: '40px 68px' }}></div>
+          {/* Central glow */}
+          <div className={cn("w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full blur-[100px] opacity-20", isHistorical ? "bg-amber-600" : "bg-red-600")}></div>
+          {/* Vignette mask to fade out grid */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#020617_70%)]"></div>
         </div>
 
         <div className={cn(
-            "relative z-10 bg-slate-900/80 backdrop-blur-xl border p-8 md:p-10 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden", 
-            isHistorical ? "border-amber-500/30 shadow-amber-900/20" : "border-red-500/30 shadow-red-900/20"
+            "relative w-full max-w-sm bg-black/40 border backdrop-blur-md overflow-hidden p-8 rounded border-white/10 group", 
+            isHistorical ? "shadow-[0_0_30px_rgba(245,158,11,0.05)]" : "shadow-[0_0_30px_rgba(220,38,38,0.05)]"
         )}>
-          {/* Top accent bar */}
-          <div className={cn("absolute top-0 left-0 right-0 h-2", isHistorical ? "bg-amber-500" : "bg-red-600")}></div>
+          {/* Top accent */}
+          <div className={cn("absolute top-0 left-0 w-full h-1", isHistorical ? "bg-amber-500" : "bg-red-600")}></div>
           
-          <div className="flex flex-col items-center mb-8">
-            <div className={cn(
-                "p-4 rounded-2xl mb-4 transform -rotate-6", 
-                isHistorical ? "bg-amber-500/20 text-amber-500" : "bg-red-500/20 text-red-500"
-            )}>
-              <Lock className="w-10 h-10" />
-            </div>
-            <h2 className="text-3xl font-black italic text-white text-center uppercase tracking-tighter">
-              Control de Carrera
+          {/* Scanline effect over the card */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_4px] pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col items-center text-center mb-8">
+            <ShieldAlert className={cn("w-10 h-10 mb-3 opacity-90", isHistorical ? "text-amber-500" : "text-red-500")} />
+            <h2 className="text-xl font-black italic text-white uppercase tracking-tighter leading-none mb-1">
+              Modo Administrador
             </h2>
-            
-            {/* Season Badge */}
-            <div className={cn(
-                "mt-4 px-6 py-2 rounded-full border-2 font-black italic text-xl uppercase tracking-widest shadow-lg",
-                isHistorical 
-                    ? "border-amber-500/50 text-amber-400 bg-amber-950/50 shadow-amber-900/20" 
-                    : "border-red-500/50 text-red-400 bg-red-950/50 shadow-red-900/20"
-            )}>
-              Temporada {activeSeason}
-            </div>
+            <p className="text-slate-400 text-[10px] font-mono tracking-widest uppercase">
+              Dirección de Carrera
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="w-full space-y-6 relative z-10">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">
-                Código de Autorización
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={cn(
-                      "w-full bg-slate-950 border-2 rounded-xl px-4 py-4 text-white text-center text-xl tracking-[0.5em] focus:outline-none transition-all",
-                      isHistorical ? "border-slate-800 focus:border-amber-500" : "border-slate-800 focus:border-red-500"
-                  )}
-                  disabled={isProcessing}
-                />
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
+                  Clave de Acceso
+                </label>
+                <span className={cn("text-[9px] font-mono tracking-widest animate-pulse", isHistorical ? "text-amber-500/70" : "text-red-500/70")}>[ESPERANDO]</span>
               </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="INTRODUCIR_CLAVE..."
+                autoFocus
+                className={cn(
+                    "w-full bg-black/80 border font-mono px-4 py-3 text-white text-lg tracking-[0.3em] focus:outline-none transition-all placeholder:tracking-widest placeholder:text-slate-800",
+                    isHistorical ? "border-amber-500/30 focus:border-amber-500 focus:bg-amber-500/5" : "border-red-500/30 focus:border-red-500 focus:bg-red-500/5"
+                )}
+                disabled={isProcessing}
+              />
             </div>
             
             {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm text-center font-medium animate-in fade-in slide-in-from-top-2">
-                    {error}
+                <div className="bg-red-950/80 border border-red-500 text-red-500 p-2 text-[10px] uppercase tracking-widest text-center font-mono font-bold">
+                  ERROR: {error}
                 </div>
             )}
             
@@ -120,19 +119,21 @@ export function AdminPanel() {
               type="submit"
               disabled={isProcessing || !password}
               className={cn(
-                  "w-full text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]",
-                  buttonColor
+                  "w-full text-white font-black py-3 uppercase tracking-[0.2em] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group transition-all duration-300 border",
+                  isHistorical 
+                      ? "bg-amber-600/20 hover:bg-amber-600 border-amber-500" 
+                      : "bg-red-600/20 hover:bg-red-600 border-red-500"
               )}
             >
               {isProcessing ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-0" />
-                    <span>Verificando...</span>
+                    <span className="font-mono text-xs">VERIFICANDO...</span>
                   </>
               ) : (
                   <>
-                    <span>Acceder</span>
-                    <Lock size={18} className="opacity-50" />
+                    <span className="font-mono text-xs font-bold">INICIAR CONEXIÓN</span>
+                    <Terminal className="w-4 h-4 opacity-70" />
                   </>
               )}
             </button>
