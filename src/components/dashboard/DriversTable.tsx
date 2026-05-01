@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Timer, Trophy, AlertTriangle, Hash, Activity, X, Medal, Users, Calendar, MapPin, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,8 +7,50 @@ import { Driver, Constructor, Race, RaceResult } from '../../types';
 import { cn } from '../../lib/utils';
 import { TEXTURE_ASSETS, getFlagUrl } from '../../constants/assets';
 import { FastestLapModal } from './FastestLapModal';
+import { calculateAchievements, ALL_ACHIEVEMENT_DEFINITIONS } from '../../lib/achievements';
+import { MarqueeText } from './MarqueeText';
 
 import { useScrollLock } from '../../hooks/useScrollLock';
+
+const AchievementBadge = ({ achievement }: { achievement: any }) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  return (
+    <div 
+      className="relative w-full h-14 group cursor-pointer [perspective:1000px] shrink-0"
+      onClick={() => setIsFlipped(!isFlipped)}
+      onMouseLeave={() => setIsFlipped(false)}
+    >
+      <motion.div
+        className="w-full h-full relative [transform-style:preserve-3d] transition-all duration-500"
+        animate={{ rotateX: isFlipped ? -180 : 0 }}
+      >
+        {/* Front */}
+        <div className="absolute inset-0 [backface-visibility:hidden] flex items-center px-4 bg-gradient-to-r from-slate-800 to-slate-900 border border-white/10 rounded-xl hover:border-yellow-500/30 transition-colors shadow-lg overflow-hidden group-hover:shadow-[0_0_15px_rgba(234,179,8,0.15)]">
+          {/* Subtle shine */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          
+          <div className="flex items-center w-full gap-3 relative z-10">
+            <div className="w-9 h-9 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/5 shadow-inner">
+              <span className="text-lg leading-none filter drop-shadow-md">{achievement.emoji}</span>
+            </div>
+            <div className="flex flex-col min-w-0 flex-1 justify-center">
+              <MarqueeText text={achievement.name} className="text-[11px] font-black text-slate-200 uppercase tracking-tight leading-tight" />
+              {achievement.value && (
+                <span className="text-[9px] font-mono text-yellow-500/90 font-bold truncate mt-0.5">{achievement.value}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Back */}
+        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateX(180deg)] flex items-center justify-center p-3 bg-slate-200 border border-white text-slate-900 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+           <span className="text-[10px] font-bold text-center leading-tight tracking-tight uppercase text-slate-800">{achievement.description}</span>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 interface DriversTableProps {
   drivers: Driver[];
@@ -31,8 +73,15 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
     currentPage * itemsPerPage
   );
 
+  const allAchievements = useMemo(() => 
+    calculateAchievements({ drivers, races }), 
+    [drivers, races]
+  );
+  
+  const [showAllAchievements, setShowAllAchievements] = useState(false);
+
   // Scroll lock for modal
-  useScrollLock(!!(selectedDriver || activeFastestLapDriver));
+  useScrollLock(!!(selectedDriver || activeFastestLapDriver || showAllAchievements));
 
   const getDriverStats = useCallback((driverId: string) => {
     const completedRaces = races.filter(r => r.status === 'completed' && r.results);
@@ -392,29 +441,61 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
               >
                 {/* Header with Team Color */}
                 <div 
-                  className="h-32 relative"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${selectedDriver.teamColor}40, ${selectedDriver.teamColor}10, transparent)` 
-                  }}
+                  className="h-40 relative overflow-hidden"
                 >
-                  <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
+                  <div className="absolute inset-0 z-0" style={{ 
+                    background: `linear-gradient(135deg, ${selectedDriver.teamColor}60, ${selectedDriver.teamColor}10, transparent)` 
+                  }}></div>
+                  <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15),transparent_60%)] mix-blend-overlay"></div>
+                  <div className="absolute inset-0 z-0 opacity-40 mix-blend-overlay" style={{ backgroundImage: `url('${TEXTURE_ASSETS.CARBON_FIBRE}')` }}></div>
+                   {(() => {
+                     const team = constructors.find(c => c.name === selectedDriver.team);
+                     if (team?.logoUrl) {
+                       return (
+                         <div className="absolute -right-8 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none transform -rotate-12 select-none grayscale mix-blend-screen overflow-hidden">
+                           <img src={team.logoUrl} alt={team.name} className="w-80 h-80 object-contain drop-shadow-2xl filter blur-[1px]" />
+                         </div>
+                       );
+                     }
+                     return (
+                       <div className="absolute right-0 top-1/2 -translate-y-1/2 leading-none font-black italic opacity-10 select-none" style={{ fontSize: '10rem', color: '#fff', WebkitTextStroke: '2px rgba(255,255,255,0.3)' }}>
+                         {selectedDriver.team.substring(0, 3).toUpperCase()}
+                       </div>
+                     );
+                   })()}
+                  
                   <button
                     onClick={() => setSelectedDriver(null)}
-                    className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors text-white bg-black/20 backdrop-blur-md border border-white/10 z-50"
+                    className="absolute top-4 right-4 p-2.5 hover:bg-white/20 rounded-full transition-all duration-300 text-white bg-black/30 backdrop-blur-md border border-white/20 z-50 group/close"
                   >
-                    <X size={20} />
+                    <X size={20} className="group-hover/close:rotate-90 group-hover/close:scale-110 transition-transform duration-300" />
                   </button>
                   
-                  <div className="absolute bottom-6 left-8 flex items-end gap-6">
-                    <div className="mb-2">
-                      <h3 className="text-3xl font-black italic text-white uppercase tracking-tighter drop-shadow-lg">
-                        {selectedDriver.name}
-                      </h3>
-                      <div className="flex items-center gap-2">
+                  <div className="absolute bottom-0 left-0 flex items-end gap-6 z-10 w-full bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent pt-12 pb-6 px-8">
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] flex items-center gap-4">
+                          {selectedDriver.name}
+                          <div className="h-1.5 w-16 md:w-24 rounded-full shadow-[0_0_10px_currentColor] opacity-90" style={{ backgroundColor: selectedDriver.teamColor, color: selectedDriver.teamColor }} />
+                        </h3>
+                        <div className="hidden md:flex flex-col items-end">
+                          <span className="text-[10px] uppercase font-black tracking-[0.3em] text-white/50">Constructor</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-white/90 font-mono text-sm uppercase tracking-wider font-bold drop-shadow-md">
+                              {selectedDriver.team}
+                            </span>
+                            {constructors.find(c => c.name === selectedDriver.team)?.logoUrl && (
+                              <img src={constructors.find(c => c.name === selectedDriver.team)!.logoUrl} alt="Team" className="w-5 h-5 object-contain filter drop-shadow-md brightness-125" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex md:hidden items-center gap-2 mt-1">
                         {constructors.find(c => c.name === selectedDriver.team)?.logoUrl && (
-                          <img src={constructors.find(c => c.name === selectedDriver.team)!.logoUrl} alt="Team" className="w-4 h-4 object-contain" />
+                          <img src={constructors.find(c => c.name === selectedDriver.team)!.logoUrl} alt="Team" className="w-4 h-4 object-contain filter drop-shadow-md brightness-125" />
                         )}
-                        <span className="text-slate-300 font-mono text-sm uppercase tracking-wider">
+                        <span className="text-white/80 font-mono text-xs uppercase tracking-wider font-bold drop-shadow-md">
                           {selectedDriver.team}
                         </span>
                       </div>
@@ -422,9 +503,9 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
                   </div>
                 </div>
 
-                <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 relative z-20">
                   {/* Left Column: EA Sports Style Rating Card */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center relative z-50">
                     {(() => {
                       const ratings = calculateRatings(selectedDriver.id);
                       
@@ -472,9 +553,14 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
                               {/* Inner texture */}
                               <div className={cn("absolute inset-0 mix-blend-overlay", pattern)}></div>
                               
-                              {/* Animated Shine Effect */}
+                              {/* Animated Shine Effect - Made more visible! */}
+                              <motion.div 
+                                animate={{ x: ['-100%', '200%'] }} 
+                                transition={{ repeat: Infinity, duration: 2.5, ease: "linear", repeatDelay: 5 }} 
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[20deg] z-20 pointer-events-none mix-blend-overlay w-[150%]" 
+                              />
                               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-30 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.6),transparent_60%)]" />
-                              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 z-30 pointer-events-none" />
+                              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-30 pointer-events-none" />
 
                               {/* Info Icon */}
                               <div className="absolute top-3 right-3 opacity-50 group-hover:opacity-100 transition-opacity z-40">
@@ -531,8 +617,8 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
                             {/* BACK OF CARD (LEGEND) */}
                             <div 
                               className={cn(
-                                "absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border-2 flex flex-col z-20 overflow-hidden shadow-2xl transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-2",
-                                "bg-slate-950 border-slate-700"
+                                "absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border-2 flex flex-col z-20 overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-2",
+                                "bg-slate-950 border-slate-700", glow
                               )}
                             >
                               {/* Punchy Background */}
@@ -588,14 +674,81 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
                         </div>
                       );
                     })()}
+
+                    {/* Recent Form (Last 5 races) */}
+                    <div className="mt-8 w-full max-w-[240px]">
+                      <h4 className="text-[10px] font-black text-slate-400/80 uppercase tracking-widest mb-3 flex items-center justify-center gap-2">
+                        <Activity size={12} className="text-blue-500/70" />
+                        Últimas 5
+                      </h4>
+                      <div className="flex gap-1.5 w-full">
+                        {(() => {
+                          const completedRaces = races.filter(r => r.status === 'completed' && r.results).slice(-5);
+                          if (completedRaces.length === 0) return <span className="text-slate-500 text-[10px] italic w-full text-center">Sin datos</span>;
+                          
+                          // Pad with empty if less than 5
+                          const paddedRaces = [...completedRaces];
+                          while (paddedRaces.length < 5) paddedRaces.unshift(null as any);
+
+                          return paddedRaces.map((race, index) => {
+                            if (!race) {
+                               return <div key={`empty-${index}`} className="flex-1 py-1.5 rounded bg-slate-900 border border-white/5 opacity-50"></div>;
+                            }
+                            
+                            const res = race.results!.find(r => r.driverId === selectedDriver.id);
+                            let bgColor = "bg-slate-800";
+                            let textColor = "text-slate-500";
+                            let text = "-";
+                            let glowClass = "";
+                            
+                            if (res) {
+                              if (res.dnf || res.isDisqualified) {
+                                bgColor = "bg-red-500/10";
+                                textColor = "text-red-400";
+                                text = "DNF";
+                                glowClass = "hover:shadow-[0_0_10px_rgba(239,68,68,0.2)]";
+                              } else if (res.position === 1) {
+                                bgColor = "bg-yellow-500/20";
+                                textColor = "text-yellow-400";
+                                text = "1º";
+                                glowClass = "hover:shadow-[0_0_12px_rgba(234,179,8,0.3)] border-yellow-500/30";
+                              } else if (res.position <= 3) {
+                                bgColor = "bg-slate-300/20";
+                                textColor = "text-slate-200";
+                                text = `${res.position}º`;
+                                glowClass = "hover:shadow-[0_0_10px_rgba(203,213,225,0.2)] border-slate-300/30";
+                              } else if (res.points > 0) {
+                                bgColor = "bg-green-500/10";
+                                textColor = "text-green-400";
+                                text = `${res.position}º`;
+                                glowClass = "hover:shadow-[0_0_10px_rgba(34,197,94,0.2)]";
+                              } else {
+                                text = `${res.position}º`;
+                                glowClass = "hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]";
+                              }
+                            }
+                            
+                            return (
+                              <div key={race.id} className="flex-1 flex flex-col items-center group/race relative cursor-default">
+                                <div className={cn("w-full py-1.5 rounded border border-white/5 flex justify-center items-center font-mono font-black text-[10px] transition-all duration-300", bgColor, textColor, glowClass)} title={race.name}>
+                                  {text}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
                   </div>
 
                   {/* Right Column: Stats & Form */}
-                  <div className="md:col-span-2 space-y-8">
+                  <div className="md:col-span-2 space-y-6">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {(() => {
                       const stats = getDriverStats(selectedDriver.id);
+                      const points = selectedDriver.points;
                       return (
                         <>
                           <div className="bg-slate-950/50 rounded-xl p-4 border border-white/5 flex flex-col items-center justify-center text-center">
@@ -622,69 +775,148 @@ export const DriversTable = React.memo(function DriversTable({ drivers, construc
                       );
                     })()}
                   </div>
-                
-                    {/* Recent Form (Last 5 races) */}
-                    <div className="mt-8">
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Activity size={16} />
-                        Estado de Forma (Últimas 5)
-                      </h4>
-                      <div className="flex gap-2">
-                        {(() => {
-                          const completedRaces = races.filter(r => r.status === 'completed' && r.results).slice(-5);
-                          if (completedRaces.length === 0) return <span className="text-slate-500 text-sm italic">Sin datos de carreras</span>;
+                     {/* Achievements */}
+                    {(() => {
+                      const completedRaces = races.filter(r => r.status === 'completed');
+                      const driverAchievements = allAchievements.filter(a => a.driverId === selectedDriver.id);
+                      
+                      if (driverAchievements.length === 0 && completedRaces.length === 0) return null;
+
+                      return (
+                        <div className="mt-6 flex-grow flex flex-col min-h-0">
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 relative">
+                              <Trophy size={16} className="text-yellow-500/80" />
+                              Palmarés <span className="text-yellow-500/50">({driverAchievements.length})</span>
+                              <div className="absolute left-0 bottom-0 w-8 h-px bg-yellow-500/50 -mb-2"></div>
+                            </h4>
+                            <button
+                              onClick={() => setShowAllAchievements(true)}
+                              className="text-[10px] uppercase font-black tracking-[0.1em] text-yellow-500 hover:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 px-4 py-1.5 rounded border border-yellow-500/20 hover:border-yellow-500/40 transition-all flex items-center gap-1 group/btn shadow-[0_0_15px_rgba(234,179,8,0.15)] relative overflow-hidden"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/20 to-yellow-500/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-in-out"></div>
+                              <span className="relative z-10 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)]">Catálogo Completo</span>
+                              <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform relative z-10" />
+                            </button>
+                          </div>
                           
-                          return completedRaces.map(race => {
-                            const res = race.results!.find(r => r.driverId === selectedDriver.id);
-                            let bgColor = "bg-slate-800";
-                            let textColor = "text-slate-300";
-                            let text = "-";
-                            
-                            if (res) {
-                              if (res.dnf || res.isDisqualified) {
-                                bgColor = "bg-red-500/20";
-                                textColor = "text-red-400";
-                                text = "DNF";
-                              } else if (res.position === 1) {
-                                bgColor = "bg-yellow-500/20";
-                                textColor = "text-yellow-400";
-                                text = "1º";
-                              } else if (res.position <= 3) {
-                                bgColor = "bg-slate-300/20";
-                                textColor = "text-slate-200";
-                                text = `${res.position}º`;
-                              } else if (res.points > 0) {
-                                bgColor = "bg-green-500/20";
-                                textColor = "text-green-400";
-                                text = `${res.position}º`;
-                              } else {
-                                text = `${res.position}º`;
-                              }
-                            }
-                            
-                            return (
-                              <div key={race.id} className="flex-1 flex flex-col items-center gap-2 group/race relative">
-                                <div className={cn("w-full py-2 rounded-lg border border-white/5 flex justify-center items-center font-mono font-bold text-sm transition-colors", bgColor, textColor)}>
-                                  {text}
-                                </div>
-                                {race.flagCode && (
-                                  <img src={getFlagUrl(race.flagCode, 20)} alt={race.name} className="w-5 h-3.5 rounded-sm object-cover opacity-50 group-hover/race:opacity-100 transition-opacity" />
-                                )}
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full mb-2 opacity-0 group-hover/race:opacity-100 transition-opacity bg-slate-900 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap pointer-events-none z-10">
-                                  {race.name}
-                                </div>
+                          <div className="flex-1 min-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                            {driverAchievements.length > 0 ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                {driverAchievements.map((achievement) => (
+                                  <AchievementBadge key={achievement.id} achievement={achievement} />
+                                ))}
                               </div>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
+                            ) : (
+                              <div className="flex items-center gap-3 bg-slate-900/50 border border-dashed border-slate-700/50 rounded-xl px-4 py-3 w-full opacity-60">
+                                <div className="w-8 h-8 rounded-full border border-dashed border-slate-600 flex items-center justify-center bg-slate-800/30">
+                                  <Trophy size={14} className="text-slate-500" />
+                                </div>
+                                <span className="text-slate-400 text-[11px] uppercase tracking-widest font-black">La temporada es larga. Aún hay tiempo...</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </motion.div>
             </motion.div>
           )}
+      </AnimatePresence>,
+      document.body
+    )}
+
+    {/* Catalogue Modal */}
+    {createPortal(
+      <AnimatePresence>
+        {showAllAchievements && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm"
+            onClick={() => setShowAllAchievements(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden relative flex flex-col max-h-[85vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-500/20 rounded-lg text-yellow-500">
+                    <Trophy size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-black italic text-slate-100 uppercase tracking-tight">Catálogo de Logros</h3>
+                      <div className="group relative z-30 flex items-center justify-center">
+                        <Info size={16} className="text-slate-500 hover:text-slate-300 cursor-help transition-colors" />
+                        <div className="absolute top-full left-0 md:left-1/2 md:-translate-x-1/2 mt-3 w-64 p-4 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100] pointer-events-none">
+                          <div className="text-[11px] leading-relaxed text-slate-300 font-medium normal-case tracking-normal">
+                            <span className="text-yellow-500 font-bold block mb-2 uppercase tracking-widest text-[9px]">Estilos de Piloto</span>
+                            <ul className="space-y-1.5 pl-3 list-disc text-slate-300 marker:text-yellow-500/50">
+                              <li>Muchos logros son <span className="text-white font-black">excluyentes</span> entre sí.</li>
+                              <li>No están pensados para conseguirse todos.</li>
+                              <li>Valoran y representan visualmente tu historial en pista.</li>
+                            </ul>
+                          </div>
+                          <div className="absolute left-6 md:left-1/2 md:-translate-x-1/2 -top-[5px] w-2 h-2 bg-slate-900 border-t border-l border-slate-700 rotate-45"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                       Has desbloqueado {selectedDriver ? allAchievements.filter(a => a.driverId === selectedDriver.id).length : 0} de {ALL_ACHIEVEMENT_DEFINITIONS.length} disponibles
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAllAchievements(false)}
+                  className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto overflow-x-hidden flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 custom-scrollbar">
+                {ALL_ACHIEVEMENT_DEFINITIONS.map(def => {
+                  const hasItInCurrentDriver = selectedDriver ? allAchievements.some(a => a.id === def.id && a.driverId === selectedDriver.id) : false;
+                  
+                  return (
+                    <div 
+                      key={def.id}
+                      className={cn(
+                        "flex items-center gap-4 p-3 rounded-xl border transition-all duration-300",
+                        hasItInCurrentDriver 
+                          ? "bg-slate-800/80 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]" 
+                          : "bg-slate-900/50 border-slate-800 opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
+                      )}
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/5 shadow-inner text-2xl">
+                        {def.emoji}
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className={cn(
+                          "text-sm font-black uppercase tracking-tight truncate",
+                          hasItInCurrentDriver ? "text-yellow-400" : "text-slate-300"
+                        )}>
+                          {def.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium leading-tight">
+                          {def.description}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>,
       document.body
     )}

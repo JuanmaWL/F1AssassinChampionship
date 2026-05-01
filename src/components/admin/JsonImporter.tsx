@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, ElementType } from 'react';
+import { useState, useEffect, ChangeEvent, ElementType, useRef } from 'react';
 import { ChampionshipData, SeasonId, Race } from '../../types';
 import { Upload, Download, AlertTriangle, Check, FileJson, FileText, Bot, Database, Users, Flag, Trophy, Calendar as CalendarIcon, Image as ImageIcon, X, Edit } from 'lucide-react';
 import { dataService } from '../../services/dataService';
@@ -26,6 +26,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
   const [isImporting, setIsImporting] = useState(false);
   const [isProcessingAI, setIsProcessingAI] = useState(false);
   const { addToast } = useToast();
+  const isUserEditing = useRef(false);
 
   const buttonColor = isHistorical ? "bg-amber-600 hover:bg-amber-700" : "bg-red-600 hover:bg-red-700";
   const accentColor = isHistorical ? "text-amber-500" : "text-red-500";
@@ -33,18 +34,12 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
   // Load current data into JSON editor when switching to 'edit' mode
   useEffect(() => {
     if (activeSection === 'edit') {
+      isUserEditing.current = false;
       setJsonContent(JSON.stringify(currentData, null, 2));
       setError(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
-
-  // Refresca el JSON solo si el editor está vacío (primera carga o tras guardar)
-  useEffect(() => {
-    if (activeSection === 'edit' && jsonContent === '') {
-      setJsonContent(JSON.stringify(currentData, null, 2));
-    }
-  }, [currentData]);
 
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>, type: 'json' | 'text' | 'image') => {
     const file = event.target.files?.[0];
@@ -489,7 +484,10 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
             <div className="relative">
               <textarea
                 value={jsonContent}
-                onChange={(e) => setJsonContent(e.target.value)}
+                onChange={(e) => {
+                  isUserEditing.current = true;
+                  setJsonContent(e.target.value);
+                }}
                 placeholder={activeSection === 'full' ? '{ "drivers": [], ... }' : '[ ... ]'}
                 className="w-full h-96 bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-300 font-mono focus:outline-none focus:border-blue-500 transition-colors"
               />
