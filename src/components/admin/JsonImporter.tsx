@@ -198,7 +198,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
           throw new Error("JSON inválido para base de datos completa.");
         }
         // Handle 'teams' vs 'constructors' key compatibility
-        const constructors = parsedData.constructors || (parsedData as any).teams;
+        const constructors = parsedData.constructors || (parsedData as any).teams; // TODO: type this properly
         newData = {
           drivers: parsedData.drivers,
           constructors: constructors,

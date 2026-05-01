@@ -64,7 +64,7 @@ export function useVisitTracker() {
         const pathname = window.location.pathname;
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const memory = (navigator as any).deviceMemory;
+        const memory = (navigator as any).deviceMemory; // TODO: type this properly
         const cores = navigator.hardwareConcurrency;
         
         let deviceType = 'desktop';

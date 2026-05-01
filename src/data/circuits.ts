@@ -503,15 +503,37 @@ export const CIRCUITS: Record<string, CircuitData> = {
   }
 };
 
+const normalize = (str: string) => 
+  str.toLowerCase()
+     .normalize('NFD')
+     .replace(/[\u0300-\u036f]/g, "")
+     .replace(/[()]/g, "")
+     .trim();
+
+interface PrecomputedCircuitInfo {
+  id: string;
+  data: CircuitData;
+  terms: string[];
+}
+
+const PRECOMPUTED_CIRCUITS: PrecomputedCircuitInfo[] = [];
+
+Object.entries(CIRCUITS).forEach(([key, circuit]) => {
+  const terms = new Set<string>();
+  terms.add(normalize(key));
+  terms.add(normalize(circuit.name));
+  terms.add(normalize(circuit.country));
+  circuit.aliases?.forEach(alias => terms.add(normalize(alias)));
+  
+  PRECOMPUTED_CIRCUITS.push({
+    id: key,
+    data: circuit,
+    terms: Array.from(terms).filter(t => t.length > 0)
+  });
+});
+
 export const findCircuitInfo = (searchString: string | undefined): CircuitData | null => {
   if (!searchString) return null;
-
-  const normalize = (str: string) => 
-    str.toLowerCase()
-       .normalize('NFD')
-       .replace(/[\u0300-\u036f]/g, "")
-       .replace(/[()]/g, "") // Remove parentheses
-       .trim();
 
   // Clean the search string: remove everything after '(' if present
   const cleanSearchString = searchString.split('(')[0].trim();
@@ -520,58 +542,29 @@ export const findCircuitInfo = (searchString: string | undefined): CircuitData |
   
   // 1. Direct key match
   if (CIRCUITS[search]) {
-    console.log(`findCircuitInfo: Direct match for "${searchString}" -> ${search}`);
+    // console.log(`findCircuitInfo: Direct match for "${searchString}" -> ${search}`);
     return CIRCUITS[search];
   }
 
   if (CIRCUITS[fullSearch]) {
-    console.log(`findCircuitInfo: Direct full match for "${searchString}" -> ${fullSearch}`);
+    // console.log(`findCircuitInfo: Direct full match for "${searchString}" -> ${fullSearch}`);
     return CIRCUITS[fullSearch];
   }
 
-  // 2. Exact name or country match (normalized)
-  for (const [key, circuit] of Object.entries(CIRCUITS)) {
-    const normName = normalize(circuit.name);
-    const normCountry = normalize(circuit.country);
-    if (normName === search || normCountry === search || normName === fullSearch || normCountry === fullSearch) {
-      console.log(`findCircuitInfo: Exact match for "${searchString}" -> ${key}`);
-      return circuit;
-    }
+  // 2. Exact match on precomputed terms
+  const exactMatch = PRECOMPUTED_CIRCUITS.find(c => c.terms.includes(search) || c.terms.includes(fullSearch));
+  if (exactMatch) {
+    // console.log(`findCircuitInfo: Exact match for "${searchString}" -> ${exactMatch.id}`);
+    return exactMatch.data;
   }
 
-  // 3. Exact alias match (normalized)
-  for (const [key, circuit] of Object.entries(CIRCUITS)) {
-    if (circuit.aliases?.some(alias => {
-      const normAlias = normalize(alias);
-      return normAlias === search || normAlias === fullSearch;
-    })) {
-      console.log(`findCircuitInfo: Exact alias match for "${searchString}" -> ${key}`);
-      return circuit;
-    }
-  }
-
-  // 4. Fuzzy match (includes)
-  for (const [key, circuit] of Object.entries(CIRCUITS)) {
-    const normName = normalize(circuit.name);
-    const normCountry = normalize(circuit.country);
-    
-    if (normName.includes(search) || search.includes(normName) ||
-        normCountry.includes(search) || search.includes(normCountry) ||
-        normName.includes(fullSearch) || fullSearch.includes(normName) ||
-        normCountry.includes(fullSearch) || fullSearch.includes(normCountry) ||
-        search.includes(key) || fullSearch.includes(key)) {
-      console.log(`findCircuitInfo: Fuzzy match for "${searchString}" -> ${key}`);
-      return circuit;
-    }
-
-    if (circuit.aliases?.some(alias => {
-      const normAlias = normalize(alias);
-      return normAlias.includes(search) || search.includes(normAlias) ||
-             normAlias.includes(fullSearch) || fullSearch.includes(normAlias);
-    })) {
-      console.log(`findCircuitInfo: Fuzzy alias match for "${searchString}" -> ${key}`);
-      return circuit;
-    }
+  // 3. Fuzzy match
+  const fuzzyMatch = PRECOMPUTED_CIRCUITS.find(c => 
+    c.terms.some(term => term.includes(search) || search.includes(term) || term.includes(fullSearch) || fullSearch.includes(term))
+  );
+  if (fuzzyMatch) {
+    // console.log(`findCircuitInfo: Fuzzy match for "${searchString}" -> ${fuzzyMatch.id}`);
+    return fuzzyMatch.data;
   }
 
   console.warn(`findCircuitInfo: No match found for "${searchString}"`);

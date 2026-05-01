@@ -24,13 +24,15 @@ export function useEditorState<T>() {
 
   const withSave = async (
     fn: () => Promise<void>, 
-    options?: { successMessage?: string, successType?: 'success' | 'info' | 'error', errorMessage?: string }
+    options?: { successMessage?: string, successType?: 'success' | 'info' | 'error', errorMessage?: string, keepOpen?: boolean }
   ) => {
     setIsSaving(true);
     try {
       await fn();
       addToast(options?.successMessage || 'Guardado exitosamente', options?.successType || 'success');
-      handleCancel();
+      if (!options?.keepOpen) {
+        handleCancel();
+      }
     } catch (error) {
       console.error('Error saving:', error);
       addToast(options?.errorMessage || 'Error al guardar', 'error');

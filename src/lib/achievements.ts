@@ -188,109 +188,80 @@ export function calculateAchievements(data: Pick<ChampionshipData, 'drivers' | '
      name: string, 
      description: string, 
      emoji: string, 
-     maxVal: number, 
      valueCheck: (stats: any) => number, 
-     threshold: number = 1, 
-     descSuffix: (val: number) => string
+     options: { mode: 'max' | 'threshold', threshold: number, descSuffix?: (val: number) => string }
   ) => {
-    if (maxVal < threshold) return;
-    const winners = data.drivers.filter(d => valueCheck(driverStats[d.id]) === maxVal);
-    winners.forEach(w => {
-      achievements.push({
-        id,
-        name,
-        description,
-        emoji,
-        driverId: w.id,
-        value: descSuffix(maxVal)
+    if (options.mode === 'max') {
+      const maxVal = Math.max(...Object.values(driverStats).map(s => valueCheck(s)), 0);
+      if (maxVal < options.threshold) return;
+      const winners = data.drivers.filter(d => valueCheck(driverStats[d.id]) === maxVal);
+      winners.forEach(w => {
+        achievements.push({
+          id, name, description, emoji, driverId: w.id,
+          value: options.descSuffix ? options.descSuffix(maxVal) : undefined
+        });
       });
-    });
-  };
-
-  // Helper to add absolute threshold achievements
-  const addThresholdAchievement = (
-     id: string,
-     name: string,
-     description: string,
-     emoji: string,
-     valueCheck: (stats: any) => number,
-     threshold: number,
-     descSuffix?: (val: number) => string
-  ) => {
-    const winners = data.drivers.filter(d => valueCheck(driverStats[d.id]) >= threshold);
-    winners.forEach(w => {
-      achievements.push({
-        id,
-        name,
-        description,
-        emoji,
-        driverId: w.id,
-        value: descSuffix ? descSuffix(valueCheck(driverStats[w.id])) : undefined
+    } else {
+      const winners = data.drivers.filter(d => valueCheck(driverStats[d.id]) >= options.threshold);
+      winners.forEach(w => {
+        achievements.push({
+          id, name, description, emoji, driverId: w.id,
+          value: options.descSuffix ? options.descSuffix(valueCheck(driverStats[w.id])) : undefined
+        });
       });
-    });
+    }
   };
 
   // 1. Rey de la Velocidad
-  const maxFastestLaps = Math.max(...Object.values(driverStats).map(s => s.fastestLaps), 0);
-  addAchievement('speed_king', 'Rey de la Velocidad', 'Mayor número de vueltas rápidas', '🟣', maxFastestLaps, s => s.fastestLaps, 1, v => `${v} VR`);
+  addAchievement('speed_king', 'Rey de la Velocidad', 'Mayor número de vueltas rápidas', '🟣', s => s.fastestLaps, { mode: 'max', threshold: 1, descSuffix: v => `${v} VR` });
 
   // 2. Kamikaze
-  const maxDnfs = Math.max(...Object.values(driverStats).map(s => s.dnfs), 0);
-  addAchievement('kamikaze', 'Kamikaze', 'Mayor número de abandonos (DNF)', '🔴', maxDnfs, s => s.dnfs, 1, v => `${v} DNF`);
+  addAchievement('kamikaze', 'Kamikaze', 'Mayor número de abandonos (DNF)', '🔴', s => s.dnfs, { mode: 'max', threshold: 1, descSuffix: v => `${v} DNF` });
 
   // 4. El Remontador
-  const maxComeback = Math.max(...Object.values(driverStats).map(s => s.maxComeback), 0);
-  addAchievement('remontador', 'El Remontador', 'Mayor diferencia positiva de posiciones en una carrera', '⚡', maxComeback, s => s.maxComeback, 1, v => `+${v} pos`);
+  addAchievement('remontador', 'El Remontador', 'Mayor diferencia positiva de posiciones en una carrera', '⚡', s => s.maxComeback, { mode: 'max', threshold: 1, descSuffix: v => `+${v} pos` });
 
   // 5. Hat-Trick
-  const maxWinStreak = Math.max(...Object.values(driverStats).map(s => s.maxWinStreak), 0);
-  addAchievement('hat_trick', 'Hat-Trick', 'Mayor racha de victorias consecutivas', '👑', maxWinStreak, s => s.maxWinStreak, 2, v => `${v} victorias`);
+  addAchievement('hat_trick', 'Hat-Trick', 'Mayor racha de victorias consecutivas', '👑', s => s.maxWinStreak, { mode: 'max', threshold: 2, descSuffix: v => `${v} victorias` });
 
   // 6. Puntos de Hierro
-  const maxFinishedNoDnf = Math.max(...Object.values(driverStats).map(s => s.finishedNoDnfCount), 0);
-  addAchievement('iron_points', 'Puntos de Hierro', 'Mayor número de carreras finalizadas sin DNF', '🛡️', maxFinishedNoDnf, s => s.finishedNoDnfCount, 1, v => `${v} carreras`);
+  addAchievement('iron_points', 'Puntos de Hierro', 'Mayor número de carreras finalizadas sin DNF', '🛡️', s => s.finishedNoDnfCount, { mode: 'max', threshold: 1, descSuffix: v => `${v} carreras` });
 
   // 7. El Tardío
-  const maxLastPlaces = Math.max(...Object.values(driverStats).map(s => s.lastPlaces), 0);
-  addAchievement('tardio', 'El Tardío', 'Piloto con más carreras en última posición', '🐢', maxLastPlaces, s => s.lastPlaces, 1, v => `${v} veces`);
+  addAchievement('tardio', 'El Tardío', 'Piloto con más carreras en última posición', '🐢', s => s.lastPlaces, { mode: 'max', threshold: 1, descSuffix: v => `${v} veces` });
 
   // 8. Maestro del Podio
-  const maxPodiums = Math.max(...Object.values(driverStats).map(s => s.podiums), 0);
-  addAchievement('maestro_podio', 'Maestro del Podio', 'Mayor número de podios (Top 3)', '🍾', maxPodiums, s => s.podiums, 2, v => `${v} podios`);
+  addAchievement('maestro_podio', 'Maestro del Podio', 'Mayor número de podios (Top 3)', '🍾', s => s.podiums, { mode: 'max', threshold: 2, descSuffix: v => `${v} podios` });
 
   // 9. Siempre en los Puntos
-  const maxPointsFinishes = Math.max(...Object.values(driverStats).map(s => s.pointsFinishes), 0);
-  addAchievement('puntos_constantes', 'Siempre en los Puntos', 'Mayor número de carreras puntuando', '🎯', maxPointsFinishes, s => s.pointsFinishes, 3, v => `${v} carreras`);
+  addAchievement('puntos_constantes', 'Siempre en los Puntos', 'Mayor número de carreras puntuando', '🎯', s => s.pointsFinishes, { mode: 'max', threshold: 3, descSuffix: v => `${v} carreras` });
   
   // 10. El Sancionado
-  const maxSanctions = Math.max(...Object.values(driverStats).map(s => s.sanctions), 0);
-  addAchievement('chico_malo', 'El Chico Malo', 'Piloto con mayor número de penalizaciones', '👮', maxSanctions, s => s.sanctions, 1, v => `${v} sanciones`);
+  addAchievement('chico_malo', 'El Chico Malo', 'Piloto con mayor número de penalizaciones', '👮', s => s.sanctions, { mode: 'max', threshold: 1, descSuffix: v => `${v} sanciones` });
   
   // 11. El Dominador
-  const maxWins = Math.max(...Object.values(driverStats).map(s => s.totalWins), 0);
-  addAchievement('dominador', 'El Dominador', 'Mayor número de victorias absolutas', '🥇', maxWins, s => s.totalWins, 2, v => `${v} victorias`);
+  addAchievement('dominador', 'El Dominador', 'Mayor número de victorias absolutas', '🥇', s => s.totalWins, { mode: 'max', threshold: 2, descSuffix: v => `${v} victorias` });
   
   // 12. Top 5 Habitual
-  const maxTop5 = Math.max(...Object.values(driverStats).map(s => s.top5), 0);
-  addAchievement('top_5', 'Top 5 Habitual', 'Mayor número de veces en el Top 5', '⭐', maxTop5, s => s.top5, 3, v => `${v} veces`);
+  addAchievement('top_5', 'Top 5 Habitual', 'Mayor número de veces en el Top 5', '⭐', s => s.top5, { mode: 'max', threshold: 3, descSuffix: v => `${v} veces` });
 
   // GENERIC/THRESHOLD LOGROS:
-  addThresholdAchievement('bautismo_fuego', 'Bautismo de Fuego', 'Ha puntuado por primera vez', '🔥', s => s.pointsFinishes, 1);
-  addThresholdAchievement('finisher', 'Finisher', 'Ha terminado 5 carreras sin abandonar', '🏁', s => s.finishedNoDnfCount, 5, v => `${v} carreras`);
-  addThresholdAchievement('superviviente', 'Superviviente', 'Ha terminado 10 carreras sin abandonar', '🛡️', s => s.finishedNoDnfCount, 10, v => `${v} carreras`);
-  addThresholdAchievement('veterano', 'Veterano', 'Ha participado en 10 carreras o más', '🏎️', s => s.racesEntered, 10, v => `${v} carreras`);
-  addThresholdAchievement('trotamundos', 'Trotamundos', 'Ha participado en 15 carreras', '🌍', s => s.racesEntered, 15, v => `${v} carreras`);
-  addThresholdAchievement('sabor_champan', 'Sabor a Champán', 'Ha conseguido subir al podio alguna vez', '🥂', s => s.podiums, 1);
-  addThresholdAchievement('golden_boy', 'Golden Boy', 'Ha conseguido ganar al menos una carrera', '🌟', s => s.totalWins, 1);
-  addThresholdAchievement('tractor', 'El Tractor', 'Acumula al menos 3 abandonos totales', '🚜', s => s.dnfs, 3, v => `${v} DNF`);
-  addThresholdAchievement('el_pupas', 'El Pupas', 'Acumula al menos 5 abandonos totales', '🚑', s => s.dnfs, 5, v => `${v} DNF`);
-  addThresholdAchievement('pasado_frenada', 'Pasado de Frenada', 'Ha recibido al menos 3 sanciones totales', '⚠️', s => s.sanctions, 3, v => `${v} sanc`);
-  addThresholdAchievement('peligro_publico', 'Peligro Público', 'Ha recibido al menos 5 sanciones totales', '⛔', s => s.sanctions, 5, v => `${v} sanc`);
-  addThresholdAchievement('vuela_bajo', 'Vuela Bajo', 'Ha logrado al menos 1 vuelta rápida', '✈️', s => s.fastestLaps, 1);
-  addThresholdAchievement('rayo', 'El Rayo', 'Ha logrado al menos 3 vueltas rápidas', '⚡', s => s.fastestLaps, 3);
-  addThresholdAchievement('racha_puntos', 'Cazador de Puntos', 'Ha puntuado en 3 carreras consecutivas', '🩸', s => s.maxPointsStreak, 3, v => `${v} seguidas`);
-  addThresholdAchievement('racha_podios', 'Indomable', 'Ha subido al podio 3 carreras consecutivas', '🏆', s => s.maxPodiumStreak, 3, v => `${v} seguidos`);
-  addThresholdAchievement('casi_casi', 'Casi, casi', 'Al menos 3 veces en el Top 5 sin subir al podio', '🤏', s => (s.top5 - s.podiums), 3, v => `${v} veces`);
+  addAchievement('bautismo_fuego', 'Bautismo de Fuego', 'Ha puntuado por primera vez', '🔥', s => s.pointsFinishes, { mode: 'threshold', threshold: 1 });
+  addAchievement('finisher', 'Finisher', 'Ha terminado 5 carreras sin abandonar', '🏁', s => s.finishedNoDnfCount, { mode: 'threshold', threshold: 5, descSuffix: v => `${v} carreras` });
+  addAchievement('superviviente', 'Superviviente', 'Ha terminado 10 carreras sin abandonar', '🛡️', s => s.finishedNoDnfCount, { mode: 'threshold', threshold: 10, descSuffix: v => `${v} carreras` });
+  addAchievement('veterano', 'Veterano', 'Ha participado en 10 carreras o más', '🏎️', s => s.racesEntered, { mode: 'threshold', threshold: 10, descSuffix: v => `${v} carreras` });
+  addAchievement('trotamundos', 'Trotamundos', 'Ha participado en 15 carreras', '🌍', s => s.racesEntered, { mode: 'threshold', threshold: 15, descSuffix: v => `${v} carreras` });
+  addAchievement('sabor_champan', 'Sabor a Champán', 'Ha conseguido subir al podio alguna vez', '🥂', s => s.podiums, { mode: 'threshold', threshold: 1 });
+  addAchievement('golden_boy', 'Golden Boy', 'Ha conseguido ganar al menos una carrera', '🌟', s => s.totalWins, { mode: 'threshold', threshold: 1 });
+  addAchievement('tractor', 'El Tractor', 'Acumula al menos 3 abandonos totales', '🚜', s => s.dnfs, { mode: 'threshold', threshold: 3, descSuffix: v => `${v} DNF` });
+  addAchievement('el_pupas', 'El Pupas', 'Acumula al menos 5 abandonos totales', '🚑', s => s.dnfs, { mode: 'threshold', threshold: 5, descSuffix: v => `${v} DNF` });
+  addAchievement('pasado_frenada', 'Pasado de Frenada', 'Ha recibido al menos 3 sanciones totales', '⚠️', s => s.sanctions, { mode: 'threshold', threshold: 3, descSuffix: v => `${v} sanc` });
+  addAchievement('peligro_publico', 'Peligro Público', 'Ha recibido al menos 5 sanciones totales', '⛔', s => s.sanctions, { mode: 'threshold', threshold: 5, descSuffix: v => `${v} sanc` });
+  addAchievement('vuela_bajo', 'Vuela Bajo', 'Ha logrado al menos 1 vuelta rápida', '✈️', s => s.fastestLaps, { mode: 'threshold', threshold: 1 });
+  addAchievement('rayo', 'El Rayo', 'Ha logrado al menos 3 vueltas rápidas', '⚡', s => s.fastestLaps, { mode: 'threshold', threshold: 3 });
+  addAchievement('racha_puntos', 'Cazador de Puntos', 'Ha puntuado en 3 carreras consecutivas', '🩸', s => s.maxPointsStreak, { mode: 'threshold', threshold: 3, descSuffix: v => `${v} seguidas` });
+  addAchievement('racha_podios', 'Indomable', 'Ha subido al podio 3 carreras consecutivas', '🏆', s => s.maxPodiumStreak, { mode: 'threshold', threshold: 3, descSuffix: v => `${v} seguidos` });
+  addAchievement('casi_casi', 'Casi, casi', 'Al menos 3 veces en el Top 5 sin subir al podio', '🤏', s => (s.top5 - s.podiums), { mode: 'threshold', threshold: 3, descSuffix: v => `${v} veces` });
 
   // Extra threshold achievements using driver points directly
   const addPointsThreshold = (id: string, name: string, desc: string, emoji: string, maxPoints: number) => {

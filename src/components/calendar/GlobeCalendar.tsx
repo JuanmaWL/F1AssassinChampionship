@@ -483,14 +483,14 @@ export function GlobeCalendar({ races, accentColor }: GlobeCalendarProps) {
                     groupsControls
                       .style("cursor", "not-allowed")
                       .on("click", null)
-                      .filter(({ index }: any) => {
+                      .filter(({ index }: any) => { // TODO: type this properly
                         const i = indexDatum + index;
                         return i >= 0 && i < length;
                       })
                       .style("cursor", "pointer")
                       .on(
                         "click",
-                        (e: any, { index }: any) => {
+                        (e: any, { index }: any) => { // TODO: type this properly
                           handleUpdate(data[indexDatum + index], datum);
                         },
                         {
