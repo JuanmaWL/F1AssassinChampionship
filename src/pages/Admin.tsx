@@ -1,4 +1,4 @@
-import { useState, FormEvent, lazy, Suspense } from 'react';
+import { useState, FormEvent, lazy, Suspense, Fragment } from 'react';
 import { Lock, Settings, Trophy, Users, Flag, Calendar as CalendarIcon, Database, Info, RefreshCw, PanelLeftClose, PanelLeftOpen, Compass, Activity } from 'lucide-react';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { cn } from '../lib/utils';
@@ -142,6 +142,36 @@ export function AdminPanel() {
     );
   }
 
+  type NavGroup = {
+    items: { id: AdminTab; label: string; icon: React.ElementType; shortTitle: string }[];
+    separator?: boolean;
+  }[];
+
+  const NAV_ITEMS: NavGroup = [
+    {
+      items: [
+        { id: 'teams', label: '1. Escuderías', shortTitle: 'Escuderías', icon: Trophy },
+        { id: 'drivers', label: '2. Pilotos', shortTitle: 'Pilotos', icon: Users },
+        { id: 'calendar', label: '3. Calendario', shortTitle: 'Calendario', icon: CalendarIcon },
+        { id: 'results', label: '4. Resultados', shortTitle: 'Resultados', icon: Flag },
+      ],
+      separator: true,
+    },
+    {
+      items: [
+        { id: 'circuits', label: 'Gestión de Circuitos', shortTitle: 'Circuitos', icon: Compass },
+      ],
+      separator: true,
+    },
+    {
+      items: [
+        { id: 'import', label: 'Mantenimiento', shortTitle: 'Mantenimiento', icon: Database },
+        { id: 'metrics', label: 'Métricas', shortTitle: 'Métricas', icon: Activity },
+        { id: 'settings', label: 'Ajustes', shortTitle: 'Ajustes', icon: Settings },
+      ],
+    },
+  ];
+
   return (
     <div className="pb-20 -mx-4 md:-mx-8">
       {/* Admin Header - Full Width */}
@@ -265,129 +295,33 @@ export function AdminPanel() {
               </button>
             </div>
 
-            <button
-                onClick={() => setActiveTab('teams')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'teams' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
+            {NAV_ITEMS.map((group, groupIndex) => (
+              <Fragment key={groupIndex}>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={cn(
+                        "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
+                        isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
+                        activeTab === item.id 
+                          ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
+                          : "text-slate-500 hover:text-white hover:bg-white/5"
+                      )}
+                      title={isCollapsed ? item.shortTitle : undefined}
+                    >
+                      <Icon size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === item.id ? accentColor : "")} />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+                {group.separator && (
+                  <div className={cn("h-px bg-white/5 my-4", isCollapsed ? "w-8" : "mx-4")}></div>
                 )}
-                title={isCollapsed ? "Escuderías" : undefined}
-            >
-                <Trophy size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'teams' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">1. Escuderías</span>}
-            </button>
-
-            <button
-                onClick={() => setActiveTab('drivers')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'drivers' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Pilotos" : undefined}
-            >
-                <Users size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'drivers' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">2. Pilotos</span>}
-            </button>
-
-            <button
-                onClick={() => setActiveTab('calendar')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'calendar' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Calendario" : undefined}
-            >
-                <CalendarIcon size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'calendar' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">3. Calendario</span>}
-            </button>
-
-            <button
-                onClick={() => setActiveTab('results')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'results' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Resultados" : undefined}
-            >
-                <Flag size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'results' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">4. Resultados</span>}
-            </button>
-
-            <div className={cn("h-px bg-white/5 my-4", isCollapsed ? "w-8" : "mx-4")}></div>
-
-            <button
-                onClick={() => setActiveTab('circuits')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'circuits' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Circuitos" : undefined}
-            >
-                <Compass size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'circuits' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">Gestión de Circuitos</span>}
-            </button>
-
-            <div className={cn("h-px bg-white/5 my-4", isCollapsed ? "w-8" : "mx-4")}></div>
-
-            <button
-                onClick={() => setActiveTab('import')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'import' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Mantenimiento" : undefined}
-            >
-                <Database size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'import' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">Mantenimiento</span>}
-            </button>
-
-            <button
-                onClick={() => setActiveTab('metrics')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'metrics' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Métricas" : undefined}
-            >
-                <Activity size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'metrics' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">Métricas</span>}
-            </button>
-
-            <button
-                onClick={() => setActiveTab('settings')}
-                className={cn(
-                "text-left rounded-xl font-bold uppercase text-sm tracking-wider flex items-center transition-all group",
-                isCollapsed ? "justify-center p-3 w-12 h-12" : "w-full px-4 py-3 gap-3",
-                activeTab === 'settings' 
-                    ? cn("bg-white/10 text-white border border-white/10 shadow-lg", isHistorical && "border-amber-500/30 shadow-amber-500/10")
-                    : "text-slate-500 hover:text-white hover:bg-white/5"
-                )}
-                title={isCollapsed ? "Ajustes" : undefined}
-            >
-                <Settings size={18} className={cn("transition-transform group-hover:scale-110 shrink-0", activeTab === 'settings' ? accentColor : "")} />
-                {!isCollapsed && <span className="truncate">Ajustes</span>}
-            </button>
+              </Fragment>
+            ))}
           </div>
 
           {/* FAQ / Instructions Block */}
