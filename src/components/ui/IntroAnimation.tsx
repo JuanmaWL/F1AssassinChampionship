@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, lazy, Suspense, useMemo } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'motion/react';
 import { FOOTER_ASSETS } from '../../constants/assets';
 import { INTRO_ANIMATION_DURATION } from '../../constants/config';
@@ -51,12 +51,29 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
   const [carHasPassed, setCarHasPassed] = useState(false);
   const [showCRTEffect, setShowCRTEffect] = useState(false);
   const impactControls = useAnimation();
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileSplashStage, setMobileSplashStage] = useState(0);
 
-  // Disable intro on mobile
+  // Random glitch timings per logo
+  const glitchTimings = useMemo(() => [0, 1, 2].map(() => ({
+    duration: 3 + Math.random() * 5,
+    delay: Math.random() * 3,
+  })), []);
+
+  // Define isMobile detection initially
+  const checkIsMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+  // Disable intro on mobile and show 1.5s splash instead
   useEffect(() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    if (isMobile) {
-      onComplete();
+    if (checkIsMobile()) {
+      setIsMobile(true);
+      setMobileSplashStage(1);
+
+      // Total 1.5s: 1.2s visible (0.3 fade in + 0.9 stay), then 0.3s fade out handled by AnimatePresence
+      const t1 = setTimeout(() => setMobileSplashStage(2), 1200);
+      const t2 = setTimeout(() => onComplete(), 1500);
+
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [onComplete]);
 
@@ -70,6 +87,8 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
   }, []);
 
   useEffect(() => {
+    if (checkIsMobile()) return; // Skip desktop timers on mobile
+    
     // Sequence timing - Professional racing intro
     const timers = [
       setTimeout(() => setStage(1), 1000),  // Lights start igniting
@@ -111,6 +130,42 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
       return () => clearTimeout(impactTimer);
     }
   }, [carHasPassed, impactControls]);
+
+  if (isMobile) {
+    return (
+      <AnimatePresence>
+        {mobileSplashStage === 1 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-4 overflow-hidden"
+          >
+             <div className="relative text-center px-4 w-full">
+                <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase flex flex-col items-center leading-none py-2">
+                    <span className="text-red-600 drop-shadow-[0_0_20px_rgba(220,38,38,0.8)] mb-2 pt-6">
+                      F1
+                    </span>
+                    <span style={{ textShadow: '0 0 30px rgba(220, 38, 38, 0.8)' }}>
+                      ASSASSINS
+                    </span>
+                    <span className="text-xl mt-1 text-slate-300">
+                      CHAMPIONSHIP
+                    </span>
+                </h1>
+                <motion.div 
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+                    className="h-1 bg-red-600 mt-6 mx-auto rounded-full shadow-[0_0_15px_#dc2626] w-[80%]"
+                />
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <motion.div
@@ -401,9 +456,9 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                           animate={{ clipPath: "inset(0 0% 0 0)", x: 0 }}
                           transition={{ duration: 1, ease: [0.77, 0, 0.175, 1], delay: 0.1 }}
                         >
-                          <h1 className="text-5xl sm:text-6xl md:text-8xl font-black italic tracking-tighter text-white uppercase flex flex-col items-center leading-none whitespace-nowrap min-h-[1.2em] w-full">
+                          <h1 className="text-5xl sm:text-6xl md:text-8xl font-black italic tracking-tighter text-white uppercase flex flex-col items-center leading-none whitespace-nowrap min-h-[1.2em] w-full py-4">
                               <motion.span 
-                                className="text-red-600 drop-shadow-[0_0_30px_rgba(220,38,38,0.8)] mb-2"
+                                className="text-red-600 drop-shadow-[0_0_30px_rgba(220,38,38,0.8)] mb-2 pt-8"
                               >
                                 F1
                               </motion.span>
@@ -519,9 +574,27 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                               "grayscale(0%) brightness(1.5) drop-shadow(3px 0px 0px #ff0000) drop-shadow(-3px 0px 0px #00ffff)",
                               "grayscale(0%) brightness(1)"
                             ],
+                          } : (stage >= 4 && carHasPassed) ? {
+                            x: [0, -4, 4, -2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+                            scale: [1.05, 1.08, 1.02, 1.06, 1.04, 1.05, 1.05, 1.05, 1.05, 1.05, 1.05, 1.05, 1.05],
+                            filter: [
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1.5) drop-shadow(6px 0px 0px #ff0000) drop-shadow(-6px 0px 0px #00ffff)",
+                              "grayscale(0%) brightness(0.8) drop-shadow(-4px 0px 0px #00ff00) drop-shadow(4px 0px 0px #ff00ff)",
+                              "grayscale(0%) brightness(1.3) drop-shadow(3px 0px 0px #ff0000)",
+                              "grayscale(0%) brightness(0.9) drop-shadow(-3px 0px 0px #00ffff)",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                              "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))",
+                            ]
                           } : stage >= 4 ? {
                             x: 0,
-                            scale: carHasPassed ? [1, 1.08, 1.05] : [1, 1.05, 1],
+                            scale: [1, 1.05, 1],
                             filter: "grayscale(0%) brightness(1) drop-shadow(0px 0px 8px rgba(239, 68, 68, 0.6))"
                           } : {
                             x: 0,
@@ -531,9 +604,15 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                           transition={isMetamorphosing ? {
                             duration: 0.4,
                             ease: "easeInOut"
+                          } : (stage >= 4 && carHasPassed) ? {
+                            duration: glitchTimings[idx].duration,
+                            repeat: Infinity,
+                            delay: glitchTimings[idx].delay,
+                            ease: "linear",
+                            times: [0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1]
                           } : stage >= 4 ? {
-                            duration: carHasPassed ? 0.8 : (3 + (idx * 0.5)), 
-                            repeat: carHasPassed ? 0 : Infinity, 
+                            duration: 3 + (idx * 0.5), 
+                            repeat: Infinity, 
                             ease: "easeInOut"
                           } : {
                             duration: 0.4,
@@ -572,9 +651,15 @@ export function IntroAnimation({ onComplete, activeSeason }: IntroAnimationProps
                         ].map((p, i) => (
                           <motion.div
                             key={p.name}
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.1 * i, type: "spring" }}
+                            initial={{ scale: 0.8, opacity: 0, y: 15 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            transition={{ 
+                              delay: 0.1 * i, 
+                              type: "spring", 
+                              stiffness: 300, 
+                              damping: 20, 
+                              mass: 0.8 
+                            }}
                             whileHover={{ scale: 1.1 }}
                             className="px-3 py-1.5 md:px-5 md:py-2.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2 md:gap-2.5 shadow-xl text-white/90 transition-all duration-300"
                             style={carHasPassed ? {
