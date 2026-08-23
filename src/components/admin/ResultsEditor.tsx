@@ -77,9 +77,9 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
 
       const base64Data = await base64Promise;
 
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
       if (!apiKey) {
-        throw new Error("Missing Gemini API Key");
+        throw new Error("No se ha encontrado la clave GEMINI_API_KEY en las variables de entorno.");
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -103,7 +103,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: {
             parts: [
                 { text: prompt },
@@ -192,9 +192,9 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       setParsedResults(mappedResults);
       addToast('¡IA procesó los resultados con éxito! Por favor revisa abajo.', 'success');
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Parsing Error:", err);
-      addToast('Fallo en IA. Revisa la API Key o introduce los resultados manualmente.', 'error');
+      addToast(`Fallo en IA: ${err?.message || 'Revisa la API Key o introduce los resultados manualmente.'}`, 'error');
     }
   };
 
@@ -203,8 +203,8 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     
     setIsEnhancing(true);
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("Missing Gemini API Key");
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("No se ha encontrado la clave GEMINI_API_KEY en las variables de entorno.");
 
       const ai = new GoogleGenAI({ apiKey });
       const prompt = `
@@ -225,7 +225,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.6-flash',
         contents: { parts: [{ text: prompt }] }
       });
 
@@ -234,9 +234,9 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
         setRaceReport(enhancedText);
         addToast('Reporte mejorado con IA exitosamente.', 'success');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Enhancement Error:", err);
-      addToast('Error al mejorar el reporte con IA.', 'error');
+      addToast(`Error al mejorar el reporte: ${err?.message || 'Error en Gemini API'}`, 'error');
     } finally {
       setIsEnhancing(false);
     }

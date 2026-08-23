@@ -89,8 +89,8 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     setError(null);
     
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key de Gemini no configurada.");
+      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API Key de Gemini no configurada en las variables de entorno.");
 
       const ai = new GoogleGenAI({ apiKey });
       
@@ -154,7 +154,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.6-flash",
         contents: { parts: parts }
       });
 
