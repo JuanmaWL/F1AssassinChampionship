@@ -8,6 +8,7 @@ import { useChampionship } from '../context/ChampionshipContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { GeminiStatusIndicator } from '../components/admin/GeminiStatusIndicator';
 
 // Lazy loaded editors
 const ResultsEditor = lazy(() => import('../components/admin/ResultsEditor').then(module => ({ default: module.ResultsEditor })));
@@ -211,6 +212,8 @@ export function AdminPanel() {
           </div>
           
           <div className="flex items-center gap-3">
+            <GeminiStatusIndicator isHistorical={isHistorical} />
+
             <button
               onClick={async () => {
                 setIsRefreshing(true);

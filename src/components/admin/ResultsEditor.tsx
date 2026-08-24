@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { ChampionshipData, RaceResult, SeasonId } from '../../types';
 import { Upload, Save, AlertTriangle, CheckCircle, Wand2, X } from 'lucide-react';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { GoogleGenAI } from '@google/genai';
+import { getGeminiClient, GEMINI_MODEL } from '../../services/geminiService';
 import { cn } from '../../lib/utils';
 import { calculateStandings, getPoints } from '../../lib/calculations';
 import { dataService } from '../../services/dataService';
@@ -77,12 +77,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
 
       const base64Data = await base64Promise;
 
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("No se ha encontrado la clave GEMINI_API_KEY en las variables de entorno.");
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getGeminiClient();
       
       const driversList = data.drivers.map(d => d.name).join(', ');
       const prompt = `
@@ -203,10 +198,7 @@ export function ResultsEditor({ data, onUpdateData, activeSeason, isHistorical }
     
     setIsEnhancing(true);
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("No se ha encontrado la clave GEMINI_API_KEY en las variables de entorno.");
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getGeminiClient();
       const prompt = `
         Actúa como un Comisario de la FIA pero sé CONCISO, DIRECTO y VISUAL.
         Mejora el siguiente reporte de incidentes de una carrera de F1.

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 
 export const MarqueeText = ({ text, className }: { text: string; className?: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const [shouldScroll, setShouldScroll] = useState(false);
   const [scrollAmount, setScrollAmount] = useState(0);
 

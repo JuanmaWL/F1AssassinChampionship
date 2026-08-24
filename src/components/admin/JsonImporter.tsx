@@ -3,7 +3,7 @@ import { ChampionshipData, SeasonId, Race } from '../../types';
 import { Upload, Download, AlertTriangle, Check, FileJson, FileText, Bot, Database, Users, Flag, Trophy, Calendar as CalendarIcon, Image as ImageIcon, X, Edit } from 'lucide-react';
 import { dataService } from '../../services/dataService';
 import { cn } from '../../lib/utils';
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient, GEMINI_MODEL } from '../../services/geminiService';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useToast } from '../../context/ToastContext';
 
@@ -89,10 +89,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
     setError(null);
     
     try {
-      const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || (import.meta as any).env?.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key de Gemini no configurada en las variables de entorno.");
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getGeminiClient();
       
       let systemPrompt = "";
       if (promptType === 'drivers') {
@@ -154,7 +151,7 @@ export function JsonImporter({ currentData, onUpdateData, activeSeason, isHistor
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: GEMINI_MODEL,
         contents: { parts: parts }
       });
 
